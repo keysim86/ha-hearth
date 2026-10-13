@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hearth",
+        "description": "Adds the Hearth panel to the sidebar. Rooms are built from Home Assistant areas; outdoor sensors and the rest are set later in the options."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Hearth is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Hearth panel settings",
+        "description": "Rooms come from HA areas: every area with a thermostat is a room in the Climate tab. Here you set the look and what areas cannot tell.",
+        "sections": {
+          "appearance": {
+            "name": "Appearance",
+            "description": "Card style is the default; each device can pick its own in the panel (gear icon).",
+            "data": {
+              "style": "Room card style",
+              "sidebar_title": "Sidebar title",
+              "sidebar_icon": "Sidebar icon",
+              "require_admin": "Admins only"
+            },
+            "data_description": {
+              "style": "Tiles, list or dials.",
+              "sidebar_title": "Sidebar entry text.",
+              "sidebar_icon": "Sidebar entry icon.",
+              "require_admin": "Hides the panel from regular users."
+            }
+          },
+          "outdoor": {
+            "name": "Outdoor",
+            "description": "Sensors outside. Empty field = tile without that value.",
+            "data": {
+              "outdoor_temperature": "Temperature",
+              "outdoor_humidity": "Humidity",
+              "outdoor_pressure": "Pressure",
+              "outdoor_illuminance": "Illuminance",
+              "outdoor_pm25": "PM2.5",
+              "outdoor_pm10": "PM10",
+              "outdoor_aqi": "Air quality index (e.g. CAQI)",
+              "outdoor_aqi_level": "Index level (text)"
+            },
+            "data_description": {
+              "outdoor_temperature": "Also used to compare with indoor humidity.",
+              "outdoor_illuminance": "Outdoor light sensor (lx).",
+              "outdoor_aqi_level": "E.g. very_low / low / medium / high / very_high."
+            }
+          },
+          "house": {
+            "name": "House",
+            "description": "House status bar above the rooms.",
+            "data": {
+              "boiler_state": "Boiler — state",
+              "boiler_flow_temperature": "Boiler — flow temperature",
+              "boiler_pressure": "Boiler — water pressure",
+              "dhw_temperature": "Hot water — temperature",
+              "presence": "Someone home",
+              "tariff": "Electricity tariff zone"
+            },
+            "data_description": {
+              "presence": "On/off entity, e.g. a household group.",
+              "tariff": "Shown next to ventilation and dehumidifiers."
+            }
+          },
+          "rooms": {
+            "name": "Rooms",
+            "description": "Extra rules for rooms built from areas.",
+            "data": {
+              "helper_prefix": "Heating helper prefix",
+              "fans": "Fans",
+              "exclude_entities": "Exclude entities"
+            },
+            "data_description": {
+              "helper_prefix": "E.g. “heating” for input_number.heating_<area>_komfort/_eko/_wieczor and alike. Empty = control the thermostat only.",
+              "fans": "Switches and fans shown as the room fan (fan.* and names with “fan” are found automatically).",
+              "exclude_entities": "E.g. a dishwasher door sensor detected as a room door."
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "style": {
+      "options": {
+        "tiles": "Tiles — arc, 24 h chart, day timeline (default)",
+        "list": "List — one row per room, densest",
+        "dials": "Dials — colourful thermostat-like cards"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "domain": "hearth",
+  "name": "Hearth",
+  "codeowners": ["@keysim86"],
+  "config_flow": true,
+  "dependencies": ["http", "frontend", "panel_custom"],
+  "documentation": "https://github.com/keysim86/ha-hearth",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/keysim86/ha-hearth/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}

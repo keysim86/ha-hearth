@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hearth",
+        "description": "Dodaje panel Hearth do menu bocznego. Pokoje panel buduje sam z obszarów Home Assistant; czujniki na zewnątrz i resztę ustawisz potem w opcjach."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Hearth jest już dodany."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ustawienia panelu Hearth",
+        "description": "Pokoje biorą się z obszarów HA: każdy obszar z termostatem to pokój w zakładce Klimat. Tu ustawiasz wygląd i to, czego obszary nie mówią.",
+        "sections": {
+          "appearance": {
+            "name": "Wygląd",
+            "description": "Styl kart to ustawienie domyślne; każde urządzenie może wybrać własny w panelu (koło zębate).",
+            "data": {
+              "style": "Styl kart pokoi",
+              "sidebar_title": "Nazwa w menu",
+              "sidebar_icon": "Ikona w menu",
+              "require_admin": "Tylko dla administratorów"
+            },
+            "data_description": {
+              "style": "Kafelki, lista albo pokrętła.",
+              "sidebar_title": "Tekst pozycji w menu bocznym.",
+              "sidebar_icon": "Ikona pozycji w menu bocznym.",
+              "require_admin": "Ukrywa panel przed zwykłymi użytkownikami."
+            }
+          },
+          "outdoor": {
+            "name": "Na zewnątrz",
+            "description": "Czujniki za oknem. Puste pole = kafelek bez tej wartości.",
+            "data": {
+              "outdoor_temperature": "Temperatura",
+              "outdoor_humidity": "Wilgotność",
+              "outdoor_pressure": "Ciśnienie",
+              "outdoor_illuminance": "Natężenie światła",
+              "outdoor_pm25": "PM2,5",
+              "outdoor_pm10": "PM10",
+              "outdoor_aqi": "Indeks jakości powietrza (np. CAQI)",
+              "outdoor_aqi_level": "Poziom indeksu (opis)"
+            },
+            "data_description": {
+              "outdoor_temperature": "Także porównanie z wilgotnością w pokojach.",
+              "outdoor_illuminance": "Czujnik światła na zewnątrz (lx).",
+              "outdoor_aqi_level": "Np. very_low / low / medium / high / very_high."
+            }
+          },
+          "house": {
+            "name": "Dom",
+            "description": "Pasek stanu domu nad pokojami.",
+            "data": {
+              "boiler_state": "Kocioł — stan",
+              "boiler_flow_temperature": "Kocioł — temperatura zasilania",
+              "boiler_pressure": "Kocioł — ciśnienie wody",
+              "dhw_temperature": "Ciepła woda — temperatura",
+              "presence": "Ktoś w domu",
+              "tariff": "Strefa taryfy prądu"
+            },
+            "data_description": {
+              "presence": "Encja on/off, np. grupa domowników.",
+              "tariff": "Pokazywana przy wentylacji i osuszaczach."
+            }
+          },
+          "rooms": {
+            "name": "Pokoje",
+            "description": "Dodatkowe reguły dla pokoi z obszarów.",
+            "data": {
+              "helper_prefix": "Prefiks pomocników ogrzewania",
+              "fans": "Wentylatory",
+              "exclude_entities": "Pomiń encje"
+            },
+            "data_description": {
+              "helper_prefix": "Np. „ogrzewanie” dla input_number.ogrzewanie_<obszar>_komfort/_eko/_wieczor i podobnych. Puste = sterowanie samym termostatem.",
+              "fans": "Przełączniki i wentylatory pokazywane jako wentylator pokoju (encje fan.* i nazwy z „wentylator/fan” wykrywane same).",
+              "exclude_entities": "Np. czujnik drzwi zmywarki rozpoznany jako drzwi pokoju."
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "style": {
+      "options": {
+        "tiles": "Kafelki — łuk, wykres 24 h, oś dnia (domyślny)",
+        "list": "Lista — wiersz na pokój, najgęstszy",
+        "dials": "Pokrętła — kolorowe karty jak termostat"
+      }
+    }
+  }
+}
