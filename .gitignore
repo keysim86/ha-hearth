@@ -2,5 +2,5 @@ node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
-dev/snapshot.json
+dev/snapshot*.json
 dev/options.json

@@ -3,6 +3,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { clock, duration, f1, num } from "../format";
 import { HistoryStore, sumPeriods } from "../history";
+import type { StatsStore } from "../data/stats";
 import {
   climateTarget,
   hasProfiles,
@@ -20,6 +21,12 @@ import type { Hass, Options } from "../types";
 
 export interface Actions {
   toggleRoom(areaId: string): void;
+  /** Dowolna usługa HA (bramy, termostaty kotła). */
+  call(domain: string, service: string, data: Record<string, unknown>): void;
+  /** Suwak number / input_number z opóźnionym zapisem. */
+  stepNumber(entity: string, delta: number): void;
+  /** Nastawa dowolnego termostatu (climate / water_heater) z opóźnionym zapisem. */
+  stepTarget(entity: string, delta: number): void;
   stepProfile(room: Room, p: Profile, delta: number): void;
   stepClimate(room: Room, delta: number): void;
   stepHumidity(entity: string, delta: number): void;
@@ -30,6 +37,9 @@ export interface Ctx {
   hass: Hass;
   opts: Options;
   hist: HistoryStore;
+  stats: StatsStore;
+  /** Przerysowanie po dociągnięciu danych w tle (statystyki, prognoza). */
+  refresh: () => void;
   clock: ReturnType<typeof clock>;
   nowMinute: number;
   pending: Map<string, number>;
@@ -154,3 +164,58 @@ export const deviceRow = (d: Device) => html`<div class="dev ${d.on ? "on" : ""}
 export const deviceIcon = (d: Device) => (d.kind === "fan" ? fanIcon : dryIcon);
 
 export const workTime = (d: Device) => duration(sumPeriods(d.periods));
+
+// ---- nazwy i formatowanie dla zakładek ----
+
+export function deviceName(hass: Hass, id: string): string | undefined {
+  const d = hass.entities[id]?.device_id;
+  const dev = d ? hass.devices[d] : undefined;
+  return dev ? (dev.name_by_user || dev.name || undefined) : undefined;
+}
+
+/** Nazwa do pokazania: bez numerów seryjnych, PPE czy identyfikatorów licznika (dłuższe ciągi cyfr) i bez prefiksu
+ *  węzła ESPHome („miresphome16 - Plug UPS” → „UPS”). */
+export function cleanName(name: string): string {
+  const out = name
+    .replace(/^[\w-]*\d+\s+[-–]\s+/, "")
+    .split(/\s+/)
+    .filter((word) => (word.match(/\d/g)?.length ?? 0) < 6)
+    .join(" ")
+    .replace(/^Plug\s+/i, "")
+    .replace(/\s+(ID|nr|no\.?)\s*$/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return out || name;
+}
+
+/** Nazwa encji bez nazwy urządzenia na początku (jak w nowych kartach HA). */
+export function entityName(hass: Hass, id: string): string {
+  const friendly = String(hass.states[id]?.attributes.friendly_name ?? id);
+  const dev = deviceName(hass, id);
+  const strip = (n: string) =>
+    dev && n.toLowerCase().startsWith(dev.toLowerCase()) && n.length > dev.length + 1 ? n.slice(dev.length).replace(/^[\s\-–:]+/, "") : n;
+  const reg = hass.entities[id]?.name;
+  return cleanName(strip(reg || friendly));
+}
+
+/** „od 14:05”, „od wczoraj 18:30”, „od 12.10” — kiedy zaczął się obecny stan. */
+export function sinceLabel(ctx: Ctx, t: number | string): string {
+  const ms = typeof t === "number" ? t : Date.parse(t);
+  const d = new Date(ms), today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (ms >= today.getTime()) return `od ${ctx.clock.hm(ms)}`;
+  if (ms >= today.getTime() - 864e5) return `od wczoraj ${ctx.clock.hm(ms)}`;
+  return `od ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export const unitOf = (hass: Hass, id?: string | null): string => (id ? hass.states[id]?.attributes.unit_of_measurement ?? "" : "");
+
+/** „5 min”, „2 h 10 min”, „3 dni” od chwili. */
+export function since(t: number | string): string {
+  const ms = Date.now() - (typeof t === "number" ? t : Date.parse(t));
+  const m = Math.max(0, Math.round(ms / 60000));
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h} h${m % 60 ? ` ${m % 60} min` : ""}`;
+  return `${Math.floor(h / 24)} dni`;
+}

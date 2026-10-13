@@ -46,15 +46,16 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert set(result["data_schema"].schema) >= {"appearance", "outdoor", "house", "rooms"}
+    assert set(result["data_schema"].schema) >= {"appearance", "outdoor", "house", "home", "energy", "boiler", "meters", "rooms"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "appearance": {"style": "dials", "sidebar_title": "Dom", "sidebar_icon": "mdi:home", "require_admin": False},
+            "appearance": {"style": "dials", "tabs": ["home", "climate", "energy", "boiler", "meters"], "sidebar_title": "Dom", "sidebar_icon": "mdi:home", "require_admin": False},
             "outdoor": {},  # pole temperatury wyczyszczone
+            "house": {"presence": "binary_sensor.domownicy"},
             # Czujniki z MQTT (ebusd) bez klasy urządzenia muszą przejść.
-            "house": {
+            "boiler": {
                 "boiler_flame": "binary_sensor.ogrzewanie_plomien",
                 "boiler_dhw_demand": "binary_sensor.ciepla_woda",
                 "boiler_modulation": "sensor.ogrzewanie_aktualna_moc",
@@ -63,8 +64,11 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
                 "boiler_pressure": "sensor.ogrzewanie_cisnienie",
                 "dhw_temperature": "sensor.ciepla_woda_aktualnie",
                 "dhw_target": "sensor.ciepla_woda_docelowo",
-                "presence": "binary_sensor.domownicy",
+                "gas": ["sensor.gaz_co", "sensor.gaz_cwu"],
             },
+            "home": {"persons": ["person.a", "person.b"], "mailbox": "binary_sensor.poczta"},
+            "energy": {},
+            "meters": {"meters": ["sensor.licznik_wody"]},
             "rooms": {"areas": ["salon", "lazienka"], "helper_prefix": "ogrzewanie", "fans": ["switch.wentylator"]},
         },
     )
@@ -79,6 +83,11 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     assert o["boiler_pressure"] == "sensor.ogrzewanie_cisnienie"
     assert o["dhw_target"] == "sensor.ciepla_woda_docelowo"
     assert o["boiler_state"] is None
+    assert o["gas"] == ["sensor.gaz_co", "sensor.gaz_cwu"]
+    assert o["persons"] == ["person.a", "person.b"]
+    assert o["gates"] == []  # nie podane = wykrywanie automatyczne
+    assert o["meters"] == ["sensor.licznik_wody"]
+    assert o["tabs"] == ["home", "climate", "energy", "boiler", "meters"]
     assert o["areas"] == ["salon", "lazienka"]
     assert o["helper_prefix"] == "ogrzewanie"
     assert o["fans"] == ["switch.wentylator"]

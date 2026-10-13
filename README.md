@@ -9,20 +9,28 @@
 [![HA](https://img.shields.io/badge/Home%20Assistant-2026.10%2B-blue?style=flat-square)](https://www.home-assistant.io/)
 [![License](https://img.shields.io/github/license/keysim86/ha-hearth.svg?style=flat-square)](LICENSE)
 
-> Panel Home Assistant dla całego domu. Pokoje budują się same z **obszarów HA** — bez list encji w YAML-u.
-> Pierwsza zakładka to **Klimat**: temperatura i cel każdego pokoju, plan dnia, wilgotność, wentylatory i osuszacze,
-> a nad pokojami pogoda i jakość powietrza za oknem.
+> Panel Home Assistant dla całego domu w pięciu zakładkach: **Dom**, **Klimat**, **Energia**, **Kocioł**, **Liczniki**.
+> Pokoje budują się same z **obszarów HA**, zużycie z **panelu Energia** HA — bez list encji w YAML-u.
 
 ![Klimat — styl Kafelki](assets/kafelki.png)
 
-## Co jest w panelu
+## Zakładki
 
-| Część | Zawartość |
+| Zakładka | Zawartość |
 |-------|-----------|
-| 🌤️ **Na zewnątrz** | Temperatura i wilgotność z wykresem 24 h · ciśnienie z trendem z 3 godzin · światło (lx), wschód i zachód słońca · jakość powietrza: CAQI z poziomem, PM2,5 i PM10 według indeksu GIOŚ |
-| 🏠 **Dom** | Stan kotła i temperatura zasilania · ile pokoi grzeje · otwarte okna i drzwi · tryb domu (noc / w domu / pusty dom) · ciepła woda · wentylacja i osuszanie z taryfą prądu |
-| 🌡️ **Pokoje** | Temperatura i cel, różnica do celu · wykres z 24 h · oś dnia (w domu / noc / wieczór) z kreską „teraz” · wentylatory i osuszacze (pracuje / czuwa, ostatnia praca) · wilgotność, zawór, bateria głowicy, okna |
-| ⚙️ **Ustawienia pokoju** | Po kliknięciu: dlaczego taki cel · temperatury profili −/+ · plan dnia i automatyka · dane głowicy · wilgotność wobec celu osuszacza, praca urządzeń w 24 h, energia osuszacza, przycisk wentylatora |
+| 🏠 **Dom** | Domownicy (zdjęcie, gdzie są i od kiedy, odległość, bateria telefonu, kroki) · bramy i garaże z przyciskiem i czasem otwarcia · skrzynka pocztowa · odpady z kolorami pojemników · prognoza pogody ECMWF na 14 dni (Open-Meteo, bez klucza) |
+| 🌡️ **Klimat** | Na zewnątrz (temperatura, ciśnienie z trendem, słońce i światło, CAQI, PM2,5/PM10 wg GIOŚ) · pasek domu · pokoje: temperatura i cel, wykres 24 h, oś dnia, wentylatory i osuszacze · po kliknięciu ustawienia pokoju (profile −/+, automatyka, osuszacz, wentylator) |
+| ⚡ **Energia** | Moc całkowita z wykresem 24 h · fazy L1–L3 z kontrolą napięcia · zużycie dziś i w miesiącu ze źródeł panelu Energia, z podziałem na strefy i kosztem · 30 dni i 12 miesięcy na słupkach · ranking odbiorników (moc teraz, kWh dziś) |
+| 🔥 **Kocioł** | Stan (płomień, zapłon, pompa, ciepła woda), moc palnika, wentylator, ciśnienie, krzywa · zasilanie, powrót, zewnątrz, ciepła woda z wykresem 24 h · termostaty ogrzewania i ciepłej wody (tryby, presety, −/+) · gaz: dziś, miesiąc, 30 dni, 12 miesięcy · suwaki ustawień |
+| 📟 **Liczniki** | Dowolne encje pogrupowane według urządzeń (licznik, sprzedawca, zmiękczacz, zmywarka…) · liczniki narastające z zużyciem dziś i w miesiącu · pomiary z wykresem 24 h · stany drzwi, soli i daty po polsku |
+
+<table><tr>
+<td><img src="assets/dom.png" alt="Dom"/></td>
+<td><img src="assets/energia.png" alt="Energia"/></td>
+</tr><tr>
+<td><img src="assets/kociol.png" alt="Kocioł"/></td>
+<td><img src="assets/liczniki.png" alt="Liczniki"/></td>
+</tr></table>
 
 ### Trzy style kart pokoi
 
@@ -65,14 +73,18 @@ Coś trafiło nie tam? **Pomiń encje** w opcjach. Chcesz inne pokoje albo inną
 
 ## Opcje
 
-| Sekcja | Pola |
-|---|---|
-| **Wygląd** | styl kart (kafelki / lista / pokrętła), nazwa i ikona w menu, tylko dla administratorów |
-| **Na zewnątrz** | temperatura, wilgotność, ciśnienie, natężenie światła, PM2,5, PM10, indeks jakości powietrza i jego poziom |
-| **Dom** | kocioł: stan albo płomień + zapotrzebowanie na CWU + moc palnika (np. z ebusd), zasilanie, powrót, ciśnienie wody · ciepła woda: temperatura i cel · obecność domowników · strefa taryfy |
-| **Pokoje** | obszary i ich kolejność · prefiks pomocników ogrzewania · wentylatory · pominięte encje |
+Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 
-Każde pole jest opcjonalne — brak czujnika to po prostu brak kafelka.
+| Sekcja | Pola | Bez ustawień |
+|---|---|---|
+| **Wygląd** | styl kart, zakładki, nazwa i ikona w menu, tylko dla administratorów | wszystkie zakładki, kafelki |
+| **Na zewnątrz** | temperatura, wilgotność, ciśnienie, światło, PM2,5, PM10, indeks powietrza i jego poziom | podpowiedź przy dodaniu integracji |
+| **Pasek domu** | obecność domowników, strefa taryfy | — |
+| **Zakładka Dom** | osoby, bramy, skrzynka pocztowa (+ bateria), odpady, pogoda (encja) | osoby z telefonem, rolety klasy brama/garaż/drzwi, czujniki Waste Collection Schedule, Open-Meteo |
+| **Zakładka Energia** | moc całkowita, moc i napięcie faz, odbiorniki | zużycie, koszty i odbiorniki z panelu Energia |
+| **Kocioł** | termostaty ogrzewania i CWU, stan albo płomień + zapotrzebowanie na CWU, zapłon, pompa, moc, wentylator, zasilanie (+ cel), powrót, ciśnienie, krzywa, zewnątrz (+ średnia), ciepła woda (+ cel), gaz, suwaki ustawień | gaz z panelu Energia |
+| **Zakładka Liczniki** | encje liczników (grupowane według urządzeń) | woda i gaz z panelu Energia |
+| **Pokoje** | obszary i ich kolejność, prefiks pomocników ogrzewania, wentylatory, pominięte encje | każdy obszar z termostatem |
 
 ### Profile ogrzewania (opcjonalnie)
 

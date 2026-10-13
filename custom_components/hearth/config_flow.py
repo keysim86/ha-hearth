@@ -11,82 +11,69 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
 
-from .const import (
-    CONF_ADMIN_ONLY,
-    CONF_AREAS,
-    CONF_BOILER_DHW_DEMAND,
-    CONF_BOILER_FLAME,
-    CONF_BOILER_FLOW,
-    CONF_BOILER_MODULATION,
-    CONF_BOILER_PRESSURE,
-    CONF_BOILER_RETURN,
-    CONF_BOILER_STATE,
-    CONF_DHW_TARGET,
-    CONF_DHW_TEMP,
-    CONF_EXCLUDE,
-    CONF_FANS,
-    CONF_HELPER_PREFIX,
-    CONF_ICON,
-    CONF_OUT_AQI,
-    CONF_OUT_AQI_LEVEL,
-    CONF_OUT_HUMIDITY,
-    CONF_OUT_ILLUMINANCE,
-    CONF_OUT_PM10,
-    CONF_OUT_PM25,
-    CONF_OUT_PRESSURE,
-    CONF_OUT_TEMP,
-    CONF_PRESENCE,
-    CONF_STYLE,
-    CONF_TARIFF,
-    CONF_TITLE,
-    DEFAULTS,
-    DOMAIN,
-    SECTIONS,
-    STYLES,
-)
+from . import const as c
+from .const import DEFAULTS, DOMAIN, SECTIONS, STYLES, TABS
 from .discovery import guess_outdoor
 
 
 # Bez filtra klasy urządzenia: czujniki z MQTT (np. ebusd) czy szablonów często jej nie mają,
 # a filtr odrzuciłby poprawny wybór. Klasy używa tylko podpowiedź przy pierwszej konfiguracji.
-_SENSOR = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
-_BINARY = selector.EntitySelector(selector.EntitySelectorConfig(domain="binary_sensor"))
-_ANY_STATE = selector.EntitySelector(selector.EntitySelectorConfig())
+def _entity(domain: str | list[str] | None = None, many: bool = False) -> selector.EntitySelector:
+    cfg = selector.EntitySelectorConfig(multiple=many, reorder=many)
+    if domain:
+        cfg["domain"] = domain
+    return selector.EntitySelector(cfg)
+
+
+_SENSOR = _entity("sensor")
+_BINARY = _entity("binary_sensor")
+_ANY = _entity()
 
 # Pole -> selektor. Kolejność w sekcjach bierze się z SECTIONS.
 _FIELDS: dict[str, Any] = {
-    CONF_STYLE: selector.SelectSelector(
+    c.CONF_STYLE: selector.SelectSelector(
         selector.SelectSelectorConfig(options=STYLES, translation_key="style", mode=selector.SelectSelectorMode.LIST)
     ),
-    CONF_TITLE: selector.TextSelector(),
-    CONF_ICON: selector.IconSelector(),
-    CONF_ADMIN_ONLY: selector.BooleanSelector(),
-    CONF_OUT_TEMP: _SENSOR,
-    CONF_OUT_HUMIDITY: _SENSOR,
-    CONF_OUT_PRESSURE: _SENSOR,
-    CONF_OUT_ILLUMINANCE: _SENSOR,
-    CONF_OUT_PM25: _SENSOR,
-    CONF_OUT_PM10: _SENSOR,
-    CONF_OUT_AQI: _SENSOR,
-    CONF_OUT_AQI_LEVEL: _SENSOR,
-    CONF_BOILER_STATE: _ANY_STATE,
-    CONF_BOILER_FLAME: _BINARY,
-    CONF_BOILER_DHW_DEMAND: _BINARY,
-    CONF_BOILER_MODULATION: _SENSOR,
-    CONF_BOILER_FLOW: _SENSOR,
-    CONF_BOILER_RETURN: _SENSOR,
-    CONF_BOILER_PRESSURE: _SENSOR,
-    CONF_DHW_TEMP: _SENSOR,
-    CONF_DHW_TARGET: _SENSOR,
-    CONF_PRESENCE: _ANY_STATE,
-    CONF_TARIFF: _SENSOR,
-    CONF_AREAS: selector.AreaSelector(selector.AreaSelectorConfig(multiple=True)),
-    CONF_HELPER_PREFIX: selector.TextSelector(),
-    CONF_FANS: selector.EntitySelector(selector.EntitySelectorConfig(domain=["fan", "switch"], multiple=True)),
-    CONF_EXCLUDE: selector.EntitySelector(selector.EntitySelectorConfig(multiple=True)),
+    c.CONF_TABS: selector.SelectSelector(
+        selector.SelectSelectorConfig(options=TABS, translation_key="tabs", multiple=True, mode=selector.SelectSelectorMode.LIST)
+    ),
+    c.CONF_TITLE: selector.TextSelector(),
+    c.CONF_ICON: selector.IconSelector(),
+    c.CONF_ADMIN_ONLY: selector.BooleanSelector(),
+    **{k: _SENSOR for k in (c.CONF_OUT_TEMP, c.CONF_OUT_HUMIDITY, c.CONF_OUT_PRESSURE, c.CONF_OUT_ILLUMINANCE,
+                            c.CONF_OUT_PM25, c.CONF_OUT_PM10, c.CONF_OUT_AQI, c.CONF_OUT_AQI_LEVEL)},
+    c.CONF_PRESENCE: _ANY,
+    c.CONF_TARIFF: _SENSOR,
+    c.CONF_PERSONS: _entity("person", many=True),
+    c.CONF_GATES: _entity("cover", many=True),
+    c.CONF_MAILBOX: _BINARY,
+    c.CONF_MAILBOX_BATTERY: _SENSOR,
+    c.CONF_WASTE: _entity("sensor", many=True),
+    c.CONF_WEATHER: _entity("weather"),
+    c.CONF_POWER_TOTAL: _SENSOR,
+    c.CONF_PHASE_POWER: _entity("sensor", many=True),
+    c.CONF_PHASE_VOLTAGE: _entity("sensor", many=True),
+    c.CONF_CONSUMERS: _entity("sensor", many=True),
+    c.CONF_CLIMATE_HEATING: _entity("climate"),
+    c.CONF_CLIMATE_DHW: _entity(["climate", "water_heater"]),
+    c.CONF_BOILER_STATE: _ANY,
+    c.CONF_BOILER_FLAME: _BINARY,
+    c.CONF_BOILER_DHW_DEMAND: _BINARY,
+    c.CONF_BOILER_IGNITION: _BINARY,
+    c.CONF_BOILER_PUMP: _BINARY,
+    **{k: _SENSOR for k in (c.CONF_BOILER_MODULATION, c.CONF_BOILER_FAN, c.CONF_BOILER_FLOW, c.CONF_BOILER_FLOW_TARGET,
+                            c.CONF_BOILER_RETURN, c.CONF_BOILER_PRESSURE, c.CONF_BOILER_CURVE, c.CONF_BOILER_OUTDOOR,
+                            c.CONF_BOILER_OUTDOOR_AVG, c.CONF_DHW_TEMP, c.CONF_DHW_TARGET)},
+    c.CONF_GAS: _entity("sensor", many=True),
+    c.CONF_BOILER_SETTINGS: _entity(["number", "input_number"], many=True),
+    c.CONF_METERS: _entity(many=True),
+    c.CONF_AREAS: selector.AreaSelector(selector.AreaSelectorConfig(multiple=True, reorder=True)),
+    c.CONF_HELPER_PREFIX: selector.TextSelector(),
+    c.CONF_FANS: _entity(["fan", "switch"], many=True),
+    c.CONF_EXCLUDE: _entity(many=True),
 }
 # Pola z wartością domyślną są wymagane (zawsze coś wybrane); reszta może zostać pusta.
-_REQUIRED = {CONF_STYLE, CONF_TITLE, CONF_ICON, CONF_ADMIN_ONLY}
+_REQUIRED = {c.CONF_STYLE, c.CONF_TABS, c.CONF_TITLE, c.CONF_ICON, c.CONF_ADMIN_ONLY}
 
 
 def options_schema(current: dict[str, Any]) -> vol.Schema:
@@ -115,8 +102,8 @@ def flatten(user_input: dict[str, Any]) -> dict[str, Any]:
                 out[key] = values[key]
             else:
                 out[key] = [] if isinstance(DEFAULTS.get(key), list) else DEFAULTS.get(key) if key in _REQUIRED else None
-    if out.get(CONF_HELPER_PREFIX) is None:
-        out[CONF_HELPER_PREFIX] = ""
+    if out.get(c.CONF_HELPER_PREFIX) is None:
+        out[c.CONF_HELPER_PREFIX] = ""
     return out
 
 

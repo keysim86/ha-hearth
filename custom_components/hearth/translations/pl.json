@@ -14,19 +14,21 @@
     "step": {
       "init": {
         "title": "Ustawienia panelu Hearth",
-        "description": "Pokoje biorą się z obszarów HA: każdy obszar z termostatem to pokój w zakładce Klimat. Tu ustawiasz wygląd i to, czego obszary nie mówią.",
+        "description": "Puste pola i listy = panel wykrywa sam (pokoje z obszarów, osoby, bramy, odpady, odbiorniki i gaz z panelu Energia). Wpisz tylko wyjątki.",
         "sections": {
           "appearance": {
             "name": "Wygląd",
-            "description": "Styl kart to ustawienie domyślne; każde urządzenie może wybrać własny w panelu (koło zębate).",
+            "description": "Zakładki, styl kart pokoi i pozycja w menu. Każde urządzenie może wybrać własny styl kart w panelu (koło zębate).",
             "data": {
               "style": "Styl kart pokoi",
+              "tabs": "Zakładki",
               "sidebar_title": "Nazwa w menu",
               "sidebar_icon": "Ikona w menu",
               "require_admin": "Tylko dla administratorów"
             },
             "data_description": {
               "style": "Kafelki, lista albo pokrętła.",
+              "tabs": "Które zakładki pokazać (kolejność stała).",
               "sidebar_title": "Tekst pozycji w menu bocznym.",
               "sidebar_icon": "Ikona pozycji w menu bocznym.",
               "require_admin": "Ukrywa panel przed zwykłymi użytkownikami."
@@ -34,7 +36,7 @@
           },
           "outdoor": {
             "name": "Na zewnątrz",
-            "description": "Czujniki za oknem. Puste pole = kafelek bez tej wartości.",
+            "description": "Czujniki za oknem (zakładka Klimat). Puste pole = kafelek bez tej wartości.",
             "data": {
               "outdoor_temperature": "Temperatura",
               "outdoor_humidity": "Wilgotność",
@@ -52,33 +54,98 @@
             }
           },
           "house": {
-            "name": "Dom",
-            "description": "Pasek stanu domu nad pokojami.",
+            "name": "Pasek domu",
+            "description": "Pasek stanu domu nad pokojami w zakładce Klimat (kocioł bierze z sekcji Kocioł).",
             "data": {
-              "boiler_state": "Kocioł — stan (tekst)",
-              "boiler_flame": "Kocioł — płomień",
-              "boiler_dhw_demand": "Kocioł — zapotrzebowanie na ciepłą wodę",
-              "boiler_modulation": "Kocioł — modulacja (%)",
-              "boiler_flow_temperature": "Kocioł — temperatura zasilania",
-              "boiler_return_temperature": "Kocioł — temperatura powrotu",
-              "boiler_pressure": "Kocioł — ciśnienie wody",
-              "dhw_temperature": "Ciepła woda — temperatura",
-              "dhw_target": "Ciepła woda — temperatura docelowa",
               "presence": "Ktoś w domu",
               "tariff": "Strefa taryfy prądu"
             },
             "data_description": {
-              "boiler_state": "Encja z gotowym stanem, np. HEATING / STANDBY z integracji producenta. Przy ebusd zostaw puste i wskaż płomień.",
-              "boiler_flame": "binary_sensor on/off (np. ebusd bai/Flame). Panel wylicza z niego stan: Grzeje / Czuwa.",
-              "boiler_dhw_demand": "binary_sensor (np. ebusd bai/HwcDemand) — „Grzeje wodę” zamiast „Grzeje”.",
-              "boiler_modulation": "Moc palnika w %, pokazywana przy „Grzeje”.",
               "presence": "Encja on/off, np. grupa domowników.",
-              "tariff": "Pokazywana przy wentylacji i osuszaczach."
+              "tariff": "Pokazywana przy wentylacji, osuszaczach i w zakładce Energia."
+            }
+          },
+          "home": {
+            "name": "Zakładka Dom",
+            "description": "Osoby, bramy, skrzynka pocztowa, odpady i pogoda.",
+            "data": {
+              "persons": "Osoby",
+              "gates": "Bramy i garaże",
+              "mailbox": "Skrzynka pocztowa — poczta",
+              "mailbox_battery": "Skrzynka pocztowa — bateria",
+              "waste": "Odpady",
+              "weather": "Pogoda (encja)"
+            },
+            "data_description": {
+              "persons": "Puste = wszystkie osoby z telefonem. Bateria i kroki z telefonu osoby.",
+              "gates": "Puste = rolety klasy brama, garaż i drzwi.",
+              "mailbox": "binary_sensor: on = jest poczta.",
+              "waste": "Puste = czujniki integracji Waste Collection Schedule.",
+              "weather": "Puste = prognoza Open-Meteo (ECMWF) dla lokalizacji domu."
+            }
+          },
+          "energy": {
+            "name": "Zakładka Energia",
+            "description": "Zużycie i koszty bierze z panelu Energia w HA; tu tylko pomiary chwilowe.",
+            "data": {
+              "power_total": "Moc całkowita",
+              "phase_power": "Moc na fazach",
+              "phase_voltage": "Napięcie na fazach",
+              "consumers": "Odbiorniki (moc)"
+            },
+            "data_description": {
+              "power_total": "Czujnik mocy w W albo kW (np. z licznika/analizatora).",
+              "phase_power": "Kolejno L1, L2, L3.",
+              "phase_voltage": "Kolejno L1, L2, L3.",
+              "consumers": "Puste = urządzenia z panelu Energia (moc z tego samego urządzenia)."
+            }
+          },
+          "boiler": {
+            "name": "Kocioł",
+            "description": "Pasek domu i zakładka Kocioł. Przy ebusd: płomień + zapotrzebowanie na ciepłą wodę zamiast encji stanu.",
+            "data": {
+              "climate_heating": "Ogrzewanie (termostat)",
+              "climate_dhw": "Ciepła woda (termostat)",
+              "boiler_state": "Stan (tekst)",
+              "boiler_flame": "Płomień",
+              "boiler_dhw_demand": "Zapotrzebowanie na ciepłą wodę",
+              "boiler_ignition": "Zapłon",
+              "boiler_pump": "Pompa",
+              "boiler_modulation": "Moc palnika (%)",
+              "boiler_fan_speed": "Prędkość wentylatora",
+              "boiler_flow_temperature": "Temperatura zasilania",
+              "boiler_flow_target": "Docelowa temperatura zasilania",
+              "boiler_return_temperature": "Temperatura powrotu",
+              "boiler_pressure": "Ciśnienie wody",
+              "boiler_heat_curve": "Krzywa grzewcza",
+              "boiler_outdoor": "Temperatura zewnętrzna (kocioł)",
+              "boiler_outdoor_avg": "Średnia temperatura zewnętrzna",
+              "dhw_temperature": "Ciepła woda — temperatura",
+              "dhw_target": "Ciepła woda — cel",
+              "gas": "Zużycie gazu",
+              "boiler_settings": "Ustawienia (suwaki)"
+            },
+            "data_description": {
+              "boiler_state": "Gotowy stan, np. HEATING / STANDBY. Przy ebusd zostaw puste i wskaż płomień.",
+              "boiler_flame": "binary_sensor on/off (np. ebusd bai/Flame).",
+              "boiler_dhw_demand": "binary_sensor (np. ebusd bai/HwcDemand).",
+              "gas": "Puste = gaz z panelu Energia. Wykresy dzienne i miesięczne ze statystyk.",
+              "boiler_settings": "Encje number / input_number z −/+ w zakładce Kocioł."
+            }
+          },
+          "meters": {
+            "name": "Zakładka Liczniki",
+            "description": "Dowolne encje — panel grupuje je według urządzeń (np. licznik, sprzedawca, zmiękczacz, zmywarka).",
+            "data": {
+              "meters": "Encje liczników"
+            },
+            "data_description": {
+              "meters": "Puste = woda i gaz z panelu Energia."
             }
           },
           "rooms": {
             "name": "Pokoje",
-            "description": "Dodatkowe reguły dla pokoi z obszarów.",
+            "description": "Dodatkowe reguły dla pokoi z obszarów (zakładka Klimat).",
             "data": {
               "areas": "Pokoje (obszary)",
               "helper_prefix": "Prefiks pomocników ogrzewania",
@@ -102,6 +169,15 @@
         "tiles": "Kafelki — łuk, wykres 24 h, oś dnia (domyślny)",
         "list": "Lista — wiersz na pokój, najgęstszy",
         "dials": "Pokrętła — kolorowe karty jak termostat"
+      }
+    },
+    "tabs": {
+      "options": {
+        "home": "Dom",
+        "climate": "Klimat",
+        "energy": "Energia",
+        "boiler": "Kocioł",
+        "meters": "Liczniki"
       }
     }
   }

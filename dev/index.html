@@ -15,7 +15,7 @@
 <script type="module">
   import "../custom_components/hearth/www/hearth-panel.js";
   const q = new URLSearchParams(location.search);
-  const snap = await (await fetch("./snapshot.json")).json();
+  const snap = await (await fetch(q.get("snap") ? `./snapshot-${q.get("snap")}.json` : "./snapshot.json")).json();
   let options = {};
   try { options = await (await fetch("./options.json")).json(); } catch { /* bez opcji: same pokoje */ }
   const shift = Date.now() - Date.parse(snap.now);
@@ -23,12 +23,29 @@
   const states = {};
   for (const [id, s] of Object.entries(snap.states)) states[id] = { ...s, last_changed: moved(s.last_changed), last_updated: moved(s.last_updated) };
   const dark = q.get("dark") === "1";
+  // Dni migawki przenosimy o pełne doby, żeby dzisiejszy dzień migawki był „dziś”.
+  const dayShift = Math.round(shift / 864e5) * 864e5;
+  const alignStart = (start, period) => {
+    const t = (typeof start === "number" ? start : Date.parse(start)) + (period === "month" ? 0 : dayShift);
+    const d = new Date(t);
+    if (period === "month") { d.setDate(1); }
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
   document.body.classList.toggle("dark", dark);
   window.__calls = [];
   const hass = {
     states, entities: snap.entities, devices: snap.devices, areas: snap.areas,
-    themes: { darkMode: dark }, config: { time_zone: "Europe/Warsaw" }, user: { is_admin: true },
+    themes: { darkMode: dark }, config: { time_zone: "Europe/Warsaw", ...(snap.config ?? {}) }, user: { is_admin: true },
     async callWS(msg) {
+      if (msg.type === "energy/get_prefs") return snap.energy_prefs ?? { energy_sources: [], device_consumption: [] };
+      if (msg.type === "recorder/statistics_during_period") {
+        // Statystyki z migawki przesunięte na „teraz”; okresy dzienne i miesięczne wyrównane do północy w strefie przeglądarki.
+        const rows = snap.statistics?.[msg.period] ?? {};
+        const out = {};
+        for (const id of msg.statistic_ids) if (rows[id]) out[id] = rows[id].map(([start, change]) => ({ start: alignStart(start, msg.period), change }));
+        return out;
+      }
       if (msg.type !== "history/history_during_period") throw new Error("atrapa: " + msg.type);
       const out = {};
       for (const id of msg.entity_ids) if (snap.history[id]) out[id] = snap.history[id].map(([t, s]) => ({ s, lu: t + shift / 1000 }));
@@ -39,6 +56,9 @@
   const el = document.createElement("hearth-panel");
   el.hass = hass;
   el.narrow = innerWidth < 870;
+  el.route = { prefix: "/hearth", path: "/" + (q.get("tab") || "klimat") };
+  // Klik w zakładkę: atrapa nawigacji HA (zmienia trasę panelu).
+  window.addEventListener("location-changed", () => { el.route = { prefix: "/hearth", path: location.pathname.replace(/^\/hearth/, "") || "/" }; });
   el.panel = { config: { options: { ...options, style: q.get("style") || options.style || "tiles" }, version: "dev" } };
   document.body.append(el);
   window.__panel = el;

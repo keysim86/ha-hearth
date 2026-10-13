@@ -195,3 +195,90 @@ export const dryIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fi
 export const gearIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Zm8.4 4.9-.1-1.5 2-1.6-2-3.4-2.4.8a8 8 0 0 0-2.6-1.5L14.8 4h-3.9l-.5 2.4a8 8 0 0 0-2.6 1.5l-2.4-.8-2 3.4 2 1.6-.1 1.5.1 1.5-2 1.6 2 3.4 2.4-.8a8 8 0 0 0 2.6 1.5l.5 2.4h3.9l.5-2.4a8 8 0 0 0 2.6-1.5l2.4.8 2-3.4-2-1.6.1-1.5Z"></path></svg>`;
 
 export const menuIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>`;
+
+// ---- wykresy zakładek Energia / Kocioł / Liczniki ----
+
+export interface Bar {
+  label: string;
+  values: number[];
+  now?: boolean;
+}
+
+/** Słupki (warstwowe, gdy w `values` jest kilka liczb), oś X z co n-tym podpisem, maksimum w rogu. */
+export function bars(data: Bar[], colors: string[], o: { unit?: string; every?: number; height?: number; digits?: number } = {}): TemplateResult {
+  const W = 600, H = o.height ?? 130, top = 14, bottom = 18;
+  const max = Math.max(0.0001, ...data.map((d) => d.values.reduce((a, b) => a + Math.max(0, b), 0)));
+  const slot = W / Math.max(1, data.length), bw = Math.max(2, slot * 0.68);
+  const every = o.every ?? Math.ceil(data.length / 12);
+  const fmt = (v: number) => v.toLocaleString("pl-PL", { maximumFractionDigits: o.digits ?? 1 });
+  return html`<svg class="bars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Wykres słupkowy">
+    <line x1="0" x2=${W} y1=${H - bottom} y2=${H - bottom} stroke="var(--line)" vector-effect="non-scaling-stroke"></line>
+    ${data.map((d, i) => {
+      let y = H - bottom;
+      const x = i * slot + (slot - bw) / 2;
+      return svg`${d.values.map((v, k) => {
+        const h = (Math.max(0, v) / max) * (H - top - bottom);
+        y -= h;
+        return svg`<rect x=${x} y=${y} width=${bw} height=${Math.max(0, h)} rx="1.5" fill=${colors[k % colors.length]} opacity=${d.now ? 1 : 0.82}></rect>`;
+      })}${i % every === 0 || d.now ? svg`<text x=${x + bw / 2} y=${H - 4} font-size="10" text-anchor="middle" fill=${d.now ? "var(--fg)" : "var(--faint)"}>${d.label}</text>` : nothing}`;
+    })}
+    <text x="2" y="10" font-size="10" fill="var(--faint)">max ${fmt(max)}${o.unit ? ` ${o.unit}` : ""}</text>
+  </svg>`;
+}
+
+export interface Series {
+  name: string;
+  color: string;
+  points: Point[];
+  dashed?: boolean;
+}
+
+/** Kilka linii z ostatnich 24 h na wspólnej skali (np. zasilanie, powrót, zewnątrz). */
+export function multiLine(series: Series[], o: { unit?: string; height?: number } = {}): TemplateResult | typeof nothing {
+  const t1 = Date.now(), t0 = t1 - DAY;
+  const lines = series.map((s) => ({ ...s, pts: numeric(s.points, t0, t1) })).filter((s) => s.pts.length > 2);
+  if (!lines.length) return nothing;
+  const vals = lines.flatMap((s) => s.pts.map((p) => p[1]));
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi - lo < 2) { lo -= 1; hi += 1; }
+  const W = 600, H = o.height ?? 150, pad = 6;
+  const X = (t: number) => ((t - t0) / DAY) * W;
+  const Y = (v: number) => H - pad - ((v - lo) / (hi - lo)) * (H - 2 * pad);
+  const path = (pts: Array<[number, number]>) => pts.map(([t, v], i) => `${i ? "L" : "M"}${X(t).toFixed(1)} ${Y(v).toFixed(1)}`).join("");
+  return html`<div class="mline">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Wykres z ostatnich 24 godzin">
+      ${[0.25, 0.5, 0.75].map((f) => svg`<line x1=${W * f} x2=${W * f} y1="0" y2=${H} stroke="var(--line)" stroke-dasharray="2 5" vector-effect="non-scaling-stroke"></line>`)}
+      ${lines.map((s) => svg`<path d=${path(s.pts)} fill="none" stroke=${s.color} stroke-width="2" stroke-dasharray=${s.dashed ? "5 4" : "none"} vector-effect="non-scaling-stroke"></path>`)}
+    </svg>
+    <div class="mlabels"><span>${hi.toLocaleString("pl-PL", { maximumFractionDigits: 1 })}${o.unit ?? ""}</span><span>${lo.toLocaleString("pl-PL", { maximumFractionDigits: 1 })}${o.unit ?? ""}</span></div>
+    <div class="mlegend">${lines.map((s) => html`<span><i style="background:${s.color}"></i>${s.name}</span>`)}<span class="tt">−24 h … teraz</span></div>
+  </div>`;
+}
+
+/** Ikony pogody (proste, w kolorach motywu). */
+export function weatherIcon(kind: string): TemplateResult {
+  const sun = svg`<circle cx="12" cy="12" r="4.2" fill="var(--warn)"></circle>${[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+    const r = (a * Math.PI) / 180;
+    return svg`<line x1=${12 + Math.cos(r) * 6.5} y1=${12 + Math.sin(r) * 6.5} x2=${12 + Math.cos(r) * 9} y2=${12 + Math.sin(r) * 9} stroke="var(--warn)" stroke-width="1.8" stroke-linecap="round"></line>`;
+  })}`;
+  const cloud = (dx = 0, dy = 0, fill = "var(--faint)") =>
+    svg`<path transform="translate(${dx} ${dy})" d="M7 18h10a4 4 0 0 0 .4-8A5.5 5.5 0 0 0 6.8 11 3.5 3.5 0 0 0 7 18Z" fill=${fill}></path>`;
+  const drops = svg`${[8, 12, 16].map((x) => svg`<line x1=${x} y1="19.5" x2=${x - 1.2} y2="22.5" stroke="var(--frost)" stroke-width="1.8" stroke-linecap="round"></line>`)}`;
+  const flakes = svg`${[8, 12, 16].map((x) => svg`<circle cx=${x} cy="21" r="1.3" fill="var(--frost)"></circle>`)}`;
+  const parts: Record<string, unknown> = {
+    sun,
+    partly: svg`<g transform="translate(-3 -3) scale(.8)">${sun}</g>${cloud(2, 1)}`,
+    cloud: cloud(0, 0),
+    fog: svg`${cloud(0, -2)}${[18, 21].map((y) => svg`<line x1="5" x2="19" y1=${y} y2=${y} stroke="var(--faint)" stroke-width="1.6" stroke-linecap="round"></line>`)}`,
+    rain: svg`${cloud(0, -2)}${drops}`,
+    snow: svg`${cloud(0, -2)}${flakes}`,
+    storm: svg`${cloud(0, -2, "var(--muted)")}<path d="M12 15l-2.5 4.5h3L11 23.5l4.5-6h-3l1.5-2.5Z" fill="var(--warn)"></path>`,
+  };
+  return html`<svg class="wico" viewBox="0 0 24 24" aria-hidden="true">${parts[kind] ?? parts.cloud}</svg>`;
+}
+
+export const gateIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M3 21V8l9-5 9 5v13M7 21v-9h10v9M7 15h10M7 18h10"></path></svg>`;
+export const doorIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M6 21V4h12v17M3 21h18M14.5 12.5h.01"></path></svg>`;
+export const mailIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 7h16v11H4zM4 7l8 6 8-6"></path></svg>`;
+export const boltIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"></path></svg>`;
+export const steps = html`<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M5 1.5c1.3 0 2 1.5 2 3.2 0 1.5-.6 2.6-1.8 2.6S3.4 6.2 3.4 4.7C3.4 3 4 1.5 5 1.5Zm-1.4 7h3l-.3 2.3c-.2 1-.9 1.6-1.6 1.6-.8 0-1.4-.7-1.3-1.6Zm7.4-4c1 0 1.6 1.5 1.6 3.2 0 1.5-.8 2.6-1.8 2.6S9 9.2 9 7.7C9 6 9.9 4.5 11 4.5Zm-1.4 7h3l-.2 2.3c-.1 1-.8 1.6-1.6 1.6s-1.3-.7-1.2-1.6Z"></path></svg>`;

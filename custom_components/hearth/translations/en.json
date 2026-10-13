@@ -14,19 +14,21 @@
     "step": {
       "init": {
         "title": "Hearth panel settings",
-        "description": "Rooms come from HA areas: every area with a thermostat is a room in the Climate tab. Here you set the look and what areas cannot tell.",
+        "description": "Empty fields and lists = the panel finds things itself (rooms from areas, persons, gates, waste, consumers and gas from the Energy dashboard). Enter exceptions only.",
         "sections": {
           "appearance": {
             "name": "Appearance",
-            "description": "Card style is the default; each device can pick its own in the panel (gear icon).",
+            "description": "Tabs, room card style and the sidebar entry. Each device can pick its own card style in the panel (gear icon).",
             "data": {
               "style": "Room card style",
+              "tabs": "Tabs",
               "sidebar_title": "Sidebar title",
               "sidebar_icon": "Sidebar icon",
               "require_admin": "Admins only"
             },
             "data_description": {
               "style": "Tiles, list or dials.",
+              "tabs": "Which tabs to show (fixed order).",
               "sidebar_title": "Sidebar entry text.",
               "sidebar_icon": "Sidebar entry icon.",
               "require_admin": "Hides the panel from regular users."
@@ -34,7 +36,7 @@
           },
           "outdoor": {
             "name": "Outdoor",
-            "description": "Sensors outside. Empty field = tile without that value.",
+            "description": "Sensors outside (Climate tab). Empty field = tile without that value.",
             "data": {
               "outdoor_temperature": "Temperature",
               "outdoor_humidity": "Humidity",
@@ -52,33 +54,98 @@
             }
           },
           "house": {
-            "name": "House",
-            "description": "House status bar above the rooms.",
+            "name": "House bar",
+            "description": "House status bar above the rooms in the Climate tab (the boiler comes from the Boiler section).",
             "data": {
-              "boiler_state": "Boiler — state (text)",
-              "boiler_flame": "Boiler — flame",
-              "boiler_dhw_demand": "Boiler — hot water demand",
-              "boiler_modulation": "Boiler — modulation (%)",
-              "boiler_flow_temperature": "Boiler — flow temperature",
-              "boiler_return_temperature": "Boiler — return temperature",
-              "boiler_pressure": "Boiler — water pressure",
-              "dhw_temperature": "Hot water — temperature",
-              "dhw_target": "Hot water — target temperature",
               "presence": "Someone home",
               "tariff": "Electricity tariff zone"
             },
             "data_description": {
-              "boiler_state": "Entity with a ready state, e.g. HEATING / STANDBY from the vendor integration. With ebusd leave empty and pick the flame.",
-              "boiler_flame": "On/off binary_sensor (e.g. ebusd bai/Flame). The panel derives the state from it: Heating / Idle.",
-              "boiler_dhw_demand": "binary_sensor (e.g. ebusd bai/HwcDemand) — “Heating water” instead of “Heating”.",
-              "boiler_modulation": "Burner power in %, shown next to “Heating”.",
               "presence": "On/off entity, e.g. a household group.",
-              "tariff": "Shown next to ventilation and dehumidifiers."
+              "tariff": "Shown next to ventilation, dehumidifiers and in the Energy tab."
+            }
+          },
+          "home": {
+            "name": "Home tab",
+            "description": "Persons, gates, mailbox, waste and weather.",
+            "data": {
+              "persons": "Persons",
+              "gates": "Gates and garages",
+              "mailbox": "Mailbox — mail",
+              "mailbox_battery": "Mailbox — battery",
+              "waste": "Waste",
+              "weather": "Weather (entity)"
+            },
+            "data_description": {
+              "persons": "Empty = every person with a phone. Battery and steps from the person's phone.",
+              "gates": "Empty = covers of class gate, garage and door.",
+              "mailbox": "binary_sensor: on = mail inside.",
+              "waste": "Empty = Waste Collection Schedule sensors.",
+              "weather": "Empty = Open-Meteo (ECMWF) forecast for the home location."
+            }
+          },
+          "energy": {
+            "name": "Energy tab",
+            "description": "Consumption and costs come from the HA Energy dashboard; here only live measurements.",
+            "data": {
+              "power_total": "Total power",
+              "phase_power": "Phase power",
+              "phase_voltage": "Phase voltage",
+              "consumers": "Consumers (power)"
+            },
+            "data_description": {
+              "power_total": "Power sensor in W or kW (e.g. from a meter/analyser).",
+              "phase_power": "L1, L2, L3 in order.",
+              "phase_voltage": "L1, L2, L3 in order.",
+              "consumers": "Empty = devices from the Energy dashboard (power from the same device)."
+            }
+          },
+          "boiler": {
+            "name": "Boiler",
+            "description": "House bar and the Boiler tab. With ebusd: flame + hot water demand instead of a state entity.",
+            "data": {
+              "climate_heating": "Heating (thermostat)",
+              "climate_dhw": "Hot water (thermostat)",
+              "boiler_state": "State (text)",
+              "boiler_flame": "Flame",
+              "boiler_dhw_demand": "Hot water demand",
+              "boiler_ignition": "Ignition",
+              "boiler_pump": "Pump",
+              "boiler_modulation": "Burner power (%)",
+              "boiler_fan_speed": "Fan speed",
+              "boiler_flow_temperature": "Flow temperature",
+              "boiler_flow_target": "Target flow temperature",
+              "boiler_return_temperature": "Return temperature",
+              "boiler_pressure": "Water pressure",
+              "boiler_heat_curve": "Heating curve",
+              "boiler_outdoor": "Outdoor temperature (boiler)",
+              "boiler_outdoor_avg": "Average outdoor temperature",
+              "dhw_temperature": "Hot water — temperature",
+              "dhw_target": "Hot water — target",
+              "gas": "Gas consumption",
+              "boiler_settings": "Settings (sliders)"
+            },
+            "data_description": {
+              "boiler_state": "Ready state, e.g. HEATING / STANDBY. With ebusd leave empty and pick the flame.",
+              "boiler_flame": "On/off binary_sensor (e.g. ebusd bai/Flame).",
+              "boiler_dhw_demand": "binary_sensor (e.g. ebusd bai/HwcDemand).",
+              "gas": "Empty = gas from the Energy dashboard. Daily and monthly charts from statistics.",
+              "boiler_settings": "number / input_number entities with −/+ in the Boiler tab."
+            }
+          },
+          "meters": {
+            "name": "Meters tab",
+            "description": "Any entities — the panel groups them by device (e.g. meter, supplier, softener, dishwasher).",
+            "data": {
+              "meters": "Meter entities"
+            },
+            "data_description": {
+              "meters": "Empty = water and gas from the Energy dashboard."
             }
           },
           "rooms": {
             "name": "Rooms",
-            "description": "Extra rules for rooms built from areas.",
+            "description": "Extra rules for rooms built from areas (Climate tab).",
             "data": {
               "areas": "Rooms (areas)",
               "helper_prefix": "Heating helper prefix",
@@ -102,6 +169,15 @@
         "tiles": "Tiles — arc, 24 h chart, day timeline (default)",
         "list": "List — one row per room, densest",
         "dials": "Dials — colourful thermostat-like cards"
+      }
+    },
+    "tabs": {
+      "options": {
+        "home": "Home",
+        "climate": "Climate",
+        "energy": "Energy",
+        "boiler": "Boiler",
+        "meters": "Meters"
       }
     }
   }

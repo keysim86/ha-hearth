@@ -10,7 +10,7 @@ const BOILER: Record<string, string> = {
 };
 
 /** Stan kotła: z encji tekstowej albo (np. ebusd) z płomienia, zapotrzebowania CWU i modulacji. */
-function boilerState(ctx: Ctx): { text: string; burning: boolean; sub: string } | null {
+export function boilerState(ctx: Ctx): { text: string; burning: boolean; sub: string } | null {
   const o = ctx.opts;
   if (o.boiler_flame) {
     const flame = st(ctx, o.boiler_flame);

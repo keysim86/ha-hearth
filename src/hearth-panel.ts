@@ -3,11 +3,12 @@
 import { LitElement, html, nothing, type PropertyValues } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import { clock, num } from "./format";
+import { StatsStore } from "./data/stats";
 import { HistoryStore } from "./history";
 import { climateTarget, discoverRooms, hasProfiles, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
-import type { Hass, Options, PanelInfo, Style } from "./types";
+import type { Hass, Options, PanelInfo, Route, Style, Tab } from "./types";
 import type { Actions, Ctx } from "./views/common";
 import { devices } from "./views/common";
 import { detail } from "./views/detail";
@@ -16,8 +17,20 @@ import { house } from "./views/house";
 import { listHeader, row } from "./views/list";
 import { outdoor } from "./views/outdoor";
 import { tile } from "./views/tiles";
+import { boilerView } from "./views/boiler";
+import { energyView } from "./views/energy";
+import { homeView } from "./views/home";
+import { metersView } from "./views/meters";
 
 const STYLES: Style[] = ["tiles", "list", "dials"];
+const TABS: Tab[] = ["home", "climate", "energy", "boiler", "meters"];
+const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
+  home: ["dom", "Dom"],
+  climate: ["klimat", "Klimat"],
+  energy: ["energia", "Energia"],
+  boiler: ["kociol", "Kocioł"],
+  meters: ["liczniki", "Liczniki"],
+};
 const STYLE_INFO: Record<Style, [string, string]> = {
   tiles: ["Kafelki", "Łuk, wykres 24 h, oś dnia i urządzenia; ustawienia po kliknięciu."],
   list: ["Lista", "Wiersz na pokój, skala 16–28 °C. Najgęstszy, dobry na komputer."],
@@ -54,6 +67,7 @@ export class HearthPanel extends LitElement {
   @property({ attribute: false }) hass?: Hass;
   @property({ type: Boolean, reflect: true }) narrow = false;
   @property({ attribute: false }) panel?: PanelInfo;
+  @property({ attribute: false }) route?: Route;
 
   @state() private open: string | null = null;
   @state() private cols = 1;
@@ -63,6 +77,7 @@ export class HearthPanel extends LitElement {
   @query("dialog") private dialog?: HTMLDialogElement;
 
   private hist = new HistoryStore();
+  private stats = new StatsStore();
   private pending = new Map<string, number>();
   private timers = new Map<string, number>();
   private roomsCache?: { key: unknown[]; rooms: Room[] };
@@ -72,6 +87,18 @@ export class HearthPanel extends LitElement {
 
   private get options(): Options {
     return { style: "tiles", ...(this.panel?.config?.options ?? {}) } as Options;
+  }
+
+  private get tabs(): Tab[] {
+    const chosen = this.options.tabs ?? [];
+    const list = TABS.filter((t) => !chosen.length || chosen.includes(t));
+    return list.length ? list : TABS;
+  }
+
+  private get tab(): Tab {
+    const slug = (this.route?.path ?? "").split("/").filter(Boolean)[0];
+    const found = this.tabs.find((t) => TAB_INFO[t][0] === slug);
+    return found ?? this.tabs[0];
   }
 
   private get cardStyle(): Style {
@@ -131,10 +158,18 @@ export class HearthPanel extends LitElement {
     this.measure();
     if (!this.hass) return;
     const o = this.options;
-    const ids = [
-      ...this.rooms().flatMap((r) => [r.temp, ...r.fans, ...r.dehumidifiers.flatMap((d) => [d.entity, d.power, d.energy])]),
-      o.outdoor_temperature, o.outdoor_pressure, o.outdoor_illuminance, o.outdoor_pm25,
-    ].filter((x): x is string => Boolean(x));
+    const tab = this.tab;
+    const byTab: Record<Tab, Array<string | null | undefined>> = {
+      climate: [
+        ...this.rooms().flatMap((r) => [r.temp, ...r.fans, ...r.dehumidifiers.flatMap((d) => [d.entity, d.power, d.energy])]),
+        o.outdoor_temperature, o.outdoor_pressure, o.outdoor_illuminance, o.outdoor_pm25,
+      ],
+      home: [],
+      energy: [o.power_total, ...(o.phase_power ?? [])],
+      boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
+      meters: (o.meters ?? []).filter((id) => this.hass!.states[id]?.attributes.state_class === "measurement"),
+    };
+    const ids = byTab[tab].filter((x): x is string => Boolean(x));
     this.hist
       .ensure(this.hass, ids)
       .then((fresh) => fresh && this.requestUpdate())
@@ -206,6 +241,27 @@ export class HearthPanel extends LitElement {
       const v = clamp(cur + delta, Math.max(30, num(a.min_humidity) ?? 0), Math.min(90, num(a.max_humidity) ?? 100));
       this.setPending(key, v, () => this.hass!.callService("humidifier", "set_humidity", { entity_id: entity, humidity: v }));
     },
+    call: (domain: string, service: string, data: Record<string, unknown>) => {
+      this.hass!.callService(domain, service, data).catch((err) => this.toast(`Nie udało się: ${(err as Error)?.message ?? err}`));
+    },
+    stepNumber: (entity: string, delta: number) => {
+      const a = this.hass!.states[entity]?.attributes ?? {};
+      const cur = this.pending.get(entity) ?? num(this.hass!.states[entity]?.state);
+      if (cur === null) return;
+      const step = num(a.step) ?? Math.abs(delta);
+      const v = clamp(Number((roundStep(cur + delta, step)).toFixed(6)), num(a.min) ?? -Infinity, num(a.max) ?? Infinity);
+      const domain = entity.split(".")[0];
+      this.setPending(entity, v, () => this.hass!.callService(domain, "set_value", { entity_id: entity, value: v }));
+    },
+    stepTarget: (entity: string, delta: number) => {
+      const key = `${entity}#t`;
+      const a = this.hass!.states[entity]?.attributes ?? {};
+      const cur = this.pending.get(key) ?? num(a.temperature);
+      if (cur === null) return;
+      const v = clamp(roundStep(cur + delta, Math.abs(delta) || 0.5), num(a.min_temp) ?? 5, num(a.max_temp) ?? 80);
+      const domain = entity.split(".")[0];
+      this.setPending(key, v, () => this.hass!.callService(domain, "set_temperature", { entity_id: entity, temperature: v }));
+    },
     toggleEntity: (entity: string) => {
       this.hass!.callService(entity.split(".")[0], "toggle", { entity_id: entity }).catch((err) =>
         this.toast(`Nie udało się przełączyć: ${(err as Error)?.message ?? err}`),
@@ -266,7 +322,37 @@ export class HearthPanel extends LitElement {
       pending: this.pending,
       open: this.open,
       actions: this.actions,
+      stats: this.stats,
+      refresh: () => this.requestUpdate(),
     };
+    const tab = this.tab;
+    const nav = html`<nav class="tabs" aria-label="Zakładki">
+      ${this.tabs.map((t) => html`<a href="${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}" class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"}
+        @click=${(e: MouseEvent) => {
+          if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+          e.preventDefault();
+          this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}`);
+        }}>${TAB_INFO[t][1]}</a>`)}
+    </nav>`;
+    const body = tab === "climate" ? this.climate(ctx) : tab === "home" ? homeView(ctx) : tab === "energy" ? energyView(ctx) : tab === "boiler" ? boilerView(ctx) : metersView(ctx);
+    return html`<div class="wrap s-${this.cardStyle}">
+        <header class="top">
+          <div class="top-l">
+            ${this.narrow
+              ? html`<button class="menu" type="button" aria-label="Menu" @click=${() => this.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }))}>${menuIcon}</button>`
+              : nothing}
+            <h1>${TAB_INFO[tab][1]} <small>${this.options.sidebar_title || "Hearth"}</small></h1>
+          </div>
+          <button class="gear" type="button" @click=${() => this.dialog?.showModal()}>${gearIcon}<span>Ustawienia panelu</span></button>
+        </header>
+        ${this.tabs.length > 1 ? nav : nothing}
+        ${body}
+      </div>
+      ${this.settings()}
+      <div class="toast" role="status" ?hidden=${!this.toastText}>${this.toastText}</div>`;
+  }
+
+  private climate(ctx: Ctx) {
     const rooms = this.rooms();
     const style = this.cardStyle;
     const card = style === "list" ? row : style === "dials" ? dial : tile;
@@ -280,17 +366,7 @@ export class HearthPanel extends LitElement {
     });
     const profiles = rooms.some(hasProfiles);
     const anyDevices = rooms.some((r) => devices(ctx, r).length);
-    return html`<div class="wrap s-${style}">
-        <header class="top">
-          <div class="top-l">
-            ${this.narrow
-              ? html`<button class="menu" type="button" aria-label="Menu" @click=${() => this.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }))}>${menuIcon}</button>`
-              : nothing}
-            <h1>Klimat <small>${this.options.sidebar_title || "Hearth"}</small></h1>
-          </div>
-          <button class="gear" type="button" @click=${() => this.dialog?.showModal()}>${gearIcon}Ustawienia panelu</button>
-        </header>
-        ${outdoor(ctx)} ${house(ctx, rooms)}
+    return html`${outdoor(ctx)} ${house(ctx, rooms)}
         ${profiles || anyDevices
           ? html`<div class="legend" aria-label="Legenda">
               ${profiles
@@ -306,9 +382,7 @@ export class HearthPanel extends LitElement {
           ? html`<main class="grid">${items}</main>`
           : html`<div class="empty">Nie znalazłem pokoi. Pokój to obszar Home Assistant z termostatem (encja climate.*) — przypisz głowice do obszarów w ustawieniach urządzeń.</div>`}
         <p class="foot">${FOOT[style]}</p>
-      </div>
-      ${this.settings()}
-      <div class="toast" role="status" ?hidden=${!this.toastText}>${this.toastText}</div>`;
+    `;
   }
 }
 

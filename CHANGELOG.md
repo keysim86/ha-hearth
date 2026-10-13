@@ -8,6 +8,21 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 ## [Unreleased]
 
 ### Added
+- **Zakładki Dom, Energia, Kocioł i Liczniki** obok Klimatu — przełączane w nagłówku, każda pod własnym adresem
+  (`/hearth/dom`, `/hearth/energia`…); w opcjach wybór, które pokazać
+- **Dom** — domownicy (zdjęcie, gdzie i od kiedy, odległość od domu, bateria telefonu z ładowaniem, kroki dziś), bramy
+  i garaże z przyciskiem Otwórz / Zamknij / Zatrzymaj i czasem otwarcia, skrzynka pocztowa, odpady z kolorami
+  pojemników (najbliższe na górze), prognoza ECMWF na 14 dni z Open-Meteo dla lokalizacji domu
+- **Energia** — moc całkowita z wykresem 24 h, fazy L1–L3 z kontrolą napięcia (207–253 V), zużycie i koszt dziś
+  i w miesiącu ze źródeł panelu Energia z podziałem na strefy taryfy, 30 dni i 12 miesięcy na słupkach, ranking
+  odbiorników (moc teraz i kWh dziś; moc z urządzenia z panelu Energia)
+- **Kocioł** — stan z płomienia, zapłonu, pompy i zapotrzebowania na CWU, moc palnika, wentylator, ciśnienie
+  z oceną, krzywa; zasilanie, powrót, zewnątrz i ciepła woda z wykresem 24 h; termostaty ogrzewania i ciepłej wody
+  (tryby, presety, −/+); gaz dziś, w miesiącu, 30 dni i 12 miesięcy (CO i CWU warstwowo); suwaki ustawień
+- **Liczniki** — dowolne encje pogrupowane według urządzeń; liczniki narastające z zużyciem dziś i w miesiącu ze
+  statystyk, pomiary z wykresem 24 h, stany i daty po polsku
+- **Czytelne nazwy** — bez numerów seryjnych, PPE i identyfikatorów (słowa z 6+ cyframi) oraz prefiksów węzłów
+  ESPHome; nazwa urządzenia nie powtarza się w nazwie encji
 - **Integracja `hearth` z panelem w menu bocznym** — jeden wpis na instalację; panel rejestrowany przez `panel_custom`,
   pliki panelu serwowane z integracji (`/hearth_files`), wersja w adresie wymusza świeży plik po aktualizacji
 - **Pokoje z obszarów HA** — pokój to obszar z termostatem; termometr, wilgotność, okna i drzwi (tylko kontaktrony),
@@ -17,6 +32,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 - **Na zewnątrz** — temperatura i wilgotność z wykresem, ciśnienie z trendem 3 h, światło i słońce, CAQI z poziomem
   oraz PM2,5 / PM10 według indeksu GIOŚ
 - **Pasek domu** — kocioł, ile pokoi grzeje, okna, tryb domu, ciepła woda, wentylacja i osuszanie z taryfą
+- **Sumy ze statystyk bez ujemnych skoków** — zerowanie licznika (dobowego albo kosztu przy zmianie taryfy) nie
+  zaniża zużycia ani kosztu
 - **Kocioł prosto z ebusd** — stan wyliczany z płomienia i zapotrzebowania na ciepłą wodę („Grzeje”, „Grzeje wodę”,
   „Czuwa”) z mocą palnika w %; zasilanie, powrót, ciśnienie, temperatura i cel ciepłej wody; dalej można podać gotową
   encję stanu z integracji producenta
