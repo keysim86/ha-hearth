@@ -36,6 +36,7 @@ CONF_TARIFF = "tariff"
 
 # Pokoje
 CONF_HELPER_PREFIX = "helper_prefix"
+CONF_AREAS = "areas"
 CONF_FANS = "fans"
 CONF_EXCLUDE = "exclude_entities"
 
@@ -44,7 +45,7 @@ SECTIONS: dict[str, list[str]] = {
     "outdoor": [CONF_OUT_TEMP, CONF_OUT_HUMIDITY, CONF_OUT_PRESSURE, CONF_OUT_ILLUMINANCE,
                 CONF_OUT_PM25, CONF_OUT_PM10, CONF_OUT_AQI, CONF_OUT_AQI_LEVEL],
     "house": [CONF_BOILER_STATE, CONF_BOILER_FLOW, CONF_BOILER_PRESSURE, CONF_DHW_TEMP, CONF_PRESENCE, CONF_TARIFF],
-    "rooms": [CONF_HELPER_PREFIX, CONF_FANS, CONF_EXCLUDE],
+    "rooms": [CONF_AREAS, CONF_HELPER_PREFIX, CONF_FANS, CONF_EXCLUDE],
 }
 
 DEFAULTS: dict[str, object] = {
@@ -53,6 +54,7 @@ DEFAULTS: dict[str, object] = {
     CONF_ICON: "mdi:home-thermometer",
     CONF_ADMIN_ONLY: False,
     CONF_HELPER_PREFIX: "",
+    CONF_AREAS: [],
     CONF_FANS: [],
     CONF_EXCLUDE: [],
 }

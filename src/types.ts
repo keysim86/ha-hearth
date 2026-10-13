@@ -50,6 +50,7 @@ export interface Options {
   style: Style;
   sidebar_title?: string;
   helper_prefix?: string;
+  areas?: string[];
   fans?: string[];
   exclude_entities?: string[];
   outdoor_temperature?: string | null;

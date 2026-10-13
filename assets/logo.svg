@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="dom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffa45c"/>
+      <stop offset="1" stop-color="#cf4f17"/>
+    </linearGradient>
+    <linearGradient id="ogien" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd27a"/>
+      <stop offset="1" stop-color="#ff8a3d"/>
+    </linearGradient>
+  </defs>
+  <path d="M128 18c5 0 9.8 1.8 13.6 5l88 74.4c8 6.8 3.2 19.8-7.2 19.8H214v91.8C214 222.6 202.6 234 188.6 234H67.4C53.4 234 42 222.6 42 208.6v-91.4h-8.4c-10.4 0-15.2-13-7.2-19.8l88-74.4c3.8-3.2 8.6-5 13.6-5z" fill="url(#dom)"/>
+  <path d="M128 86c7 25 40 40 40 76a40 40 0 0 1-80 0c0-17.5 10.5-30 19-39.5 1.8 14 9.5 20 15.5 20 0-20-5-38.5 5.5-56.5z" fill="#fff8f0"/>
+  <path d="M129 150c3.6 11 17 16 17 30.5a17 17 0 0 1-34 0c0-8.5 4.8-13.5 8.6-17 1 6 3.6 8.6 6 8.6 0-8.5-1.2-14.6 2.4-22.1z" fill="url(#ogien)"/>
+</svg>

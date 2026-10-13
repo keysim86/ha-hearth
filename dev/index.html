@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- Podgląd panelu bez Home Assistanta: atrapa `hass` z migawki (dev/snapshot.json, poza repo).
+     Uruchom serwer w katalogu repo (np. python3 -m http.server) i otwórz /dev/?style=tiles&dark=0 -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hearth — podgląd</title>
+<style>
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: Roboto, system-ui, sans-serif;
+    --primary-background-color: #fafafa; --card-background-color: #fff; --secondary-background-color: #e5e5e5;
+    --divider-color: rgba(0, 0, 0, .12); --primary-text-color: #212121; --secondary-text-color: #727272; --disabled-text-color: #9e9e9e; }
+  body.dark { --primary-background-color: #111; --card-background-color: #1c1c1c; --secondary-background-color: #282828;
+    --divider-color: rgba(225, 225, 225, .12); --primary-text-color: #e1e1e1; --secondary-text-color: #9b9b9b; --disabled-text-color: #6f6f6f; }
+</style>
+<script type="module">
+  import "../custom_components/hearth/www/hearth-panel.js";
+  const q = new URLSearchParams(location.search);
+  const snap = await (await fetch("./snapshot.json")).json();
+  let options = {};
+  try { options = await (await fetch("./options.json")).json(); } catch { /* bez opcji: same pokoje */ }
+  const shift = Date.now() - Date.parse(snap.now);
+  const moved = (iso) => new Date(Date.parse(iso) + shift).toISOString();
+  const states = {};
+  for (const [id, s] of Object.entries(snap.states)) states[id] = { ...s, last_changed: moved(s.last_changed), last_updated: moved(s.last_updated) };
+  const dark = q.get("dark") === "1";
+  document.body.classList.toggle("dark", dark);
+  window.__calls = [];
+  const hass = {
+    states, entities: snap.entities, devices: snap.devices, areas: snap.areas,
+    themes: { darkMode: dark }, config: { time_zone: "Europe/Warsaw" }, user: { is_admin: true },
+    async callWS(msg) {
+      if (msg.type !== "history/history_during_period") throw new Error("atrapa: " + msg.type);
+      const out = {};
+      for (const id of msg.entity_ids) if (snap.history[id]) out[id] = snap.history[id].map(([t, s]) => ({ s, lu: t + shift / 1000 }));
+      return out;
+    },
+    async callService(domain, service, data) { window.__calls.push([domain, service, data]); },
+  };
+  const el = document.createElement("hearth-panel");
+  el.hass = hass;
+  el.narrow = innerWidth < 870;
+  el.panel = { config: { options: { ...options, style: q.get("style") || options.style || "tiles" }, version: "dev" } };
+  document.body.append(el);
+  window.__panel = el;
+</script>

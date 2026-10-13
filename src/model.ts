@@ -38,7 +38,8 @@ export interface Room {
 }
 
 const OPENINGS = ["window", "door", "opening", "garage_door"];
-const FAN_NAME = /wentylator|ventilat|\bfan\b|_fan|fan_/i;
+// „wentylator” albo samodzielne słowo „fan” (nie „ventilation_boost” kotła ani „fan_mode”).
+const FAN_NAME = /wentylator|(^|[._\s])fan($|[._\s])(?!mode)/i;
 
 export function areaOf(hass: Hass, entityId: string): string | undefined {
   const reg = hass.entities[entityId];
@@ -84,8 +85,10 @@ export function discoverRooms(hass: Hass, opts: Options): Room[] {
   const primary = (id: string) => !hass.entities[id]?.entity_category;
   const sensor = (id: string) => id.startsWith("sensor.");
 
+  // Wybrane obszary w wybranej kolejności; bez wyboru — wszystkie z termostatem.
+  const chosen = (opts.areas ?? []).map((a) => hass.areas[a]).filter(Boolean);
   const rooms: Room[] = [];
-  for (const area of Object.values(hass.areas)) {
+  for (const area of chosen.length ? chosen : Object.values(hass.areas)) {
     const ids = byArea.get(area.area_id) ?? [];
     const climate = ids.find((i) => i.startsWith("climate."));
     if (!climate) continue;
@@ -105,7 +108,8 @@ export function discoverRooms(hass: Hass, opts: Options): Room[] {
     });
     const onClimate = (i: string) => climateDev !== undefined && dev(i) === climateDev && sensor(i);
     const battery = ids.find((i) => onClimate(i) && dc(i) === "battery");
-    const valve = ids.find((i) => onClimate(i) && /heat_percentage|valve|position/.test(i));
+    // Otwarcie zaworu w %; napięcia silnika zaworu (mV) i podobne odpadają po jednostce.
+    const valve = ids.find((i) => onClimate(i) && /heat_percentage|valve|position/.test(i) && hass.states[i]?.attributes.unit_of_measurement === "%");
     const fans = ids.filter(
       (i) =>
         fanOpt.has(i) ||

@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  panel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Zbudowany panel jest aktualny
+        run: |
+          if ! git diff --quiet -- custom_components/hearth/www/; then
+            echo "::error::custom_components/hearth/www/ jest nieaktualny - uruchom 'npm run build' i dodaj wynik do commita."
+            git diff --stat -- custom_components/hearth/www/
+            exit 1
+          fi
+
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -r requirements_test.txt
+      - run: pytest -v

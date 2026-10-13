@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release-forgejo:
+    if: ${{ !contains(github.server_url, 'github.com') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wydanie w Forgejo z opisem z CHANGELOG
+        env:
+          FORGEJO_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"; VERSION_NO="${TAG#v}"
+          BODY=$(awk "/^## \[$VERSION_NO\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md \
+            | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+          if echo "$VERSION_NO" | grep -q '-'; then PRERELEASE=true; else PRERELEASE=false; fi
+          curl -s -X POST "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/releases" \
+            -H "Authorization: token $FORGEJO_TOKEN" -H "Content-Type: application/json" \
+            -d "{\"tag_name\": \"$TAG\", \"name\": \"Hearth $TAG\", \"body\": $BODY, \"prerelease\": $PRERELEASE}"
+
+  release-github:
+    if: ${{ contains(github.server_url, 'github.com') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wydanie na GitHubie z opisem z CHANGELOG
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"; VERSION_NO="${TAG#v}"
+          awk "/^## \[$VERSION_NO\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md > notes.md
+          if echo "$VERSION_NO" | grep -q '-'; then PRE="--prerelease"; else PRE=""; fi
+          gh release create "$TAG" --title "Hearth $TAG" --notes-file notes.md $PRE

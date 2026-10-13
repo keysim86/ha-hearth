@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_OUT_AQI,
+    CONF_OUT_AQI_LEVEL,
     CONF_OUT_HUMIDITY,
     CONF_OUT_ILLUMINANCE,
     CONF_OUT_PM10,
@@ -24,6 +25,8 @@ from .const import (
 
 _OUTDOOR = re.compile(r"outdoor|outside|zewn|na_zewnatrz|air_monitor|nettigo|airly|weather", re.I)
 _SKIP_PLATFORMS = {"mobile_app"}
+# Czujniki wewnątrz urządzenia (np. podgrzewana komora HECA, układ), a nie powietrza za oknem.
+_NOT_AMBIENT = re.compile(r"heca|chip|cpu|internal|device_temp|signal|uptime", re.I)
 
 _WANTED = {
     CONF_OUT_TEMP: "temperature",
@@ -45,7 +48,10 @@ def guess_outdoor(hass: HomeAssistant) -> dict[str, str]:
         if entry is not None and (entry.platform in _SKIP_PLATFORMS or entry.entity_category is not None):
             continue
         name = f"{state.entity_id} {state.attributes.get('friendly_name', '')}"
-        if not _OUTDOOR.search(name):
+        if not _OUTDOOR.search(name) or _NOT_AMBIENT.search(name):
+            continue
+        if re.search(r"caqi|aqi", state.entity_id) and state.attributes.get("device_class") == "enum":
+            best.setdefault(CONF_OUT_AQI_LEVEL, (0, state.entity_id))
             continue
         device_class = state.attributes.get("device_class")
         for key, wanted in _WANTED.items():

@@ -71,11 +71,13 @@
             "name": "Rooms",
             "description": "Extra rules for rooms built from areas.",
             "data": {
+              "areas": "Rooms (areas)",
               "helper_prefix": "Heating helper prefix",
               "fans": "Fans",
               "exclude_entities": "Exclude entities"
             },
             "data_description": {
+              "areas": "Areas shown as rooms, in this order. Empty = every area with a thermostat.",
               "helper_prefix": "E.g. “heating” for input_number.heating_<area>_komfort/_eko/_wieczor and alike. Empty = control the thermostat only.",
               "fans": "Switches and fans shown as the room fan (fan.* and names with “fan” are found automatically).",
               "exclude_entities": "E.g. a dishwasher door sensor detected as a room door."

@@ -22,7 +22,7 @@ from .const import (
     STATIC_URL,
 )
 
-FRONTEND_DIR = Path(__file__).parent / "frontend"
+FRONTEND_DIR = Path(__file__).parent / "www"
 
 
 def panel_options(entry: ConfigEntry) -> dict:

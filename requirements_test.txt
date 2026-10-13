@@ -1,0 +1,4 @@
+# Wymaga Pythona 3.14 — tylko dla niego PyPI ma aktualny pytest-homeassistant-custom-component.
+pytest
+pytest-asyncio
+pytest-homeassistant-custom-component

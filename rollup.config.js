@@ -9,7 +9,7 @@ const dev = process.env.ROLLUP_WATCH === "true";
 export default {
   input: "src/hearth-panel.ts",
   output: {
-    file: "custom_components/hearth/frontend/hearth-panel.js",
+    file: "custom_components/hearth/www/hearth-panel.js",
     format: "es",
     sourcemap: dev,
   },

@@ -71,11 +71,13 @@
             "name": "Pokoje",
             "description": "Dodatkowe reguły dla pokoi z obszarów.",
             "data": {
+              "areas": "Pokoje (obszary)",
               "helper_prefix": "Prefiks pomocników ogrzewania",
               "fans": "Wentylatory",
               "exclude_entities": "Pomiń encje"
             },
             "data_description": {
+              "areas": "Obszary pokazywane jako pokoje, w tej kolejności. Puste = każdy obszar z termostatem.",
               "helper_prefix": "Np. „ogrzewanie” dla input_number.ogrzewanie_<obszar>_komfort/_eko/_wieczor i podobnych. Puste = sterowanie samym termostatem.",
               "fans": "Przełączniki i wentylatory pokazywane jako wentylator pokoju (encje fan.* i nazwy z „wentylator/fan” wykrywane same).",
               "exclude_entities": "Np. czujnik drzwi zmywarki rozpoznany jako drzwi pokoju."

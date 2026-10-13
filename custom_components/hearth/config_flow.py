@@ -13,6 +13,7 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_ADMIN_ONLY,
+    CONF_AREAS,
     CONF_BOILER_FLOW,
     CONF_BOILER_PRESSURE,
     CONF_BOILER_STATE,
@@ -69,6 +70,7 @@ _FIELDS: dict[str, Any] = {
     CONF_DHW_TEMP: _sensor("temperature"),
     CONF_PRESENCE: _ANY_STATE,
     CONF_TARIFF: _sensor(),
+    CONF_AREAS: selector.AreaSelector(selector.AreaSelectorConfig(multiple=True)),
     CONF_HELPER_PREFIX: selector.TextSelector(),
     CONF_FANS: selector.EntitySelector(selector.EntitySelectorConfig(domain=["fan", "switch"], multiple=True)),
     CONF_EXCLUDE: selector.EntitySelector(selector.EntitySelectorConfig(multiple=True)),
