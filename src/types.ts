@@ -62,9 +62,14 @@ export interface Options {
   outdoor_aqi?: string | null;
   outdoor_aqi_level?: string | null;
   boiler_state?: string | null;
+  boiler_flame?: string | null;
+  boiler_dhw_demand?: string | null;
+  boiler_modulation?: string | null;
   boiler_flow_temperature?: string | null;
+  boiler_return_temperature?: string | null;
   boiler_pressure?: string | null;
   dhw_temperature?: string | null;
+  dhw_target?: string | null;
   presence?: string | null;
   tariff?: string | null;
 }

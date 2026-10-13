@@ -53,7 +53,18 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
         {
             "appearance": {"style": "dials", "sidebar_title": "Dom", "sidebar_icon": "mdi:home", "require_admin": False},
             "outdoor": {},  # pole temperatury wyczyszczone
-            "house": {"presence": "binary_sensor.domownicy"},
+            # Czujniki z MQTT (ebusd) bez klasy urządzenia muszą przejść.
+            "house": {
+                "boiler_flame": "binary_sensor.ogrzewanie_plomien",
+                "boiler_dhw_demand": "binary_sensor.ciepla_woda",
+                "boiler_modulation": "sensor.ogrzewanie_aktualna_moc",
+                "boiler_flow_temperature": "sensor.ogrzewanie_temperatura_zasilania",
+                "boiler_return_temperature": "sensor.ogrzewanie_temperatura_powrotu",
+                "boiler_pressure": "sensor.ogrzewanie_cisnienie",
+                "dhw_temperature": "sensor.ciepla_woda_aktualnie",
+                "dhw_target": "sensor.ciepla_woda_docelowo",
+                "presence": "binary_sensor.domownicy",
+            },
             "rooms": {"areas": ["salon", "lazienka"], "helper_prefix": "ogrzewanie", "fans": ["switch.wentylator"]},
         },
     )
@@ -64,6 +75,10 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     assert o["sidebar_title"] == "Dom"
     assert o["outdoor_temperature"] is None
     assert o["presence"] == "binary_sensor.domownicy"
+    assert o["boiler_flame"] == "binary_sensor.ogrzewanie_plomien"
+    assert o["boiler_pressure"] == "sensor.ogrzewanie_cisnienie"
+    assert o["dhw_target"] == "sensor.ciepla_woda_docelowo"
+    assert o["boiler_state"] is None
     assert o["areas"] == ["salon", "lazienka"]
     assert o["helper_prefix"] == "ogrzewanie"
     assert o["fans"] == ["switch.wentylator"]

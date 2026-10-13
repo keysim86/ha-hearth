@@ -14,9 +14,14 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_ADMIN_ONLY,
     CONF_AREAS,
+    CONF_BOILER_DHW_DEMAND,
+    CONF_BOILER_FLAME,
     CONF_BOILER_FLOW,
+    CONF_BOILER_MODULATION,
     CONF_BOILER_PRESSURE,
+    CONF_BOILER_RETURN,
     CONF_BOILER_STATE,
+    CONF_DHW_TARGET,
     CONF_DHW_TEMP,
     CONF_EXCLUDE,
     CONF_FANS,
@@ -42,10 +47,10 @@ from .const import (
 from .discovery import guess_outdoor
 
 
-def _sensor(device_class: str | list[str] | None = None) -> selector.EntitySelector:
-    return selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor", device_class=device_class))
-
-
+# Bez filtra klasy urządzenia: czujniki z MQTT (np. ebusd) czy szablonów często jej nie mają,
+# a filtr odrzuciłby poprawny wybór. Klasy używa tylko podpowiedź przy pierwszej konfiguracji.
+_SENSOR = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
+_BINARY = selector.EntitySelector(selector.EntitySelectorConfig(domain="binary_sensor"))
 _ANY_STATE = selector.EntitySelector(selector.EntitySelectorConfig())
 
 # Pole -> selektor. Kolejność w sekcjach bierze się z SECTIONS.
@@ -56,20 +61,25 @@ _FIELDS: dict[str, Any] = {
     CONF_TITLE: selector.TextSelector(),
     CONF_ICON: selector.IconSelector(),
     CONF_ADMIN_ONLY: selector.BooleanSelector(),
-    CONF_OUT_TEMP: _sensor("temperature"),
-    CONF_OUT_HUMIDITY: _sensor("humidity"),
-    CONF_OUT_PRESSURE: _sensor(["pressure", "atmospheric_pressure"]),
-    CONF_OUT_ILLUMINANCE: _sensor("illuminance"),
-    CONF_OUT_PM25: _sensor("pm25"),
-    CONF_OUT_PM10: _sensor("pm10"),
-    CONF_OUT_AQI: _sensor(),
-    CONF_OUT_AQI_LEVEL: _sensor(),
+    CONF_OUT_TEMP: _SENSOR,
+    CONF_OUT_HUMIDITY: _SENSOR,
+    CONF_OUT_PRESSURE: _SENSOR,
+    CONF_OUT_ILLUMINANCE: _SENSOR,
+    CONF_OUT_PM25: _SENSOR,
+    CONF_OUT_PM10: _SENSOR,
+    CONF_OUT_AQI: _SENSOR,
+    CONF_OUT_AQI_LEVEL: _SENSOR,
     CONF_BOILER_STATE: _ANY_STATE,
-    CONF_BOILER_FLOW: _sensor("temperature"),
-    CONF_BOILER_PRESSURE: _sensor(["pressure"]),
-    CONF_DHW_TEMP: _sensor("temperature"),
+    CONF_BOILER_FLAME: _BINARY,
+    CONF_BOILER_DHW_DEMAND: _BINARY,
+    CONF_BOILER_MODULATION: _SENSOR,
+    CONF_BOILER_FLOW: _SENSOR,
+    CONF_BOILER_RETURN: _SENSOR,
+    CONF_BOILER_PRESSURE: _SENSOR,
+    CONF_DHW_TEMP: _SENSOR,
+    CONF_DHW_TARGET: _SENSOR,
     CONF_PRESENCE: _ANY_STATE,
-    CONF_TARIFF: _sensor(),
+    CONF_TARIFF: _SENSOR,
     CONF_AREAS: selector.AreaSelector(selector.AreaSelectorConfig(multiple=True)),
     CONF_HELPER_PREFIX: selector.TextSelector(),
     CONF_FANS: selector.EntitySelector(selector.EntitySelectorConfig(domain=["fan", "switch"], multiple=True)),

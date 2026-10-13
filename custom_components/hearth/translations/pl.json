@@ -55,14 +55,23 @@
             "name": "Dom",
             "description": "Pasek stanu domu nad pokojami.",
             "data": {
-              "boiler_state": "Kocioł — stan",
+              "boiler_state": "Kocioł — stan (tekst)",
+              "boiler_flame": "Kocioł — płomień",
+              "boiler_dhw_demand": "Kocioł — zapotrzebowanie na ciepłą wodę",
+              "boiler_modulation": "Kocioł — modulacja (%)",
               "boiler_flow_temperature": "Kocioł — temperatura zasilania",
+              "boiler_return_temperature": "Kocioł — temperatura powrotu",
               "boiler_pressure": "Kocioł — ciśnienie wody",
               "dhw_temperature": "Ciepła woda — temperatura",
+              "dhw_target": "Ciepła woda — temperatura docelowa",
               "presence": "Ktoś w domu",
               "tariff": "Strefa taryfy prądu"
             },
             "data_description": {
+              "boiler_state": "Encja z gotowym stanem, np. HEATING / STANDBY z integracji producenta. Przy ebusd zostaw puste i wskaż płomień.",
+              "boiler_flame": "binary_sensor on/off (np. ebusd bai/Flame). Panel wylicza z niego stan: Grzeje / Czuwa.",
+              "boiler_dhw_demand": "binary_sensor (np. ebusd bai/HwcDemand) — „Grzeje wodę” zamiast „Grzeje”.",
+              "boiler_modulation": "Moc palnika w %, pokazywana przy „Grzeje”.",
               "presence": "Encja on/off, np. grupa domowników.",
               "tariff": "Pokazywana przy wentylacji i osuszaczach."
             }

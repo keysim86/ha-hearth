@@ -9,18 +9,41 @@ const BOILER: Record<string, string> = {
   STANDBY: "Czuwa", HEATING: "Grzeje", DOMESTIC_HOT_WATER: "Grzeje wodę", heating: "Grzeje", idle: "Czuwa", off: "Wyłączony",
 };
 
+/** Stan kotła: z encji tekstowej albo (np. ebusd) z płomienia, zapotrzebowania CWU i modulacji. */
+function boilerState(ctx: Ctx): { text: string; burning: boolean; sub: string } | null {
+  const o = ctx.opts;
+  if (o.boiler_flame) {
+    const flame = st(ctx, o.boiler_flame);
+    if (flame === undefined || flame === "unavailable" || flame === "unknown") return { text: "—", burning: false, sub: "brak odczytu" };
+    const burning = flame === "on";
+    const dhw = st(ctx, o.boiler_dhw_demand) === "on";
+    const mod = num(st(ctx, o.boiler_modulation));
+    const word = burning ? (dhw ? "Grzeje wodę" : "Grzeje") : dhw ? "Czeka na CWU" : "Czuwa";
+    return { text: word, burning, sub: burning ? `palnik ${mod !== null ? `${Math.round(mod)}%` : "pracuje"}` : "palnik wyłączony" };
+  }
+  if (o.boiler_state) {
+    const s = st(ctx, o.boiler_state) ?? "—";
+    return { text: BOILER[s] ?? s, burning: /HEAT|heat|DOMESTIC|on/.test(s), sub: "" };
+  }
+  return null;
+}
+
 const cell = (label: string, value: TemplateResult | string, sub: TemplateResult | string) =>
   html`<div class="hcell"><span class="hlabel">${label}</span><span class="hval">${value}</span><span class="hsub">${sub}</span></div>`;
 
 export function house(ctx: Ctx, rooms: Room[]): TemplateResult | typeof nothing {
   const o = ctx.opts, cells: TemplateResult[] = [];
-  if (o.boiler_state) {
-    const s = st(ctx, o.boiler_state) ?? "—";
+  const boiler = boilerState(ctx);
+  if (boiler !== null) {
+    const temp = (id?: string | null) => f1(num(st(ctx, id)));
     const parts = [
-      o.boiler_flow_temperature ? `zasilanie ${f1(num(st(ctx, o.boiler_flow_temperature)))} °C` : "",
+      o.boiler_flow_temperature ? `zasilanie ${temp(o.boiler_flow_temperature)} °C` : "",
+      o.boiler_return_temperature ? `powrót ${temp(o.boiler_return_temperature)} °C` : "",
       o.boiler_pressure ? `${f1(num(st(ctx, o.boiler_pressure)))} bar` : "",
     ].filter(Boolean);
-    cells.push(cell("Kocioł", BOILER[s] ?? s, parts.join(" · ")));
+    // Przy ebusd: „palnik 44%” na początku podpisu, potem temperatury i ciśnienie.
+    const sub = [ctx.opts.boiler_flame && boiler.burning ? boiler.sub : "", ...parts].filter(Boolean).join(" · ") || boiler.sub;
+    cells.push(cell("Kocioł", boiler.text, html`<span class="dot ${boiler.burning ? "heat" : "ok"}"></span>${sub}`));
   }
   if (rooms.length) {
     const heating = rooms.filter((r) => ctx.hass.states[r.climate]?.attributes.hvac_action === "heating").length;
@@ -44,7 +67,12 @@ export function house(ctx: Ctx, rooms: Room[]): TemplateResult | typeof nothing 
   } else if (presence) {
     cells.push(cell("Domownicy", presence === "on" ? "W domu" : "Nikogo", ""));
   }
-  if (o.dhw_temperature) cells.push(cell("Ciepła woda", html`${f1(num(st(ctx, o.dhw_temperature)))}<span class="u">°C</span>`, "zasobnik"));
+  if (o.dhw_temperature) {
+    const target = num(st(ctx, o.dhw_target));
+    const dhw = o.boiler_dhw_demand && st(ctx, o.boiler_dhw_demand) === "on";
+    cells.push(cell("Ciepła woda", html`${f1(num(st(ctx, o.dhw_temperature)))}<span class="u">°C</span>`,
+      `zasobnik${target !== null ? ` · cel ${f1(target)} °C` : ""}${dhw ? " · dogrzewanie" : ""}`));
+  }
   const devs = rooms.flatMap((r) => devices(ctx, r));
   if (devs.length) {
     const working = devs.filter((d) => d.on).length;

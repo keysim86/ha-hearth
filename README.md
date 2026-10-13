@@ -69,7 +69,7 @@ Coś trafiło nie tam? **Pomiń encje** w opcjach. Chcesz inne pokoje albo inną
 |---|---|
 | **Wygląd** | styl kart (kafelki / lista / pokrętła), nazwa i ikona w menu, tylko dla administratorów |
 | **Na zewnątrz** | temperatura, wilgotność, ciśnienie, natężenie światła, PM2,5, PM10, indeks jakości powietrza i jego poziom |
-| **Dom** | kocioł: stan, temperatura zasilania, ciśnienie wody · temperatura ciepłej wody · obecność domowników · strefa taryfy |
+| **Dom** | kocioł: stan albo płomień + zapotrzebowanie na CWU + moc palnika (np. z ebusd), zasilanie, powrót, ciśnienie wody · ciepła woda: temperatura i cel · obecność domowników · strefa taryfy |
 | **Pokoje** | obszary i ich kolejność · prefiks pomocników ogrzewania · wentylatory · pominięte encje |
 
 Każde pole jest opcjonalne — brak czujnika to po prostu brak kafelka.

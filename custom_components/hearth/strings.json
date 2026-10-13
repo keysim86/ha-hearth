@@ -55,14 +55,23 @@
             "name": "House",
             "description": "House status bar above the rooms.",
             "data": {
-              "boiler_state": "Boiler — state",
+              "boiler_state": "Boiler — state (text)",
+              "boiler_flame": "Boiler — flame",
+              "boiler_dhw_demand": "Boiler — hot water demand",
+              "boiler_modulation": "Boiler — modulation (%)",
               "boiler_flow_temperature": "Boiler — flow temperature",
+              "boiler_return_temperature": "Boiler — return temperature",
               "boiler_pressure": "Boiler — water pressure",
               "dhw_temperature": "Hot water — temperature",
+              "dhw_target": "Hot water — target temperature",
               "presence": "Someone home",
               "tariff": "Electricity tariff zone"
             },
             "data_description": {
+              "boiler_state": "Entity with a ready state, e.g. HEATING / STANDBY from the vendor integration. With ebusd leave empty and pick the flame.",
+              "boiler_flame": "On/off binary_sensor (e.g. ebusd bai/Flame). The panel derives the state from it: Heating / Idle.",
+              "boiler_dhw_demand": "binary_sensor (e.g. ebusd bai/HwcDemand) — “Heating water” instead of “Heating”.",
+              "boiler_modulation": "Burner power in %, shown next to “Heating”.",
               "presence": "On/off entity, e.g. a household group.",
               "tariff": "Shown next to ventilation and dehumidifiers."
             }

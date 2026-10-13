@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from homeassistant.components import frontend, panel_custom
@@ -25,6 +26,14 @@ from .const import (
 FRONTEND_DIR = Path(__file__).parent / "www"
 
 
+def _file_digest(path: Path) -> str:
+    """Krótki skrót pliku panelu — nowy plik po aktualizacji = nowy adres, przeglądarka nie weźmie starego z pamięci."""
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()[:8]
+    except OSError:
+        return "0"
+
+
 def panel_options(entry: ConfigEntry) -> dict:
     """Opcje wpisu uzupełnione wartościami domyślnymi."""
     return {**DEFAULTS, **entry.options}
@@ -41,14 +50,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_STATIC_REGISTERED] = True
 
     options = panel_options(entry)
+    digest = await hass.async_add_executor_job(_file_digest, FRONTEND_DIR / "hearth-panel.js")
     await panel_custom.async_register_panel(
         hass,
         frontend_url_path=PANEL_URL_PATH,
         webcomponent_name=PANEL_COMPONENT,
         sidebar_title=options[CONF_TITLE] or DEFAULTS[CONF_TITLE],
         sidebar_icon=options[CONF_ICON] or DEFAULTS[CONF_ICON],
-        # Wersja w adresie wymusza pobranie nowego pliku po aktualizacji.
-        module_url=f"{STATIC_URL}/hearth-panel.js?v={version}",
+        # Wersja i skrót pliku w adresie wymuszają pobranie nowego pliku po aktualizacji.
+        module_url=f"{STATIC_URL}/hearth-panel.js?v={version}-{digest}",
         embed_iframe=False,
         require_admin=bool(options[CONF_ADMIN_ONLY]),
         config={"options": options, "version": str(version)},

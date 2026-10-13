@@ -17,11 +17,18 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 - **Na zewnątrz** — temperatura i wilgotność z wykresem, ciśnienie z trendem 3 h, światło i słońce, CAQI z poziomem
   oraz PM2,5 / PM10 według indeksu GIOŚ
 - **Pasek domu** — kocioł, ile pokoi grzeje, okna, tryb domu, ciepła woda, wentylacja i osuszanie z taryfą
+- **Kocioł prosto z ebusd** — stan wyliczany z płomienia i zapotrzebowania na ciepłą wodę („Grzeje”, „Grzeje wodę”,
+  „Czuwa”) z mocą palnika w %; zasilanie, powrót, ciśnienie, temperatura i cel ciepłej wody; dalej można podać gotową
+  encję stanu z integracji producenta
 - **Ustawienia pokoju po kliknięciu** — dlaczego taki cel, temperatury profili −/+ (zapis do pomocników, seria kliknięć
   = jeden zapis), plan dnia, przełącznik automatyki, dane głowicy, wilgotność wobec celu osuszacza z −/+, praca
   urządzeń w 24 h, energia osuszacza, włączanie wentylatora; bez pomocników −/+ zmienia nastawę termostatu
 - **Ustawienia panelu na urządzeniu** — własny styl kart dla telefonu, tabletu czy komputera (pamięć przeglądarki),
   skrót do opcji integracji dla administratora
+- **Wybór dowolnego czujnika w opcjach** — bez filtra klasy urządzenia, bo czujniki z MQTT (np. ebusd) często jej
+  nie mają; klasy używa tylko podpowiedź przy dodawaniu integracji
+- **Świeży plik panelu po aktualizacji** — w adresie pliku jest skrót jego zawartości, więc przeglądarka nie weźmie
+  starej wersji z pamięci
 - **Opcje integracji w sekcjach** — Wygląd, Na zewnątrz, Dom, Pokoje (obszary i kolejność, prefiks pomocników
   ogrzewania, wentylatory, pominięte encje); podpowiedź czujników zewnętrznych przy dodawaniu integracji
 - **Logo i ikona** w katalogu `brand/` integracji (HA pokazuje je bez wpisu w repozytorium brands)
