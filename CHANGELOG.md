@@ -32,6 +32,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 - **Opcje integracji w sekcjach** — Wygląd, Na zewnątrz, Dom, Pokoje (obszary i kolejność, prefiks pomocników
   ogrzewania, wentylatory, pominięte encje); podpowiedź czujników zewnętrznych przy dodawaniu integracji
 - **Logo i ikona** w katalogu `brand/` integracji (HA pokazuje je bez wpisu w repozytorium brands)
+- **Bez błędu po aktualizacji w otwartej karcie** — panel nie rejestruje drugi raz elementu `hearth-panel`; nowa
+  wersja działa po odświeżeniu strony
 - Jasny i ciemny motyw z motywu HA, układ na telefon, baner wersji w konsoli przeglądarki
 - Testy (konfiguracja, opcje, rejestracja panelu), CI: typy i budowanie panelu, pytest, hassfest, HACS; wydania
   z opisem z CHANGELOG

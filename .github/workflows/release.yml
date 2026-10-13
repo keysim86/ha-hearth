@@ -13,7 +13,7 @@ jobs:
     if: ${{ !contains(github.server_url, 'github.com') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Wydanie w Forgejo z opisem z CHANGELOG
         env:
           FORGEJO_TOKEN: ${{ github.token }}
@@ -30,7 +30,7 @@ jobs:
     if: ${{ contains(github.server_url, 'github.com') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Wydanie na GitHubie z opisem z CHANGELOG
         env:
           GH_TOKEN: ${{ github.token }}

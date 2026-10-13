@@ -1,7 +1,7 @@
 // Panel Hearth — zakładka Klimat. Pokoje z obszarów HA, trzy style kart, ustawienia na urządzeniu.
 
 import { LitElement, html, nothing, type PropertyValues } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 import { clock, num } from "./format";
 import { HistoryStore } from "./history";
 import { climateTarget, discoverRooms, hasProfiles, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
@@ -48,7 +48,6 @@ let announced = false;
 const roundStep = (v: number, step: number) => Math.round(v / step) * step;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-@customElement("hearth-panel")
 export class HearthPanel extends LitElement {
   static styles = styles;
 
@@ -312,6 +311,10 @@ export class HearthPanel extends LitElement {
       <div class="toast" role="status" ?hidden=${!this.toastText}>${this.toastText}</div>`;
   }
 }
+
+// Po aktualizacji HA podaje nowy adres pliku, a w otwartej karcie stara klasa już jest zarejestrowana —
+// drugie define() rzuciłoby błąd. Nowa wersja zadziała po odświeżeniu strony.
+if (!customElements.get("hearth-panel")) customElements.define("hearth-panel", HearthPanel);
 
 declare global {
   interface HTMLElementTagNameMap {
