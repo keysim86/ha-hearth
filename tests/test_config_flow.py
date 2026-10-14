@@ -46,7 +46,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert set(result["data_schema"].schema) >= {"appearance", "outdoor", "house", "home", "energy", "boiler", "meters", "switches", "cameras", "vehicles", "proxmox", "network", "extras", "rooms"}
+    assert set(result["data_schema"].schema) >= {"appearance", "outdoor", "house", "home", "energy", "boiler", "meters", "switches", "cameras", "vehicles", "appliances", "proxmox", "network", "extras", "rooms"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -71,6 +71,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
             "switches": {},
             "cameras": {},
             "vehicles": {},
+            "appliances": {},
             "proxmox": {},
             "network": {},
             "extras": {"alerts": [{"entity": "sensor.cisnienie", "condition": "< 1.2", "message": "Ciśnienie za niskie", "severity": "error"}], "agent_url": "/agent/"},
@@ -98,6 +99,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     assert o["alerts"][0]["condition"] == "< 1.2"
     assert o["agent_url"] == "/agent/"
     assert o["cameras"] == []
+    assert o["appliances_exclude"] == []
     assert o["areas"] == ["salon", "lazienka"]
     assert o["helper_prefix"] == "ogrzewanie"
     assert o["fans"] == ["switch.wentylator"]

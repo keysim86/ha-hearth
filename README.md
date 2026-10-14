@@ -10,7 +10,7 @@
 [![License](https://img.shields.io/github/license/keysim86/ha-hearth.svg?style=flat-square)](LICENSE)
 
 > Panel Home Assistant dla całego domu: **Dom**, **Klimat**, **Przełączniki**, **Energia**, **Kocioł**, **Liczniki**, **Sieć**,
-> **Kamery**, **Auta**, **Roboty**, **Proxmox**, **Agent** i **Alerty** — każdą zakładkę włączasz i ustawiasz w kolejności w opcjach.
+> **Kamery**, **Auta**, **Roboty**, **Proxmox**, **Zdrowie**, **AGD**, **Agent** i **Alerty** — każdą zakładkę włączasz i ustawiasz w kolejności w opcjach.
 > Pokoje budują się same z **obszarów HA**, zużycie z **panelu Energia** HA — bez list encji w YAML-u.
 
 ![Klimat — styl Kafelki](assets/kafelki.png)
@@ -29,6 +29,7 @@
 | 🚗 **Auta** · 🤖 **Roboty** | Paliwo, zasięg, przebieg, akumulator, zamek, mapa · kosiarki i odkurzacze: stan, bateria, mapa, przyciski |
 | 🖥️ **Proxmox** | Węzeł, magazyny, maszyny i kontenery (CPU, RAM, dysk) z uruchamianiem i restartem |
 | ❤️ **Zdrowie** | Osoby z ustawień integracji · waga: start, zmiana, tempo, BMI z paskiem, cele z prognozą, bilanse miesięczne i tygodniowe, historia z trendem 7 dni · skład ciała (tłuszcz wg progów ACE, masa beztłuszczowa, mięśnie, woda) · aktywność: kroki i kalorie dziś i w 7–90 dniach · ciśnienie: wartości, średnie z pomiarów, historia 90 dni, raport do druku / PDF · pomiary obwodów (profil, bilans, historia) · siatki centylowe WHO dla dzieci · wpis obwodów do pomocników |
+| 🧊 **AGD** | Karta na urządzenie, wykrywana po integracji · lodówka (Home Connect): temperatury chłodziarki i zamrażarki z −/+, drzwi, alarmy, tryby (urlopowy i szabatowy z potwierdzeniem), światło; zasilania nie da się stąd wyłączyć · zmywarka (hOn): czas do końca i godzina zakończenia, program, sól, nabłyszczacz, błąd · uzdatniacz (EcoWater): sól w % i na ile dni, woda dziś i średnio, przepływ, zapas do regeneracji, ostatnia regeneracja · inne urządzenia tych integracji: odczyty |
 | 🔔 **Alerty** · 🤖 **Agent** | Reguły z licznikiem na zakładce · dowolna strona w ramce |
 | 📟 **Liczniki** | Dowolne encje pogrupowane według urządzeń (licznik, sprzedawca, zmiękczacz, zmywarka…) · liczniki narastające z zużyciem dziś i w miesiącu · pomiary z wykresem 24 h · stany drzwi, soli i daty po polsku |
 
@@ -96,6 +97,7 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 | **Zakładka Energia** | moc całkowita, moc i napięcie faz, odbiorniki | zużycie, koszty i odbiorniki z panelu Energia |
 | **Kocioł** | termostaty ogrzewania i CWU, stan albo płomień + zapotrzebowanie na CWU, zapłon, pompa, moc, wentylator, zasilanie (+ cel), powrót, ciśnienie, krzywa, zewnątrz (+ średnia), ciepła woda (+ cel), gaz, suwaki ustawień · ebusd: temat strefy do Quick Veto, tryb specjalny, koniec Veto | gaz z panelu Energia; bez tematu ebusd zwykła nastawa |
 | **Zakładka Liczniki** | encje liczników (grupowane według urządzeń) | woda i gaz z panelu Energia |
+| **AGD** | pominięte urządzenia (Home Connect, hOn, EcoWater) | wszystkie wykryte |
 | **Pokoje** | obszary i ich kolejność, prefiks pomocników ogrzewania, wentylatory, pominięte encje | każdy obszar z termostatem |
 
 ### Zdrowie — osoby

@@ -654,4 +654,16 @@ form.ocell .orow { margin-top: 6px; }
 .acc input[type="color"] { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; flex: none; }
 .acc input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 .acc input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+/* AGD: lodówka, zmywarka, uzdatniacz */
+.cards.agds { grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); align-items: start; }
+.agd { gap: 8px; }
+.agd .hlabel small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.agd .hlabel:not(:first-child) { margin-top: 6px; }
+.agd .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.agd b.alarm, .agd .alarm { color: var(--crit); }
+.agd .mchip { display: inline-flex; align-items: center; gap: 5px; }
+.agd .chipico { width: 14px; height: 14px; }
+.agd .alarmchip { border-color: color-mix(in srgb, var(--crit) 55%, var(--line)); color: var(--crit); }
+.agdtemps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.agdtemp { display: grid; gap: 6px; justify-items: start; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
 `;

@@ -89,6 +89,13 @@ _FIELDS: dict[str, Any] = {
     c.CONF_NVR_TOTAL: _SENSOR,
     c.CONF_VEHICLES: _entity("device_tracker", many=True),
     c.CONF_ROBOTS_EXCLUDE: _entity(["lawn_mower", "vacuum"], many=True),
+    # Całe urządzenia (nie pojedyncze encje) z integracji, które zakładka AGD rozpoznaje.
+    c.CONF_APPLIANCES_EXCLUDE: selector.DeviceSelector(
+        selector.DeviceSelectorConfig(
+            multiple=True,
+            filter=[{"integration": i} for i in ("home_connect", "hon", "ecowater_softener")],
+        )
+    ),
     c.CONF_PROXMOX_EXCLUDE: _entity("binary_sensor", many=True),
     # Dyski maszyn, których Proxmox nie zna (VM bez agenta gościa): {guest, label?, used, total}.
     c.CONF_PROXMOX_DISKS: selector.ObjectSelector(),

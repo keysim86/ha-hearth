@@ -209,6 +209,16 @@
               "vehicles": "Puste = lokalizatory, których urządzenie ma przebieg albo zasięg."
             }
           },
+          "appliances": {
+            "name": "AGD",
+            "description": "Zakładka AGD sama znajduje lodówki i inny sprzęt z Home Connect, zmywarki z hOn i uzdatniacze EcoWater.",
+            "data": {
+              "appliances_exclude": "Pominięte urządzenia"
+            },
+            "data_description": {
+              "appliances_exclude": "Urządzenia, których nie pokazywać w zakładce AGD."
+            }
+          },
           "proxmox": {
             "name": "Zakładka Proxmox",
             "description": "Węzły, maszyny, kontenery i magazyny z wbudowanej integracji Proxmox VE.",
@@ -514,7 +524,8 @@
         "proxmox": "Proxmox",
         "agent": "Agent",
         "alerts": "Alerty",
-        "health": "Zdrowie"
+        "health": "Zdrowie",
+        "appliances": "AGD"
       }
     },
     "gender": {

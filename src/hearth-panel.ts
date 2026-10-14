@@ -31,9 +31,10 @@ import { proxmoxView } from "./views/proxmox";
 import { switchesView } from "./views/switches";
 import { carsView, robotsView } from "./views/vehicles";
 import { healthView } from "./views/health";
+import { appliancesView } from "./views/appliances";
 
 const STYLES: Style[] = ["tiles", "list", "dials"];
-const TABS: Tab[] = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "agent", "alerts"];
+const TABS: Tab[] = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"];
 const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
   home: ["dom", "Dom"],
   climate: ["klimat", "Klimat"],
@@ -47,6 +48,7 @@ const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
   robots: ["roboty", "Roboty"],
   proxmox: ["proxmox", "Proxmox"],
   health: ["zdrowie", "Zdrowie"],
+  appliances: ["agd", "AGD"],
   agent: ["agent", "Agent"],
   alerts: ["alerty", "Alerty"],
 };
@@ -262,7 +264,7 @@ export class HearthPanel extends LitElement {
       energy: [o.power_total, ...(o.phase_power ?? [])],
       boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
       network: [...(this.hass ? speedIds({ hass: this.hass, opts: o } as Ctx) : []), ...(o.net_status ?? [])],
-      switches: [], cameras: [], cars: [], robots: [], proxmox: [], health: [], agent: [], alerts: [],
+      switches: [], cameras: [], cars: [], robots: [], proxmox: [], health: [], appliances: [], agent: [], alerts: [],
       meters: (o.meters ?? []).filter((id) => this.hass!.states[id]?.attributes.state_class === "measurement"),
     };
     const ids = byTab[tab].filter((x): x is string => Boolean(x));
@@ -664,6 +666,7 @@ export class HearthPanel extends LitElement {
       robots: () => robotsView(ctx, camTick),
       proxmox: () => proxmoxView(ctx),
       health: () => healthView(ctx),
+      appliances: () => appliancesView(ctx),
       agent: () => this.options.agent_url
         ? html`<iframe class="agent" title="Agent" src=${this.options.agent_url} @load=${(e: Event) => this.postTheme(e.target as HTMLIFrameElement)}></iframe>`
         : html`<div class="empty">Podaj adres strony w opcjach Hearth (sekcja Alerty i Agent).</div>`,

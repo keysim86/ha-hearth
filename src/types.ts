@@ -48,7 +48,7 @@ export interface Hass {
 }
 
 export type Style = "tiles" | "list" | "dials";
-export type Tab = "home" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "health" | "agent" | "alerts";
+export type Tab = "home" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "health" | "appliances" | "agent" | "alerts";
 
 export interface Options {
   style: Style;
@@ -123,6 +123,7 @@ export interface Options {
   nvr_storage_total?: string | null;
   vehicles?: string[];
   robots_exclude?: string[];
+  appliances_exclude?: string[];
   proxmox_exclude?: string[];
   proxmox_disks?: Array<{ guest: string; label?: string; used: string; total: string }>;
   net_speed?: string[];

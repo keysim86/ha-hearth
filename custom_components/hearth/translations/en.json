@@ -209,6 +209,16 @@
               "vehicles": "Empty = trackers whose device has an odometer or range."
             }
           },
+          "appliances": {
+            "name": "Appliances",
+            "description": "The Appliances tab finds fridges and other Home Connect appliances, hOn dishwashers and EcoWater softeners by itself.",
+            "data": {
+              "appliances_exclude": "Hidden devices"
+            },
+            "data_description": {
+              "appliances_exclude": "Devices not to show in the Appliances tab."
+            }
+          },
           "proxmox": {
             "name": "Proxmox tab",
             "description": "Nodes, VMs, containers and storage from the built-in Proxmox VE integration.",
@@ -514,7 +524,8 @@
         "proxmox": "Proxmox",
         "agent": "Agent",
         "alerts": "Alerts",
-        "health": "Health"
+        "health": "Health",
+        "appliances": "Appliances"
       }
     },
     "gender": {

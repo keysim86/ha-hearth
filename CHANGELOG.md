@@ -7,6 +7,22 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-14
+
+### Dodano
+- **Zakładka AGD** (adres `/hearth/agd`) — karta na urządzenie, wykrywana po integracji, bez list encji:
+  - **lodówka (Home Connect)**: temperatury chłodziarki i zamrażarki z − / + (nastawa urządzenia), stan drzwi
+    od kiedy, aktywne alarmy (za ciepło w zamrażarce, drzwi otwarte za długo), tryby jako przełączniki (super
+    chłodzenie i zamrażanie, eco, świeżość; urlopowy i szabatowy z potwierdzeniem), światło; zasilanie tylko
+    do podglądu — lodówki nie da się stąd wyłączyć
+  - **zmywarka (hOn)**: w trakcie pracy czas do końca, godzina zakończenia, program i bieżące zużycie wody
+    i prądu; poza pracą ostatni program i opóźniony start; sól, nabłyszczacz, kod błędu, drzwi, licznik programów
+  - **uzdatniacz wody (EcoWater)**: sól w % z paskiem, na ile dni i do kiedy, rodzaj soli; woda dziś i średnio
+    na dzień, przepływ teraz, zapas miękkiej wody do regeneracji; ostatnia regeneracja, wyłączona regeneracja
+    jako ostrzeżenie, usunięty kamień
+  - pozostałe urządzenia tych integracji: prosta karta z odczytami
+- **Opcja AGD → Pominięte urządzenia** — wybór całych urządzeń z Home Connect, hOn i EcoWater do ukrycia
+
 ## [0.3.0] - 2026-10-14
 
 ### Dodano
@@ -140,7 +156,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/keysim86/ha-hearth/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/keysim86/ha-hearth/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/keysim86/ha-hearth/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/keysim86/ha-hearth/releases/tag/v0.1.0
