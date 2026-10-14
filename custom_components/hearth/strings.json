@@ -24,14 +24,16 @@
               "tabs": "Tabs",
               "sidebar_title": "Sidebar title",
               "sidebar_icon": "Sidebar icon",
-              "require_admin": "Admins only"
+              "require_admin": "Admins only",
+              "accent_color": "Accent colour"
             },
             "data_description": {
               "style": "Tiles, list or dials.",
               "tabs": "Which tabs to show and in what order: selection order = panel order (remove and add again to move one). The first opens by default.",
               "sidebar_title": "Sidebar entry text.",
               "sidebar_icon": "Sidebar entry icon.",
-              "require_admin": "Hides the panel from regular users."
+              "require_admin": "Hides the panel from regular users.",
+              "accent_color": "Colour of buttons, selections, tabs and the Agent page; state colours (heating, alarms) stay. A custom #rrggbb can be typed. Each device can pick its own in the panel settings."
             }
           },
           "outdoor": {
@@ -519,6 +521,18 @@
       "options": {
         "male": "Male",
         "female": "Female"
+      }
+    },
+    "accent": {
+      "options": {
+        "ember": "Ember (default)",
+        "frost": "Blue",
+        "air": "Teal",
+        "ok": "Green",
+        "bath": "Purple",
+        "rose": "Raspberry",
+        "slate": "Slate",
+        "theme": "HA theme colour"
       }
     },
     "goal": {

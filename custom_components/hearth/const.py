@@ -15,6 +15,9 @@ CONF_TABS = "tabs"
 CONF_TITLE = "sidebar_title"
 CONF_ICON = "sidebar_icon"
 CONF_ADMIN_ONLY = "require_admin"
+CONF_ACCENT = "accent_color"
+# Kolory wiodące (klucze jak w panelu); w opcjach można też wpisać własny „#rrggbb”.
+ACCENTS = ["ember", "frost", "air", "ok", "bath", "rose", "slate", "theme"]
 STYLES = ["tiles", "list", "dials"]
 TABS = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "agent", "alerts"]
 
@@ -104,7 +107,7 @@ CONF_FANS = "fans"
 CONF_EXCLUDE = "exclude_entities"
 
 SECTIONS: dict[str, list[str]] = {
-    "appearance": [CONF_STYLE, CONF_TABS, CONF_TITLE, CONF_ICON, CONF_ADMIN_ONLY],
+    "appearance": [CONF_STYLE, CONF_ACCENT, CONF_TABS, CONF_TITLE, CONF_ICON, CONF_ADMIN_ONLY],
     "outdoor": [CONF_OUT_TEMP, CONF_OUT_HUMIDITY, CONF_OUT_PRESSURE, CONF_OUT_ILLUMINANCE,
                 CONF_OUT_PM25, CONF_OUT_PM10, CONF_OUT_AQI, CONF_OUT_AQI_LEVEL],
     "house": [CONF_PRESENCE, CONF_TARIFF],
@@ -128,6 +131,7 @@ SECTIONS: dict[str, list[str]] = {
 # Listy puste = wykrywanie automatyczne w panelu (osoby, bramy, odpady, odbiorniki i gaz z panelu Energia).
 DEFAULTS: dict[str, object] = {
     CONF_STYLE: "tiles",
+    CONF_ACCENT: "ember",
     CONF_TABS: list(TABS),
     CONF_TITLE: "Hearth",
     CONF_ICON: "mdi:home-thermometer",

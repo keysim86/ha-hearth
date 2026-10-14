@@ -88,7 +88,7 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 
 | Sekcja | Pola | Bez ustawień |
 |---|---|---|
-| **Wygląd** | styl kart, zakładki, nazwa i ikona w menu, tylko dla administratorów | wszystkie zakładki, kafelki |
+| **Wygląd** | styl kart, kolor wiodący (gotowy, kolor motywu HA albo `#rrggbb`), zakładki, nazwa i ikona w menu, tylko dla administratorów | wszystkie zakładki, kafelki, kolor Żar |
 | **Na zewnątrz** | temperatura, wilgotność, ciśnienie, światło, PM2,5, PM10, indeks powietrza i jego poziom | podpowiedź przy dodaniu integracji |
 | **Pasek domu** | obecność domowników, strefa taryfy | — |
 | **Zakładka Dom** | osoby, bramy, skrzynka pocztowa (+ bateria), kalendarz odpadów albo czujniki, przełączniki frakcji, pogoda (encja) | osoby z telefonem, rolety klasy brama/garaż/drzwi, kalendarz Waste Collection Schedule, pomocniki z „odpad/waste”, Open-Meteo |

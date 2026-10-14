@@ -61,6 +61,41 @@ const FOOT: Record<Style, string> = {
   dials: "Pierścień pokazuje 14–30 °C, białe kółko to cel. Tło karty ma kolor temperatury w pokoju. − / + zmienia cel profilu, który teraz działa.",
 };
 const STYLE_KEY = "hearth.style";
+const ACCENT_KEY = "hearth.accent";
+/** Kolory wiodące: [nazwa, jasny motyw, ciemny motyw]. Własny = „#rrggbb” (ten sam w obu motywach). */
+export const ACCENTS: Record<string, [string, string, string]> = {
+  ember: ["Żar (domyślny)", "#cf5a1e", "#ff8a4c"],
+  frost: ["Niebieski", "#2f6fb3", "#74aef0"],
+  air: ["Morski", "#0e7c84", "#55d0d8"],
+  ok: ["Zielony", "#2f8a4f", "#5cc982"],
+  bath: ["Fioletowy", "#8a4fb8", "#c393ec"],
+  rose: ["Malinowy", "#c2185b", "#f06292"],
+  slate: ["Grafitowy", "#475569", "#a3b1c2"],
+  theme: ["Kolor motywu HA", "var(--primary-color, #03a9f4)", "var(--primary-color, #03a9f4)"],
+};
+const isHex = (v: unknown): v is string => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
+const accentName = (v: string) => (ACCENTS[v]?.[0] ?? (isHex(v) ? `własny ${v}` : ACCENTS.ember[0]));
+
+/** Kolor tekstu na tle akcentu: biały albo ciemny, zależnie od jasności (WCAG). */
+function onAccent(color: string): string {
+  const m = color.trim().match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i) ?? color.match(/rgba?\((\d+)[ ,]+(\d+)[ ,]+(\d+)/i);
+  if (!m) return "#fff";
+  const hex = color.trim().startsWith("#");
+  const [r, g, b] = m.slice(1, 4).map((x) => (hex ? parseInt(x, 16) : Number(x)));
+  const lin = (c: number) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  // Kontrast z bielą vs z ciemnym tekstem (#16202b, luminancja ≈ 0,014).
+  return 1.05 / (L + 0.05) >= (L + 0.05) / 0.064 ? "#fff" : "#16202b";
+}
+
+function readAccent(): string | null {
+  try {
+    const v = localStorage.getItem(ACCENT_KEY);
+    return v && (ACCENTS[v] || isHex(v)) ? v : null;
+  } catch {
+    return null;
+  }
+}
 const UI_KEY = "hearth.ui";
 const FONTS_ID = "hearth-fonts";
 const FONTS_URL =
@@ -100,6 +135,7 @@ export class HearthPanel extends LitElement {
   @state() private open: string | null = null;
   @state() private cols = 1;
   @state() private localStyle: Style | null = readStyle();
+  @state() private localAccent: string | null = readAccent();
   @state() private toastText = "";
   @state() private ui: Record<string, string> = readUi();
   @state() private person: string | null = null;
@@ -120,6 +156,7 @@ export class HearthPanel extends LitElement {
   private tick?: number;
   private lastTick = 0;
   private lastDark?: boolean;
+  private lastAccent?: string;
   private toastTimer?: number;
   private resize?: ResizeObserver;
 
@@ -205,8 +242,10 @@ export class HearthPanel extends LitElement {
   protected updated(changed: PropertyValues<this>) {
     if ((changed as Map<string, unknown>).has("person") && this.person && !this.personDialog?.open) this.personDialog?.showModal();
     const dark = Boolean(this.hass?.themes?.darkMode);
-    if (dark !== this.lastDark) {
+    const accent = this.applyAccent(dark);
+    if (dark !== this.lastDark || accent !== this.lastAccent) {
       this.lastDark = dark;
+      this.lastAccent = accent;
       this.postTheme();
     }
     this.syncPersonMap();
@@ -233,6 +272,28 @@ export class HearthPanel extends LitElement {
       .catch(() => undefined);
   }
 
+  /** Wybrany kolor wiodący (urządzenie > opcje integracji > domyślny) jako `--accent` na elemencie panelu. */
+  private applyAccent(dark: boolean): string {
+    const key = this.localAccent ?? this.options.accent_color ?? "ember";
+    const preset = ACCENTS[key];
+    const value = preset ? preset[dark ? 2 : 1] : isHex(key) ? key : ACCENTS.ember[dark ? 2 : 1];
+    if (this.style.getPropertyValue("--accent") !== value) this.style.setProperty("--accent", value);
+    const resolved = getComputedStyle(this).getPropertyValue("--accent").trim() || value;
+    const on = onAccent(resolved);
+    if (this.style.getPropertyValue("--on-accent") !== on) this.style.setProperty("--on-accent", on);
+    return `${value}|${resolved}`;
+  }
+
+  private setAccent(v: string | null) {
+    this.localAccent = v;
+    try {
+      if (v) localStorage.setItem(ACCENT_KEY, v);
+      else localStorage.removeItem(ACCENT_KEY);
+    } catch {
+      /* pamięć przeglądarki niedostępna — wybór działa do odświeżenia */
+    }
+  }
+
   /** Motyw panelu (jasny / ciemny i kolory z motywu HA) do strony agenta w ramce — wygląda wtedy jak reszta panelu.
    *  Same kolory, nic poufnego, więc dowolny odbiorca. */
   private postTheme(frame?: HTMLIFrameElement | null) {
@@ -240,7 +301,7 @@ export class HearthPanel extends LitElement {
     if (!target?.contentWindow) return;
     const cs = getComputedStyle(this.renderRoot.querySelector(".wrap") ?? this);
     const vars = Object.fromEntries(
-      ["--bg", "--surface", "--surface-2", "--line", "--fg", "--muted", "--faint", "--ember", "--ember-soft", "--ok", "--crit", "--shadow"]
+      ["--bg", "--surface", "--surface-2", "--line", "--fg", "--muted", "--faint", "--ember", "--ember-soft", "--accent", "--accent-soft", "--on-accent", "--ok", "--crit", "--shadow"]
         .map((v) => [v, cs.getPropertyValue(v).trim()]),
     );
     target.contentWindow.postMessage({ type: "hearth-theme", dark: Boolean(this.hass?.themes?.darkMode), vars }, "*");
@@ -497,6 +558,7 @@ export class HearthPanel extends LitElement {
           ${STYLES.map((s) => opt(s, STYLE_INFO[s][0], STYLE_INFO[s][1]))}
         </div>
         <div class="rule">Wybór zapamiętuje tylko to urządzenie (przeglądarka albo aplikacja). Styl domyślny dla wszystkich, czujniki na zewnątrz, kocioł i pomocniki ogrzewania ustawisz w ustawieniach integracji.</div>
+        ${this.accentChooser()}
         ${this.wasteSwitches(ctx)}
         <div class="set-foot">
           ${this.hass?.user?.is_admin
@@ -506,6 +568,29 @@ export class HearthPanel extends LitElement {
         </div>
       </div>
     </dialog>`;
+  }
+
+  /** Kolor wiodący na tym urządzeniu: jak w integracji, gotowe kolory albo własny (próbnik). */
+  private accentChooser() {
+    const dark = Boolean(this.hass?.themes?.darkMode);
+    const def = this.options.accent_color ?? "ember";
+    const swatch = (key: string) => (ACCENTS[key] ? ACCENTS[key][dark ? 2 : 1] : isHex(key) ? key : ACCENTS.ember[dark ? 2 : 1]);
+    const custom = this.localAccent && isHex(this.localAccent) ? this.localAccent : null;
+    const item = (value: string | null, title: string, color: string) => html`<label class="acc">
+      <input type="radio" name="akcent" .checked=${this.localAccent === value} @change=${() => this.setAccent(value)} />
+      <i style="background:${color}"></i><span>${title}</span>
+    </label>`;
+    return html`<h3>Kolor wiodący na tym urządzeniu</h3>
+      <div class="accs" role="radiogroup" aria-label="Kolor wiodący">
+        ${item(null, `Jak w integracji: ${accentName(def)}`, swatch(def))}
+        ${Object.keys(ACCENTS).map((k) => item(k, ACCENTS[k][0], swatch(k)))}
+        <label class="acc">
+          <input type="radio" name="akcent" .checked=${Boolean(custom)} @change=${() => this.setAccent(custom ?? "#cf5a1e")} />
+          <input type="color" aria-label="Własny kolor" .value=${custom ?? "#cf5a1e"} @input=${(e: Event) => this.setAccent((e.target as HTMLInputElement).value)} />
+          <span>Własny</span>
+        </label>
+      </div>
+      <div class="rule">Kolor przycisków, zaznaczeń, zakładek i strony Agenta. Kolory stanów (grzanie, otwarta brama, alarmy) zostają bez zmian. Domyślny dla wszystkich urządzeń: opcje integracji → Wygląd.</div>`;
   }
 
   /** Przełączniki frakcji odpadów (pomocniki input_boolean) — wspólne dla wszystkich, działają też w automatyzacjach. */

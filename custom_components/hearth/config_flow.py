@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
 
 from . import const as c
-from .const import DEFAULTS, DOMAIN, SECTIONS, STYLES, SUBENTRY_HEALTH, TABS
+from .const import ACCENTS, DEFAULTS, DOMAIN, SECTIONS, STYLES, SUBENTRY_HEALTH, TABS
 from .discovery import guess_outdoor
 from .health import HealthSubentryFlow
 
@@ -34,6 +34,10 @@ _ANY = _entity()
 _FIELDS: dict[str, Any] = {
     c.CONF_STYLE: selector.SelectSelector(
         selector.SelectSelectorConfig(options=STYLES, translation_key="style", mode=selector.SelectSelectorMode.LIST)
+    ),
+    # Gotowe kolory albo własny wpisany jako „#rrggbb” (panel sprawdza format, zły = domyślny).
+    c.CONF_ACCENT: selector.SelectSelector(
+        selector.SelectSelectorConfig(options=ACCENTS, translation_key="accent", custom_value=True, mode=selector.SelectSelectorMode.DROPDOWN)
     ),
     # Lista rozwijana z „pastylkami” zachowuje kolejność wyboru = kolejność zakładek w panelu.
     c.CONF_TABS: selector.SelectSelector(
@@ -101,7 +105,7 @@ _FIELDS: dict[str, Any] = {
     c.CONF_EXCLUDE: _entity(many=True),
 }
 # Pola z wartością domyślną są wymagane (zawsze coś wybrane); reszta może zostać pusta.
-_REQUIRED = {c.CONF_STYLE, c.CONF_TABS, c.CONF_TITLE, c.CONF_ICON, c.CONF_ADMIN_ONLY}
+_REQUIRED = {c.CONF_STYLE, c.CONF_ACCENT, c.CONF_TABS, c.CONF_TITLE, c.CONF_ICON, c.CONF_ADMIN_ONLY}
 
 
 def options_schema(current: dict[str, Any]) -> vol.Schema:

@@ -51,7 +51,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "appearance": {"style": "dials", "tabs": ["home", "climate", "energy", "boiler", "meters"], "sidebar_title": "Dom", "sidebar_icon": "mdi:home", "require_admin": False},
+            "appearance": {"style": "dials", "accent_color": "#2f6fb3", "tabs": ["home", "climate", "energy", "boiler", "meters"], "sidebar_title": "Dom", "sidebar_icon": "mdi:home", "require_admin": False},
             "outdoor": {},  # pole temperatury wyczyszczone
             "house": {"presence": "binary_sensor.domownicy"},
             # Czujniki z MQTT (ebusd) bez klasy urządzenia muszą przejść.
@@ -82,6 +82,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     await hass.async_block_till_done()
     o = entry.options
     assert o["style"] == "dials"
+    assert o["accent_color"] == "#2f6fb3"  # własny kolor wpisany zamiast gotowego
     assert o["sidebar_title"] == "Dom"
     assert o["outdoor_temperature"] is None
     assert o["presence"] == "binary_sensor.domownicy"

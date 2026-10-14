@@ -53,6 +53,8 @@ export type Tab = "home" | "climate" | "switches" | "energy" | "boiler" | "meter
 export interface Options {
   style: Style;
   tabs?: Tab[];
+  /** Kolor wiodący: klucz gotowego koloru (ember, frost…, theme) albo „#rrggbb”. */
+  accent_color?: string;
   sidebar_title?: string;
   // Klimat
   helper_prefix?: string;

@@ -24,14 +24,16 @@
               "tabs": "Zakładki",
               "sidebar_title": "Nazwa w menu",
               "sidebar_icon": "Ikona w menu",
-              "require_admin": "Tylko dla administratorów"
+              "require_admin": "Tylko dla administratorów",
+              "accent_color": "Kolor wiodący"
             },
             "data_description": {
               "style": "Kafelki, lista albo pokrętła.",
               "tabs": "Które zakładki pokazać i w jakiej kolejności: kolejność wyboru = kolejność w panelu (usuń i dodaj ponownie, żeby przesunąć). Pierwsza otwiera się domyślnie.",
               "sidebar_title": "Tekst pozycji w menu bocznym.",
               "sidebar_icon": "Ikona pozycji w menu bocznym.",
-              "require_admin": "Ukrywa panel przed zwykłymi użytkownikami."
+              "require_admin": "Ukrywa panel przed zwykłymi użytkownikami.",
+              "accent_color": "Kolor przycisków, zaznaczeń, zakładek i strony Agenta; stany (grzanie, alarmy) bez zmian. Można wpisać własny kolor #rrggbb. Każde urządzenie może wybrać inny w Ustawieniach panelu."
             }
           },
           "outdoor": {
@@ -519,6 +521,18 @@
       "options": {
         "male": "Mężczyzna / chłopiec",
         "female": "Kobieta / dziewczynka"
+      }
+    },
+    "accent": {
+      "options": {
+        "ember": "Żar (domyślny)",
+        "frost": "Niebieski",
+        "air": "Morski",
+        "ok": "Zielony",
+        "bath": "Fioletowy",
+        "rose": "Malinowy",
+        "slate": "Grafitowy",
+        "theme": "Kolor motywu HA"
       }
     },
     "goal": {
