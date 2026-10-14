@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-14
+
 ### Dodano
 - **Automatyka urządzeń w szczegółach pokoju** (zakładka Klimat) — pomocniki `input_number` i `input_boolean`
   przypisane do obszaru pokoju (poza profilami ogrzewania) jako − / + i przełączniki, np. progi wentylatora
@@ -138,6 +140,7 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/keysim86/ha-hearth/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/keysim86/ha-hearth/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/keysim86/ha-hearth/releases/tag/v0.1.0
