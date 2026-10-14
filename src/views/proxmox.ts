@@ -93,14 +93,19 @@ export function proxmoxView(ctx: Ctx): TemplateResult {
   const rows = guests.map((g) => {
     const on = running(g);
     const cpu = num(h.states[pick(ctx, g.ents, (tk) => /_cpu$/.test(tk)) ?? ""]?.state);
-    const mem = num(h.states[pick(ctx, g.ents, (tk) => /memory_percentage$/.test(tk)) ?? ""]?.state);
+    // Realny RAM z wnętrza systemu (konwencja sensor.<maszyna>_ram_zajeta) ma pierwszeństwo: Proxmox liczy dla VM
+    // pamięć przydzieloną procesowi QEMU, więc pokazuje 98–101% niezależnie od tego, co robi gość.
+    const realMem = [`sensor.${slug(g.name)}_ram_zajeta`, `sensor.${slug(g.name)}_memory_used_percent`].find((e) => num(h.states[e]?.state) !== null);
+    // Kontenery LXC Proxmox liczy dobrze (cgroup); gwiazdka tylko przy VM bez odczytu z wnętrza.
+    const vmNoReal = !realMem && !/container|lxc/i.test(g.kind);
+    const mem = realMem ? num(h.states[realMem].state) : num(h.states[pick(ctx, g.ents, (tk) => /memory_percentage$/.test(tk)) ?? ""]?.state);
     const dUsed = num(h.states[pick(ctx, g.ents, (tk) => /_disk$/.test(tk) && !/max/.test(tk)) ?? ""]?.state);
     const dMax = num(h.states[pick(ctx, g.ents, (tk) => /_max_disk$/.test(tk)) ?? ""]?.state);
     const up = pick(ctx, g.ents, (tk) => /uptime/.test(tk));
     return html`<div class="pxrow ${on ? "" : "off"}">
       <span class="pxname"><span class="dot ${on ? "ok" : "warn"}"></span><b>${g.name}</b><small>${/container|lxc/i.test(g.kind) ? "kontener" : "maszyna"} · ${on ? `działa ${uptimeText(ctx, up)}` : "zatrzymana"}</small></span>
       <span class="pxm"><small>CPU</small>${on ? bar(cpu) : html`<span class="hsub">—</span>`}</span>
-      <span class="pxm"><small>RAM</small>${on ? bar(mem) : html`<span class="hsub">—</span>`}</span>
+      <span class="pxm" title=${realMem ? "Z wnętrza systemu (bez pamięci podręcznej)" : vmNoReal ? "Z Proxmoxa — dla maszyny wirtualnej to pamięć przydzielona, nie zużyta" : "Z Proxmoxa"}><small>RAM${vmNoReal ? " *" : ""}</small>${on ? bar(mem) : html`<span class="hsub">—</span>`}</span>
       <span class="pxm"><small>Dysk</small>${diskCell(g, dUsed, dMax)}</span>
       <span class="acts">${on ? html`${press(g, "reboot", "Restart", true)}${press(g, "shutdown", "Wyłącz", true)}` : press(g, "start", "Uruchom", false)}</span>
     </div>`;

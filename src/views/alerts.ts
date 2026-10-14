@@ -25,7 +25,10 @@ export function activeAlerts(ctx: Ctx): ActiveAlert[] {
     if (hit) out.push({ entity: r.entity, message: r.message || entityName(ctx.hass, r.entity), severity: (["error", "warn", "info"].includes(r.severity ?? "") ? r.severity : "warn") as ActiveAlert["severity"] });
   }
   const rank = { error: 0, warn: 1, info: 2 };
-  return out.sort((x, y) => rank[x.severity] - rank[y.severity]);
+  out.sort((x, y) => rank[x.severity] - rank[y.severity]);
+  // Progi stopniowane na jednej encji (np. dysk > 80% uwaga, > 90% pilne): zostaje tylko najpoważniejszy.
+  const seen = new Set<string>();
+  return out.filter((a) => !seen.has(a.entity) && seen.add(a.entity));
 }
 
 export function alertsView(ctx: Ctx): TemplateResult {

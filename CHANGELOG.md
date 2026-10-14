@@ -7,6 +7,18 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-14
+
+### Dodano
+- **Proxmox: realny RAM maszyn wirtualnych** — gdy istnieje czujnik `sensor.<maszyna>_ram_zajeta` (pamięć z wnętrza
+  systemu, bez pamięci podręcznej), panel bierze go zamiast wartości z Proxmoxa, która dla VM oznacza pamięć
+  przydzieloną procesowi QEMU (98–101% niezależnie od obciążenia); maszyny bez takiego odczytu mają przy „RAM”
+  gwiazdkę i podpowiedź, kontenery LXC bez zmian (Proxmox liczy je dobrze)
+
+### Zmieniono
+- **Alerty: progi stopniowane na jednej encji** (np. dysk > 80% „uwaga” i > 90% „pilne”) pokazują tylko
+  najpoważniejszy aktywny alert zamiast dwóch
+
 ## [0.4.0] - 2026-10-14
 
 ### Dodano
@@ -156,7 +168,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/keysim86/ha-hearth/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/keysim86/ha-hearth/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/keysim86/ha-hearth/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/keysim86/ha-hearth/compare/v0.1.0...v0.2.0

@@ -27,7 +27,7 @@
 | 🌐 **Sieć** | Prędkość internetu z wykresem, łącza z dostępnością i przerwami, aktualizacje, porty i PoE |
 | 📹 **Kamery** | Podglądy co 5 s, kliknięcie = obraz na żywo, stan rejestratora i magazynu |
 | 🚗 **Auta** · 🤖 **Roboty** | Paliwo, zasięg, przebieg, akumulator, zamek, mapa · kosiarki i odkurzacze: stan, bateria, mapa, przyciski |
-| 🖥️ **Proxmox** | Węzeł, magazyny, maszyny i kontenery (CPU, RAM, dysk) z uruchamianiem i restartem |
+| 🖥️ **Proxmox** | Węzeł, magazyny, maszyny i kontenery (CPU, RAM, dysk) z uruchamianiem i restartem · realny RAM maszyn z czujnika `sensor.<maszyna>_ram_zajeta` (z wnętrza systemu), gdy jest — Proxmox podaje dla VM pamięć przydzieloną |
 | ❤️ **Zdrowie** | Osoby z ustawień integracji · waga: start, zmiana, tempo, BMI z paskiem, cele z prognozą, bilanse miesięczne i tygodniowe, historia z trendem 7 dni · skład ciała (tłuszcz wg progów ACE, masa beztłuszczowa, mięśnie, woda) · aktywność: kroki i kalorie dziś i w 7–90 dniach · ciśnienie: wartości, średnie z pomiarów, historia 90 dni, raport do druku / PDF · pomiary obwodów (profil, bilans, historia) · siatki centylowe WHO dla dzieci · wpis obwodów do pomocników |
 | 🧊 **AGD** | Karta na urządzenie, wykrywana po integracji · lodówka (Home Connect): temperatury chłodziarki i zamrażarki z −/+, drzwi, alarmy, tryby (urlopowy i szabatowy z potwierdzeniem), światło; zasilania nie da się stąd wyłączyć · zmywarka (hOn): czas do końca i godzina zakończenia, program, sól, nabłyszczacz, błąd · uzdatniacz (EcoWater): sól w % i na ile dni, woda dziś i średnio, przepływ, zapas do regeneracji, ostatnia regeneracja · inne urządzenia tych integracji: odczyty |
 | 🔔 **Alerty** · 🤖 **Agent** | Reguły z licznikiem na zakładce · dowolna strona w ramce |
