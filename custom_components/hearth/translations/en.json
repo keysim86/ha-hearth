@@ -260,7 +260,7 @@
       "step": {
         "user": {
           "title": "New person in the Health tab",
-          "description": "Only name, sex and a weight sensor are required. Each further section enables its own page: Body composition, Activity, Blood pressure, Measurements, Growth charts and Data entry.",
+          "description": "Only name, sex and a weight sensor are required. Each further section enables its own page: Body composition, Activity, Blood pressure, Measurements, Growth charts and Data entry (body circumferences).",
           "sections": {
             "person": {
               "name": "Person",
@@ -282,7 +282,7 @@
                 "gender": "Body-fat thresholds and growth charts.",
                 "birthdate": "Age in the blood-pressure report and growth charts.",
                 "weight": "Weight sensor in kg (with statistics).",
-                "height": "Sensor or input_number with height in cm — for BMI.",
+                "height": "Sensor or input_number with height (cm, or m from a phone) — for BMI.",
                 "height_cm": "When there is no height entity.",
                 "start_weight": "Baseline for loss and goal progress; empty = first value in history.",
                 "start_date": "Empty = day of the first value in history.",
@@ -346,12 +346,9 @@
             },
             "entry": {
               "name": "Data entry",
-              "description": "Page for manual input: blood pressure, height (when height is an input_number) and circumferences.",
+              "description": "Page for manual input of body circumferences. Weight, body composition, blood pressure, height and activity come from phones and the scale.",
               "data": {
                 "data_entry": "Show the Data entry page",
-                "bp_systolic_input": "Input: systolic",
-                "bp_diastolic_input": "Input: diastolic",
-                "bp_pulse_input": "Input: pulse",
                 "input_neck": "Input: neck",
                 "input_chest": "Input: chest",
                 "input_abdomen": "Input: abdomen",
@@ -377,7 +374,7 @@
         },
         "reconfigure": {
           "title": "Person in the Health tab",
-          "description": "Only name, sex and a weight sensor are required. Each further section enables its own page: Body composition, Activity, Blood pressure, Measurements, Growth charts and Data entry.",
+          "description": "Only name, sex and a weight sensor are required. Each further section enables its own page: Body composition, Activity, Blood pressure, Measurements, Growth charts and Data entry (body circumferences).",
           "sections": {
             "person": {
               "name": "Person",
@@ -399,7 +396,7 @@
                 "gender": "Body-fat thresholds and growth charts.",
                 "birthdate": "Age in the blood-pressure report and growth charts.",
                 "weight": "Weight sensor in kg (with statistics).",
-                "height": "Sensor or input_number with height in cm — for BMI.",
+                "height": "Sensor or input_number with height (cm, or m from a phone) — for BMI.",
                 "height_cm": "When there is no height entity.",
                 "start_weight": "Baseline for loss and goal progress; empty = first value in history.",
                 "start_date": "Empty = day of the first value in history.",
@@ -463,12 +460,9 @@
             },
             "entry": {
               "name": "Data entry",
-              "description": "Page for manual input: blood pressure, height (when height is an input_number) and circumferences.",
+              "description": "Page for manual input of body circumferences. Weight, body composition, blood pressure, height and activity come from phones and the scale.",
               "data": {
                 "data_entry": "Show the Data entry page",
-                "bp_systolic_input": "Input: systolic",
-                "bp_diastolic_input": "Input: diastolic",
-                "bp_pulse_input": "Input: pulse",
                 "input_neck": "Input: neck",
                 "input_chest": "Input: chest",
                 "input_abdomen": "Input: abdomen",

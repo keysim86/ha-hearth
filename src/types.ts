@@ -178,9 +178,6 @@ export interface HealthProfile {
   report_device?: string;
   bp_exclude: string[];
   data_entry: boolean;
-  bp_systolic_input?: string;
-  bp_diastolic_input?: string;
-  bp_pulse_input?: string;
   goals: HealthGoal[];
   centiles: boolean;
   [key: `meas_${string}` | `input_${string}`]: string | undefined;

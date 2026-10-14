@@ -260,7 +260,7 @@
       "step": {
         "user": {
           "title": "Nowa osoba w zakładce Zdrowie",
-          "description": "Wymagane są tylko imię, płeć i czujnik wagi. Każda kolejna sekcja włącza swoją podstronę: Skład ciała, Aktywność, Ciśnienie, Pomiary, Siatki centylowe i Wprowadź dane.",
+          "description": "Wymagane są tylko imię, płeć i czujnik wagi. Każda kolejna sekcja włącza swoją podstronę: Skład ciała, Aktywność, Ciśnienie, Pomiary, Siatki centylowe i Wprowadź dane (obwody ciała).",
           "sections": {
             "person": {
               "name": "Osoba",
@@ -282,7 +282,7 @@
                 "gender": "Progi tkanki tłuszczowej i siatki centylowe.",
                 "birthdate": "Wiek w raporcie ciśnienia i w siatkach centylowych.",
                 "weight": "Czujnik wagi w kg (ze statystykami).",
-                "height": "Czujnik albo input_number z wzrostem w cm — do BMI.",
+                "height": "Czujnik albo input_number z wzrostem (cm albo m z telefonu) — do BMI.",
                 "height_cm": "Gdy nie ma encji wzrostu.",
                 "start_weight": "Punkt wyjścia do utraty i postępu celów; puste = pierwszy pomiar z historii.",
                 "start_date": "Puste = dzień pierwszego pomiaru z historii.",
@@ -346,12 +346,9 @@
             },
             "entry": {
               "name": "Wprowadź dane",
-              "description": "Podstrona do ręcznego wpisu: ciśnienie, wzrost (gdy wzrost to input_number) i obwody.",
+              "description": "Podstrona do ręcznego wpisu obwodów ciała. Waga, skład ciała, ciśnienie, wzrost i aktywność przychodzą z telefonów i wagi.",
               "data": {
                 "data_entry": "Pokaż podstronę Wprowadź dane",
-                "bp_systolic_input": "Wpis: ciśnienie skurczowe",
-                "bp_diastolic_input": "Wpis: ciśnienie rozkurczowe",
-                "bp_pulse_input": "Wpis: tętno",
                 "input_neck": "Wpis: szyja",
                 "input_chest": "Wpis: klatka piersiowa",
                 "input_abdomen": "Wpis: brzuch",
@@ -377,7 +374,7 @@
         },
         "reconfigure": {
           "title": "Osoba w zakładce Zdrowie",
-          "description": "Wymagane są tylko imię, płeć i czujnik wagi. Każda kolejna sekcja włącza swoją podstronę: Skład ciała, Aktywność, Ciśnienie, Pomiary, Siatki centylowe i Wprowadź dane.",
+          "description": "Wymagane są tylko imię, płeć i czujnik wagi. Każda kolejna sekcja włącza swoją podstronę: Skład ciała, Aktywność, Ciśnienie, Pomiary, Siatki centylowe i Wprowadź dane (obwody ciała).",
           "sections": {
             "person": {
               "name": "Osoba",
@@ -399,7 +396,7 @@
                 "gender": "Progi tkanki tłuszczowej i siatki centylowe.",
                 "birthdate": "Wiek w raporcie ciśnienia i w siatkach centylowych.",
                 "weight": "Czujnik wagi w kg (ze statystykami).",
-                "height": "Czujnik albo input_number z wzrostem w cm — do BMI.",
+                "height": "Czujnik albo input_number z wzrostem (cm albo m z telefonu) — do BMI.",
                 "height_cm": "Gdy nie ma encji wzrostu.",
                 "start_weight": "Punkt wyjścia do utraty i postępu celów; puste = pierwszy pomiar z historii.",
                 "start_date": "Puste = dzień pierwszego pomiaru z historii.",
@@ -463,12 +460,9 @@
             },
             "entry": {
               "name": "Wprowadź dane",
-              "description": "Podstrona do ręcznego wpisu: ciśnienie, wzrost (gdy wzrost to input_number) i obwody.",
+              "description": "Podstrona do ręcznego wpisu obwodów ciała. Waga, skład ciała, ciśnienie, wzrost i aktywność przychodzą z telefonów i wagi.",
               "data": {
                 "data_entry": "Pokaż podstronę Wprowadź dane",
-                "bp_systolic_input": "Wpis: ciśnienie skurczowe",
-                "bp_diastolic_input": "Wpis: ciśnienie rozkurczowe",
-                "bp_pulse_input": "Wpis: tętno",
                 "input_neck": "Wpis: szyja",
                 "input_chest": "Wpis: klatka piersiowa",
                 "input_abdomen": "Wpis: brzuch",

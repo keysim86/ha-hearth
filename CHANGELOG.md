@@ -27,7 +27,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
   - **Pomiary** — obwody z datą, zmianą od poprzedniej sesji i od pierwszego pomiaru, sumy, profil na „pajęczynie”,
     bilans miesięczny sumy obwodów, historia (kliknięcie kafelka = jeden obwód)
   - **Siatki** — wiek, BMI i wzrost dziecka na tle siatek centylowych WHO 2007 z kategoriami
-  - **Wprowadź dane** — ciśnienie, wzrost i obwody zapisywane do pomocników `input_number`
+  - **Wprowadź dane** — obwody ciała zapisywane do pomocników `input_number` (waga, skład ciała, ciśnienie, wzrost
+    i aktywność przychodzą z telefonów i wagi; wzrost z telefonu w metrach przeliczany na centymetry)
 - **Zakładki Dom, Energia, Kocioł i Liczniki** obok Klimatu — przełączane w nagłówku, każda pod własnym adresem
   (`/hearth/dom`, `/hearth/energia`…); w opcjach wybór, które pokazać
 - **Dom** — domownicy (zdjęcie, gdzie i od kiedy, odległość od domu, bateria telefonu z ładowaniem, kroki dziś), bramy

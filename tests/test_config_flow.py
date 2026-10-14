@@ -113,6 +113,10 @@ async def test_health_person_subentry_add_and_reconfigure(hass: HomeAssistant, p
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "health"), context={"source": config_entries.SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     assert set(result["data_schema"].schema) == {"person", "body", "activity", "pressure", "measurements", "entry", "goals"}
+    # Ręczny wpis tylko obwodów (ciśnienie i wzrost przychodzą z telefonów).
+    entry_keys = {str(k) for k in next(v for k, v in result["data_schema"].schema.items() if str(k) == "entry").schema.schema}
+    assert "input_waist" in entry_keys
+    assert not {"bp_systolic_input", "bp_diastolic_input", "bp_pulse_input"} & entry_keys
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {

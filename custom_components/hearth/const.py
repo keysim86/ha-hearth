@@ -171,7 +171,8 @@ HEALTH_SECTIONS: dict[str, list[str]] = {
     "activity": ["steps", "calories", "steps_goal", "calories_goal"],
     "pressure": ["bp_systolic", "bp_diastolic", "bp_pulse", "bp_category", "report_name", "report_device", "bp_exclude"],
     "measurements": [f"meas_{m}" for m in MEASUREMENTS],
-    "entry": ["data_entry", "bp_systolic_input", "bp_diastolic_input", "bp_pulse_input", *[f"input_{m}" for m in MEASUREMENTS]],
+    # Ręczny wpis tylko obwodów — reszta danych przychodzi z telefonów i wagi.
+    "entry": ["data_entry", *[f"input_{m}" for m in MEASUREMENTS]],
     "goals": ["goals", "centiles"],
 }
 

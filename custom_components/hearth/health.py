@@ -35,7 +35,7 @@ _FIELDS: dict[str, Any] = {
     ),
     "birthdate": selector.DateSelector(),
     "weight": _SENSOR,
-    # Wzrost z encji; input_number da się też zmienić z zakładki „Wprowadź dane”.
+    # Wzrost z encji (telefon w metrach albo szablon / pomocnik w centymetrach — panel przelicza).
     "height": _entity(["sensor", "input_number"]),
     "height_cm": _number(50, 250, 1, "cm"),
     "start_weight": _number(1, 400, 0.1, "kg"),
@@ -56,9 +56,6 @@ _FIELDS: dict[str, Any] = {
     "bp_exclude": selector.TextSelector(selector.TextSelectorConfig(multiple=True)),
     **{f"meas_{m}": _entity(["sensor", "input_number"]) for m in MEASUREMENTS},
     "data_entry": selector.BooleanSelector(),
-    "bp_systolic_input": _INPUT,
-    "bp_diastolic_input": _INPUT,
-    "bp_pulse_input": _INPUT,
     **{f"input_{m}": _INPUT for m in MEASUREMENTS},
     "goals": selector.ObjectSelector(
         selector.ObjectSelectorConfig(

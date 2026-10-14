@@ -28,7 +28,7 @@
 | 📹 **Kamery** | Podglądy co 5 s, kliknięcie = obraz na żywo, stan rejestratora i magazynu |
 | 🚗 **Auta** · 🤖 **Roboty** | Paliwo, zasięg, przebieg, akumulator, zamek, mapa · kosiarki i odkurzacze: stan, bateria, mapa, przyciski |
 | 🖥️ **Proxmox** | Węzeł, magazyny, maszyny i kontenery (CPU, RAM, dysk) z uruchamianiem i restartem |
-| ❤️ **Zdrowie** | Osoby z ustawień integracji · waga: start, zmiana, tempo, BMI z paskiem, cele z prognozą, bilanse miesięczne i tygodniowe, historia z trendem 7 dni · skład ciała (tłuszcz wg progów ACE, masa beztłuszczowa, mięśnie, woda) · aktywność: kroki i kalorie dziś i w 7–90 dniach · ciśnienie: wartości, średnie z pomiarów, historia 90 dni, raport do druku / PDF · pomiary obwodów (profil, bilans, historia) · siatki centylowe WHO dla dzieci · wpis danych do pomocników |
+| ❤️ **Zdrowie** | Osoby z ustawień integracji · waga: start, zmiana, tempo, BMI z paskiem, cele z prognozą, bilanse miesięczne i tygodniowe, historia z trendem 7 dni · skład ciała (tłuszcz wg progów ACE, masa beztłuszczowa, mięśnie, woda) · aktywność: kroki i kalorie dziś i w 7–90 dniach · ciśnienie: wartości, średnie z pomiarów, historia 90 dni, raport do druku / PDF · pomiary obwodów (profil, bilans, historia) · siatki centylowe WHO dla dzieci · wpis obwodów do pomocników |
 | 🔔 **Alerty** · 🤖 **Agent** | Reguły z licznikiem na zakładce · dowolna strona w ramce |
 | 📟 **Liczniki** | Dowolne encje pogrupowane według urządzeń (licznik, sprzedawca, zmiękczacz, zmywarka…) · liczniki narastające z zużyciem dziś i w miesiącu · pomiary z wykresem 24 h · stany drzwi, soli i daty po polsku |
 
@@ -105,12 +105,12 @@ każda kolejna sekcja włącza swoją podstronę:
 
 | Sekcja | Pola | Podstrona |
 |---|---|---|
-| **Osoba** | imię, osoba HA (zdjęcie), płeć, data urodzenia, waga, wzrost (encja albo stały), waga i data startu, dni historii | Waga |
+| **Osoba** | imię, osoba HA (zdjęcie), płeć, data urodzenia, waga, wzrost (encja w cm albo w m z telefonu, albo stały), waga i data startu, dni historii | Waga |
 | **Skład ciała** | tkanka tłuszczowa %, masa tłuszczu, masa beztłuszczowa, tkanka beztłuszczowa, mięśnie szkieletowe, kości, woda, przemiana podstawowa | Skład ciała |
 | **Aktywność** | kroki i kalorie dziś (liczniki zerowane o północy), cele | Aktywność |
 | **Ciśnienie** | skurczowe, rozkurczowe, tętno, kategoria, imię i nazwisko oraz ciśnieniomierz do raportu, pominięte pomiary | Ciśnienie |
 | **Pomiary ciała** | obwody: szyja, klatka, brzuch, talia, biodra, udo, łydka, biceps | Pomiary |
-| **Wprowadź dane** | włącznik podstrony, pomocniki `input_number` ciśnienia i obwodów (wzrost — gdy jest pomocnikiem) | Wprowadź dane |
+| **Wprowadź dane** | włącznik podstrony, pomocniki `input_number` obwodów (reszta danych przychodzi z telefonów i wagi) | Wprowadź dane |
 | **Cele i siatki** | cele wagowe (nazwa, waga, termin, kolor), siatki centylowe WHO 2007 (2–18 lat, potrzebna data urodzenia) | Waga, Siatki |
 
 Panel liczy wszystko ze statystyk rekordera (waga dzień po dniu, średnie, odczyty ciśnienia z minimum i maksimum

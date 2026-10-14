@@ -91,8 +91,11 @@ function stateNum(ctx: Ctx, id?: string): number | null {
 }
 
 export function heightCm(ctx: Ctx, p: HealthProfile): number | null {
-  const v = stateNum(ctx, p.height);
-  return v !== null && v > 30 ? v : p.height_cm ?? null;
+  const raw = stateNum(ctx, p.height);
+  // Telefon podaje wzrost w metrach (1,78), szablony i pomocniki w centymetrach.
+  const unit = p.height ? String(ctx.hass.states[p.height]?.attributes.unit_of_measurement ?? "") : "";
+  const v = raw === null ? null : unit === "m" ? raw * 100 : unit === "mm" ? raw / 10 : raw;
+  return v !== null && v > 30 ? Math.round(v * 10) / 10 : p.height_cm ?? null;
 }
 
 function historyStart(p: HealthProfile): Date {
@@ -565,62 +568,34 @@ function centilesPage(ctx: Ctx, p: HealthProfile, w: Daily): TemplateResult {
 
 // ---- Wprowadź dane ----
 
+/** Ręczny wpis tylko obwodów ciała: waga, skład ciała, ciśnienie, wzrost i aktywność przychodzą z telefonów i wagi. */
 function entryPage(ctx: Ctx, p: HealthProfile): TemplateResult {
-  // Krok „any”: przeglądarka nie odrzuci 79,3 cm; zakres i tak sprawdza zapis (i pomocnik w HA).
-  const field = (name: string, label: string, unit: string, entity: string | undefined, min: number, max: number, step: number | "any" = "any") => html`<label class="defield">
-      <span>${label}<small>${unit}</small></span>
-      <input name=${name} type="number" inputmode="decimal" min=${min} max=${max} step=${step} .value=${String(stateNum(ctx, entity) ?? "")} placeholder="—" ?disabled=${!entity} />
-    </label>`;
-  const submit = (e: SubmitEvent, spec: Array<[string, string | undefined, string, number, number]>, all: boolean, done: (v: Record<string, number>) => string) => {
+  const meas = MEASUREMENTS.filter((m) => p[`input_${m.key}`]);
+  if (!meas.length)
+    return html`<div class="empty">Wskaż pomocniki input_number obwodów w ustawieniach osoby (sekcja Wprowadź dane), żeby wpisywać pomiary tutaj.</div>`;
+  const submit = (e: SubmitEvent) => {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
-    const out: Array<[string, number]> = [], vals: Record<string, number> = {};
-    for (const [name, entity, label, min, max] of spec) {
-      if (!entity) continue;
-      const raw = String(fd.get(name) ?? "").replace(",", ".").trim();
-      if (!raw) {
-        if (all) return ctx.actions.toast(`Wypełnij: ${label}.`);
-        continue;
-      }
+    const out: Array<[string, number]> = [];
+    for (const m of meas) {
+      const raw = String(fd.get(m.key) ?? "").replace(",", ".").trim();
+      if (!raw) continue;
       const v = Number(raw);
-      if (!Number.isFinite(v) || v < min || v > max) return ctx.actions.toast(`${label}: podaj wartość ${min}–${max}.`);
-      out.push([entity, v]);
-      vals[name] = v;
+      if (!Number.isFinite(v) || v < m.min || v > m.max) return ctx.actions.toast(`${m.label}: podaj wartość ${m.min}–${m.max} cm.`);
+      out.push([p[`input_${m.key}`]!, v]);
     }
     if (!out.length) return ctx.actions.toast("Nie podano żadnej wartości.");
-    ctx.actions.saveNumbers(out, done(vals));
+    ctx.actions.saveNumbers(out, "Zapisano pomiary.");
   };
-  const bp: Array<[string, string | undefined, string, number, number]> = [
-    ["sys", p.bp_systolic_input, "skurczowe", 60, 250], ["dia", p.bp_diastolic_input, "rozkurczowe", 40, 150], ["pul", p.bp_pulse_input, "tętno", 30, 200],
-  ];
-  const heightInput = p.height?.startsWith("input_number.") ? p.height : undefined;
-  const meas = MEASUREMENTS.filter((m) => p[`input_${m.key}`]);
-  const measSpec = meas.map((m) => [m.key, p[`input_${m.key}`], m.label.toLowerCase(), m.min, m.max] as [string, string | undefined, string, number, number]);
-  const anyBp = bp.some(([, e]) => e);
-  if (!anyBp && !heightInput && !meas.length)
-    return html`<div class="empty">Wskaż pomocniki input_number w ustawieniach osoby (sekcja Wprowadź dane), a wzrost jako input_number, żeby wpisywać dane tutaj.</div>`;
-  return html`
-    ${anyBp
-      ? html`<form class="ocell" @submit=${(e: SubmitEvent) => submit(e, bp, true, (v) => `Zapisano ciśnienie ${v.sys}/${v.dia} mmHg${v.pul ? `, tętno ${v.pul}` : ""}.`)}>
-          <span class="hlabel">Ciśnienie krwi</span>
-          <div class="deform">${field("sys", "Skurczowe", "mmHg", p.bp_systolic_input, 60, 250, 1)}${field("dia", "Rozkurczowe", "mmHg", p.bp_diastolic_input, 40, 150, 1)}${field("pul", "Tętno", "bpm", p.bp_pulse_input, 30, 200, 1)}</div>
-          <div class="orow"><span class="hsub">Wszystkie trzy wartości z jednego pomiaru.</span><button class="btn hot" type="submit">Zapisz ciśnienie</button></div>
-        </form>`
-      : nothing}
-    ${heightInput
-      ? html`<form class="ocell" @submit=${(e: SubmitEvent) => submit(e, [["h", heightInput, "wzrost", 50, 250]], true, (v) => `Zapisano wzrost ${v.h} cm.`)}>
-          <span class="hlabel">Wzrost</span>
-          <div class="deform">${field("h", "Wzrost", "cm", heightInput, 50, 250)}</div>
-          <div class="orow"><span class="hsub">Do BMI, raportu i siatek centylowych.</span><button class="btn hot" type="submit">Zapisz wzrost</button></div>
-        </form>`
-      : nothing}
-    ${meas.length
-      ? html`<form class="ocell" @submit=${(e: SubmitEvent) => submit(e, measSpec, false, () => "Zapisano pomiary.")}>
-          <span class="hlabel">Pomiary ciała</span>
-          <div class="deform">${meas.map((m) => field(m.key, m.label, "cm", p[`input_${m.key}`], m.min, m.max))}</div>
-          <div class="orow"><span class="hsub">Puste pola zostają bez zmian.</span><button class="btn hot" type="submit">Zapisz pomiary</button></div>
-        </form>`
-      : nothing}`;
+  // Krok „any”: przeglądarka nie odrzuci 79,3 cm; zakres sprawdza zapis (i pomocnik w HA).
+  return html`<form class="ocell" @submit=${submit}>
+    <span class="hlabel">Pomiary ciała</span>
+    <div class="deform">${meas.map((m) => html`<label class="defield">
+      <span>${m.label}<small>cm</small></span>
+      <input name=${m.key} type="number" inputmode="decimal" min=${m.min} max=${m.max} step="any" .value=${String(stateNum(ctx, p[`input_${m.key}`]) ?? "")} placeholder="—" />
+    </label>`)}</div>
+    <div class="orow"><span class="hsub">Puste pola zostają bez zmian. Pozostałe dane przychodzą z telefonów i wagi.</span><button class="btn hot" type="submit">Zapisz pomiary</button></div>
+  </form>`;
 }
 
 // ---- zakładka ----
