@@ -21,6 +21,21 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
   (tryby, presety, −/+); gaz dziś, w miesiącu, 30 dni i 12 miesięcy (CO i CWU warstwowo); suwaki ustawień
 - **Liczniki** — dowolne encje pogrupowane według urządzeń; liczniki narastające z zużyciem dziś i w miesiącu ze
   statystyk, pomiary z wykresem 24 h, stany i daty po polsku
+- **Dom: mapa osoby** — kliknięcie domownika otwiera okno z mapą HA (jak karta „Mapa”), miejscem, czasem, odległością,
+  dokładnością GPS i linkiem do Map Google
+- **Dom: radar opadów i Windy** — przełącznik Prognoza 14 dni / Radar opadów (RainViewer) / Windy, wyśrodkowane na
+  lokalizacji domu; wybór zapamiętuje urządzenie
+- **Dom: odpady z kalendarza** — frakcje i najbliższe terminy z kalendarza Waste Collection Schedule; frakcja bez
+  terminu (np. wielkogabarytowe poza zbiórką) jest ukryta; przełączniki frakcji (pomocniki `input_boolean`, np.
+  `odpady_bio_aktywne`) w Ustawieniach panelu — wyłączony ukrywa frakcję także w automatyzacjach, które go sprawdzają
+- **Wykresy słupkowe z osią i podpowiedzią** — podziałka wartości, etykiety nad słupkami (gęste chowają się na wąskim
+  ekranie), po najechaniu albo dotknięciu data, suma i rozbicie; prąd w podziale na strefy taryfy (sezony i dni się
+  sumują), gaz na CO i CWU
+- **Kocioł: Quick Veto przez ebusd** — opcja tematu strefy (np. `ebusd/ctlv2/Z1`): w trybie Harmonogram −/+
+  ogrzewania włącza Veto (SFMode, QuickVetoTemp), w trybie dziennym zmienia temperaturę dzienną, zmiana trybu kończy
+  Veto; status „Veto do …” z czujników końca i przycisk Zakończ Veto; tryby podpisane jak w sterowniku
+- **Kocioł: gaz po latach** i podpowiedź na wykresie temperatur z 24 h (godzina i wartości wszystkich serii), wartości
+  bieżące w legendzie
 - **Czytelne nazwy** — bez numerów seryjnych, PPE i identyfikatorów (słowa z 6+ cyframi) oraz prefiksów węzłów
   ESPHome; nazwa urządzenia nie powtarza się w nazwie encji
 - **Integracja `hearth` z panelem w menu bocznym** — jeden wpis na instalację; panel rejestrowany przez `panel_custom`,

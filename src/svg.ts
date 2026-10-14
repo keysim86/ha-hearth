@@ -199,31 +199,60 @@ export const menuIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path f
 // ---- wykresy zakładek Energia / Kocioł / Liczniki ----
 
 export interface Bar {
+  /** Podpis pod słupkiem (krótki: dzień miesiąca, skrót miesiąca). */
   label: string;
+  /** Pełny opis w podpowiedzi („pon 13.10”, „październik 2026”). */
+  title?: string;
   values: number[];
   now?: boolean;
 }
 
-/** Słupki (warstwowe, gdy w `values` jest kilka liczb), oś X z co n-tym podpisem, maksimum w rogu. */
-export function bars(data: Bar[], colors: string[], o: { unit?: string; every?: number; height?: number; digits?: number } = {}): TemplateResult {
-  const W = 600, H = o.height ?? 130, top = 14, bottom = 18;
-  const max = Math.max(0.0001, ...data.map((d) => d.values.reduce((a, b) => a + Math.max(0, b), 0)));
-  const slot = W / Math.max(1, data.length), bw = Math.max(2, slot * 0.68);
+/** Zaokrąglenie maksimum osi w górę do „ładnej” liczby (1, 2, 2,5, 5 × 10^n). */
+function niceMax(v: number): number {
+  if (v <= 0) return 1;
+  const p = 10 ** Math.floor(Math.log10(v));
+  return ([1, 2, 2.5, 5, 10].find((m) => m * p >= v) ?? 10) * p;
+}
+
+/** Słupki (warstwowe, gdy w `values` jest kilka serii) z osią wartości, podpisami i podpowiedzią po najechaniu
+ *  albo dotknięciu (kolumna dostaje fokus). `names` = nazwy serii do rozbicia w podpowiedzi. */
+export function bars(
+  data: Bar[],
+  colors: string[],
+  o: { unit?: string; every?: number; height?: number; digits?: number; names?: string[]; valueLabels?: boolean | "dense" } = {},
+): TemplateResult {
+  const total = (d: Bar) => d.values.reduce((a, b) => a + Math.max(0, b), 0);
+  const top = niceMax(Math.max(...data.map(total), 0));
+  const ticks = [top, top / 2, 0];
   const every = o.every ?? Math.ceil(data.length / 12);
   const fmt = (v: number) => v.toLocaleString("pl-PL", { maximumFractionDigits: o.digits ?? 1 });
-  return html`<svg class="bars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Wykres słupkowy">
-    <line x1="0" x2=${W} y1=${H - bottom} y2=${H - bottom} stroke="var(--line)" vector-effect="non-scaling-stroke"></line>
-    ${data.map((d, i) => {
-      let y = H - bottom;
-      const x = i * slot + (slot - bw) / 2;
-      return svg`${d.values.map((v, k) => {
-        const h = (Math.max(0, v) / max) * (H - top - bottom);
-        y -= h;
-        return svg`<rect x=${x} y=${y} width=${bw} height=${Math.max(0, h)} rx="1.5" fill=${colors[k % colors.length]} opacity=${d.now ? 1 : 0.82}></rect>`;
-      })}${i % every === 0 || d.now ? svg`<text x=${x + bw / 2} y=${H - 4} font-size="10" text-anchor="middle" fill=${d.now ? "var(--fg)" : "var(--faint)"}>${d.label}</text>` : nothing}`;
-    })}
-    <text x="2" y="10" font-size="10" fill="var(--faint)">max ${fmt(max)}${o.unit ? ` ${o.unit}` : ""}</text>
-  </svg>`;
+  const unit = o.unit ? ` ${o.unit}` : "";
+  const edge = (i: number) => (i < 3 ? "l" : i > data.length - 4 ? "r" : "");
+  // Gęste etykiety (np. 30 dni): bez części dziesiętnych od 10 w górę, żeby się mieściły nad wąskim słupkiem.
+  const label = (v: number) => (o.valueLabels === "dense" && v >= 10 ? Math.round(v).toLocaleString("pl-PL") : fmt(v));
+  return html`<div class="bwrap"><div class="bchart ${o.valueLabels === "dense" ? "dense" : ""}" style="--bh:${o.height ?? 140}px">
+    <div class="byaxis" aria-hidden="true">${ticks.map((t) => html`<span style="bottom:${(t / top) * 100}%">${fmt(t)}</span>`)}</div>
+    <div class="bplot">
+      ${ticks.map((t) => html`<i class="bgrid" style="bottom:${(t / top) * 100}%"></i>`)}
+      ${data.map((d, i) => {
+        const sum = total(d);
+        return html`<div class="bcol ${d.now ? "now" : ""} ${edge(i)}" tabindex="0" aria-label="${d.title ?? d.label}: ${fmt(sum)}${unit}">
+          <div class="bstack" style="height:${((sum / top) * 100).toFixed(2)}%">
+            ${d.values.map((v, k) => (v > 0 ? html`<span style="flex:${v};background:${colors[k % colors.length]}"></span>` : nothing))}
+            ${o.valueLabels && sum > 0 ? html`<em class="bval">${label(sum)}</em>` : nothing}
+          </div>
+          <span class="blab">${i % every === 0 || d.now ? d.label : ""}</span>
+          <div class="btip" role="tooltip">
+            <b>${d.title ?? d.label}</b>
+            <span class="btot">${fmt(sum)}${unit}</span>
+            ${o.names && o.names.length > 1
+              ? d.values.map((v, k) => (v > 0 ? html`<span class="bser"><i style="background:${colors[k % colors.length]}"></i>${o.names![k]} <b>${fmt(v)}</b></span>` : nothing))
+              : nothing}
+          </div>
+        </div>`;
+      })}
+    </div>
+  </div></div>`;
 }
 
 export interface Series {
@@ -233,7 +262,8 @@ export interface Series {
   dashed?: boolean;
 }
 
-/** Kilka linii z ostatnich 24 h na wspólnej skali (np. zasilanie, powrót, zewnątrz). */
+/** Kilka linii z ostatnich 24 h na wspólnej skali (np. zasilanie, powrót, zewnątrz). Po najechaniu / dotknięciu
+ *  przedziału (pół godziny) podpowiedź z godziną i wartościami; w legendzie wartości bieżące. */
 export function multiLine(series: Series[], o: { unit?: string; height?: number } = {}): TemplateResult | typeof nothing {
   const t1 = Date.now(), t0 = t1 - DAY;
   const lines = series.map((s) => ({ ...s, pts: numeric(s.points, t0, t1) })).filter((s) => s.pts.length > 2);
@@ -245,13 +275,33 @@ export function multiLine(series: Series[], o: { unit?: string; height?: number 
   const X = (t: number) => ((t - t0) / DAY) * W;
   const Y = (v: number) => H - pad - ((v - lo) / (hi - lo)) * (H - 2 * pad);
   const path = (pts: Array<[number, number]>) => pts.map(([t, v], i) => `${i ? "L" : "M"}${X(t).toFixed(1)} ${Y(v).toFixed(1)}`).join("");
+  const at = (pts: Array<[number, number]>, t: number) => {
+    let v = pts[0][1];
+    for (const [pt, pv] of pts) { if (pt > t) break; v = pv; }
+    return v;
+  };
+  const f = (v: number) => v.toLocaleString("pl-PL", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const u = o.unit ?? "";
+  const hm = new Intl.DateTimeFormat("pl-PL", { hour: "2-digit", minute: "2-digit" });
+  const SLOTS = 48;
   return html`<div class="mline">
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Wykres z ostatnich 24 godzin">
-      ${[0.25, 0.5, 0.75].map((f) => svg`<line x1=${W * f} x2=${W * f} y1="0" y2=${H} stroke="var(--line)" stroke-dasharray="2 5" vector-effect="non-scaling-stroke"></line>`)}
-      ${lines.map((s) => svg`<path d=${path(s.pts)} fill="none" stroke=${s.color} stroke-width="2" stroke-dasharray=${s.dashed ? "5 4" : "none"} vector-effect="non-scaling-stroke"></path>`)}
-    </svg>
-    <div class="mlabels"><span>${hi.toLocaleString("pl-PL", { maximumFractionDigits: 1 })}${o.unit ?? ""}</span><span>${lo.toLocaleString("pl-PL", { maximumFractionDigits: 1 })}${o.unit ?? ""}</span></div>
-    <div class="mlegend">${lines.map((s) => html`<span><i style="background:${s.color}"></i>${s.name}</span>`)}<span class="tt">−24 h … teraz</span></div>
+    <div class="mplot">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Wykres z ostatnich 24 godzin">
+        ${[0.25, 0.5, 0.75].map((fr) => svg`<line x1=${W * fr} x2=${W * fr} y1="0" y2=${H} stroke="var(--line)" stroke-dasharray="2 5" vector-effect="non-scaling-stroke"></line>`)}
+        ${lines.map((s) => svg`<path d=${path(s.pts)} fill="none" stroke=${s.color} stroke-width="2" stroke-dasharray=${s.dashed ? "5 4" : "none"} vector-effect="non-scaling-stroke"></path>`)}
+      </svg>
+      ${[...Array(SLOTS).keys()].map((i) => {
+        const t = t0 + ((i + 0.5) / SLOTS) * DAY;
+        const edge = i < 6 ? "l" : i > SLOTS - 7 ? "r" : "";
+        return html`<div class="mslot ${edge}" tabindex="0" style="left:${(i / SLOTS) * 100}%;width:${100 / SLOTS}%">
+          <i class="mcross"></i>
+          <div class="btip" role="tooltip"><b>${hm.format(t)}</b>
+            ${lines.map((s) => html`<span class="bser"><i style="background:${s.color}"></i>${s.name} <b>${f(at(s.pts, t))}${u}</b></span>`)}</div>
+        </div>`;
+      })}
+    </div>
+    <div class="mlabels"><span>${f(hi)}${u}</span><span>${f(lo)}${u}</span></div>
+    <div class="mlegend">${lines.map((s) => html`<span><i style="background:${s.color}"></i>${s.name} <b>${f(s.pts[s.pts.length - 1][1])}${u}</b></span>`)}<span class="tt">−24 h … teraz</span></div>
   </div>`;
 }
 

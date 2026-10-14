@@ -2,7 +2,7 @@
 
 import type { Hass } from "../types";
 
-export type Period = "hour" | "day" | "month";
+export type Period = "hour" | "day" | "month" | "year";
 export interface StatPoint {
   start: number;
   change: number | null;

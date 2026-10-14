@@ -67,20 +67,24 @@
           },
           "home": {
             "name": "Home tab",
-            "description": "Persons, gates, mailbox, waste and weather.",
+            "description": "Persons (click = map), gates, mailbox, waste and weather (forecast, radar, Windy).",
             "data": {
               "persons": "Persons",
               "gates": "Gates and garages",
               "mailbox": "Mailbox — mail",
               "mailbox_battery": "Mailbox — battery",
+              "waste_calendar": "Waste — calendar",
               "waste": "Waste",
+              "waste_toggles": "Waste — category switches",
               "weather": "Weather (entity)"
             },
             "data_description": {
               "persons": "Empty = every person with a phone. Battery and steps from the person's phone.",
               "gates": "Empty = covers of class gate, garage and door.",
               "mailbox": "binary_sensor: on = mail inside.",
-              "waste": "Empty = Waste Collection Schedule sensors.",
+              "waste_calendar": "Empty = the Waste Collection Schedule calendar. A category shows only when it has a date.",
+              "waste": "Instead of the calendar: sensors with the pickup date (e.g. waste_collection_schedule sensors).",
+              "waste_toggles": "input_boolean enabling a category (e.g. waste_bio_active). Off hides it; the switch is in the panel settings. Empty = helpers with “waste” in the name.",
               "weather": "Empty = Open-Meteo (ECMWF) forecast for the home location."
             }
           },
@@ -123,14 +127,20 @@
               "dhw_temperature": "Hot water — temperature",
               "dhw_target": "Hot water — target",
               "gas": "Gas consumption",
-              "boiler_settings": "Settings (sliders)"
+              "boiler_settings": "Settings (sliders)",
+              "ebusd_zone_topic": "ebusd — zone topic (Veto)",
+              "boiler_sf_mode": "Special function mode (SF)",
+              "veto_end_date": "Veto — end date",
+              "veto_end_time": "Veto — end time"
             },
             "data_description": {
               "boiler_state": "Ready state, e.g. HEATING / STANDBY. With ebusd leave empty and pick the flame.",
               "boiler_flame": "On/off binary_sensor (e.g. ebusd bai/Flame).",
               "boiler_dhw_demand": "binary_sensor (e.g. ebusd bai/HwcDemand).",
               "gas": "Empty = gas from the Energy dashboard. Daily and monthly charts from statistics.",
-              "boiler_settings": "number / input_number entities with −/+ in the Boiler tab."
+              "boiler_settings": "number / input_number entities with −/+ in the Boiler tab.",
+              "ebusd_zone_topic": "E.g. ebusd/ctlv2/Z1. In Auto mode heating −/+ starts Quick Veto (MQTT …SFMode, …QuickVetoTemp); changing the mode ends it. Empty = plain setpoint change.",
+              "boiler_sf_mode": "Special function sensor (e.g. auto / veto) — “Veto until …” status."
             }
           },
           "meters": {

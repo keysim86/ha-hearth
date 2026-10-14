@@ -26,9 +26,10 @@
   // Dni migawki przenosimy o pełne doby, żeby dzisiejszy dzień migawki był „dziś”.
   const dayShift = Math.round(shift / 864e5) * 864e5;
   const alignStart = (start, period) => {
-    const t = (typeof start === "number" ? start : Date.parse(start)) + (period === "month" ? 0 : dayShift);
+    const t = (typeof start === "number" ? start : Date.parse(start)) + (period === "month" || period === "year" ? 0 : dayShift);
     const d = new Date(t);
     if (period === "month") { d.setDate(1); }
+    if (period === "year") { d.setMonth(0, 1); }
     d.setHours(0, 0, 0, 0);
     return d.getTime();
   };
@@ -38,6 +39,11 @@
     states, entities: snap.entities, devices: snap.devices, areas: snap.areas,
     themes: { darkMode: dark }, config: { time_zone: "Europe/Warsaw", ...(snap.config ?? {}) }, user: { is_admin: true },
     async callWS(msg) {
+      if (msg.type === "call_service" && msg.domain === "calendar" && msg.service === "get_events") {
+        const response = {};
+        for (const id of [].concat(msg.target?.entity_id ?? [])) response[id] = { events: snap.calendar_events?.[id] ?? [] };
+        return { response };
+      }
       if (msg.type === "energy/get_prefs") return snap.energy_prefs ?? { energy_sources: [], device_consumption: [] };
       if (msg.type === "recorder/statistics_during_period") {
         // Statystyki z migawki przesunięte na „teraz”; okresy dzienne i miesięczne wyrównane do północy w strefie przeglądarki.
@@ -51,7 +57,14 @@
       for (const id of msg.entity_ids) if (snap.history[id]) out[id] = snap.history[id].map(([t, s]) => ({ s, lu: t + shift / 1000 }));
       return out;
     },
-    async callService(domain, service, data) { window.__calls.push([domain, service, data]); },
+    async callService(domain, service, data) {
+      window.__calls.push([domain, service, data]);
+      // Atrapa przełączników: input_boolean.toggle zmienia stan od razu.
+      if (domain === "input_boolean" && service === "toggle") {
+        const id = data.entity_id, s = el.hass.states[id];
+        el.hass = { ...el.hass, states: { ...el.hass.states, [id]: { ...s, state: s.state === "on" ? "off" : "on" } } };
+      }
+    },
   };
   const el = document.createElement("hearth-panel");
   el.hass = hass;

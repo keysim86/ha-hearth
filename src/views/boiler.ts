@@ -6,11 +6,14 @@ import { daysAgo, monthsAgo, startOfDay, startOfMonth, sumSince } from "../data/
 import { f1, num, round } from "../format";
 import { bars, multiLine, type Bar } from "../svg";
 import { entityName, st, unitOf, type Ctx } from "./common";
+import { MONTH_NAMES } from "./energy";
 import { boilerState } from "./house";
 
 const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 // Nazwy trybów jak w polskim interfejsie HA.
 const HVAC: Record<string, string> = { off: "Wyłączony", heat: "Grzanie", auto: "Automatyczny", heat_cool: "Grzanie/chłodzenie", cool: "Chłodzenie", dry: "Osuszanie", fan_only: "Tylko wentylator", eco: "Eko", electric: "Grzałka", gas: "Gaz", performance: "Wydajny", heat_pump: "Pompa ciepła", high_demand: "Duży pobór" };
+// Sterownik Vaillant przez ebusd: heat_cool = tryb ręczny (stała temperatura dzienna), auto = harmonogram.
+const EBUSD_MODES: Record<string, string> = { heat_cool: "Dzień (ręczny)", auto: "Harmonogram", off: "Wyłączony" };
 const PRESET: Record<string, string> = { none: "Normalnie", boost: "Szybko", eco: "Eko", away: "Poza domem", comfort: "Komfort", home: "W domu", sleep: "Noc", activity: "Aktywność" };
 
 function indicator(ctx: Ctx, id: string | null | undefined, label: string, onText = "pracuje", offText = "nie") {
@@ -78,16 +81,31 @@ function thermostat(ctx: Ctx, id: string | null | undefined, title: string, curr
   const modes: string[] = a.hvac_modes ?? a.operation_list ?? [];
   const presets: string[] = a.preset_modes ?? [];
   const water = id.startsWith("water_heater.");
-  return html`<div class="ocell thermo">
+  // Tryb specjalny sterownika (ebusd): Veto z godziną końca, inne tryby nazwą.
+  const heating = id === ctx.opts.climate_heating;
+  const sf = heating ? st(ctx, ctx.opts.boiler_sf_mode) : undefined;
+  const veto = sf === "veto";
+  const vetoEnd = [st(ctx, ctx.opts.veto_end_date), st(ctx, ctx.opts.veto_end_time)?.slice(0, 5)].filter((x) => x && !/^01\.01\.2019$|^00:00$/.test(x)).join(" ");
+  const SF: Record<string, string> = { veto: "Veto", party: "Impreza", onedayaway: "Dzień poza domem", onedayathome: "Dzień w domu", ventilation: "Wietrzenie", holiday: "Urlop", hwcboost: "Szybka CWU" };
+  const ebusd = heating && Boolean(ctx.opts.ebusd_zone_topic);
+  const vetoHours = ctx.opts.boiler_settings?.find((e) => /veto.*duration|veto.*czas/i.test(e));
+  return html`<div class="ocell thermo ${veto ? "veto" : ""}">
     <span class="hlabel">${title}</span>
     <div class="orow"><span class="hval big">${f1(now)}<span class="u">°C</span></span>
       <span class="step"><button type="button" aria-label="${title}: cel niżej" @click=${() => ctx.actions.stepTarget(id, -(num(a.target_temp_step) ?? 0.5))}>−</button>
         <output>${f1(target)}°</output>
         <button type="button" aria-label="${title}: cel wyżej" @click=${() => ctx.actions.stepTarget(id, num(a.target_temp_step) ?? 0.5)}>+</button></span></div>
     <span class="hsub">teraz · cel ${f1(target)} °C${a.hvac_action ? ` · ${a.hvac_action === "heating" ? "grzeje" : a.hvac_action === "idle" ? "czeka" : a.hvac_action}` : ""}</span>
+    ${sf && sf !== "auto"
+      ? html`<div class="vetobar"><b><svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="currentColor"></rect><path d="M5.2 7V5a2.8 2.8 0 0 1 5.6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path></svg>${SF[sf] ?? sf}${vetoEnd ? ` do ${vetoEnd}` : ""}</b>
+          ${veto ? html`<button class="btn" type="button" @click=${() => ctx.actions.endVeto()}>Zakończ Veto</button>` : nothing}</div>`
+      : nothing}
+    ${ebusd && c.state !== "heat_cool" && c.state !== "off"
+      ? html`<span class="hsub">W trybie Auto −/+ włącza Veto${vetoHours && num(st(ctx, vetoHours)) !== null ? ` na ${round(num(st(ctx, vetoHours)))} h` : ""} — potem wraca harmonogram.</span>`
+      : nothing}
     ${modes.length
       ? html`<div class="chips">${modes.map((m) => html`<button type="button" class="mchip ${(water ? a.operation_mode : c.state) === m ? "on" : ""}"
-          @click=${() => ctx.actions.call(water ? "water_heater" : "climate", water ? "set_operation_mode" : "set_hvac_mode", water ? { entity_id: id, operation_mode: m } : { entity_id: id, hvac_mode: m })}>${HVAC[m] ?? m}</button>`)}</div>`
+          @click=${() => ctx.actions.setHvac(id, m)}>${(ebusd ? EBUSD_MODES[m] : undefined) ?? HVAC[m] ?? m}</button>`)}</div>`
       : nothing}
     ${presets.length
       ? html`<div class="chips">${presets.map((m) => html`<button type="button" class="mchip ${a.preset_mode === m ? "on" : ""}"
@@ -110,8 +128,26 @@ function gas(ctx: Ctx): TemplateResult | typeof nothing {
   const unit = unitOf(ctx.hass, ids[0]) || "m³";
   const colors = ["var(--ember)", "var(--bath)", "var(--frost)"];
   const pick = (rows: typeof day, start: number) => ids.map((id) => Math.max(0, (rows[id] ?? []).find((x) => x.start === start)?.change ?? 0));
-  const dayBars: Bar[] = [...Array(30).keys()].reverse().map((k) => ({ label: `${daysAgo(k).getDate()}`, values: pick(day, daysAgo(k).getTime()), now: k === 0 }));
-  const monthBars: Bar[] = [...Array(12).keys()].reverse().map((k) => ({ label: MONTHS[monthsAgo(k).getMonth()], values: pick(month, monthsAgo(k).getTime()), now: k === 0 }));
+  const DAYS = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"];
+  const dayBars: Bar[] = [...Array(30).keys()].reverse().map((k) => {
+    const d = daysAgo(k);
+    return { label: `${d.getDate()}`, title: `${DAYS[d.getDay()]} ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}${k === 0 ? " (dziś)" : ""}`, values: pick(day, d.getTime()), now: k === 0 };
+  });
+  const monthBars: Bar[] = [...Array(12).keys()].reverse().map((k) => {
+    const d = monthsAgo(k);
+    return { label: MONTHS[d.getMonth()], title: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}${k === 0 ? " (do dziś)" : ""}`, values: pick(month, d.getTime()), now: k === 0 };
+  });
+  const seriesNames = ids.map((_, i) => label(i).charAt(0).toUpperCase() + label(i).slice(1));
+  // Lata: okres roczny ze statystyk (dane są od początku zapisu statystyk w HA).
+  const yearStart = new Date(new Date().getFullYear() - 9, 0, 1);
+  const year = ctx.stats.get(ctx.hass, ids, "year", yearStart, ctx.refresh);
+  const years = [...new Set(ids.flatMap((id) => (year[id] ?? []).map((x) => new Date(x.start).getFullYear())))].sort();
+  const yearBars: Bar[] = years.map((y) => ({
+    label: String(y),
+    title: `${y}${y === new Date().getFullYear() ? " (do dziś)" : ""}`,
+    values: ids.map((id) => Math.max(0, (year[id] ?? []).filter((x) => new Date(x.start).getFullYear() === y).reduce((a, x) => a + (x.change ?? 0), 0))),
+    now: y === new Date().getFullYear(),
+  }));
   const t0 = startOfDay().getTime(), m0 = startOfMonth().getTime();
   return html`<section class="sec"><h2>Gaz</h2>
     <div class="house">
@@ -120,9 +156,12 @@ function gas(ctx: Ctx): TemplateResult | typeof nothing {
         <span class="hsub">dziś · w miesiącu ${f1(sumSince(day[id], m0))} ${unit}</span></div>`)}
     </div>
     <div class="cards two">
-      <div class="ocell"><span class="hlabel">Ostatnie 30 dni</span>${bars(dayBars, colors, { unit, every: 5 })}</div>
-      <div class="ocell"><span class="hlabel">Ostatnie 12 miesięcy</span>${bars(monthBars, colors, { unit, every: 1, digits: 0 })}</div>
+      <div class="ocell"><span class="hlabel">Ostatnie 30 dni</span>${bars(dayBars, colors, { unit, every: 3, names: seriesNames, valueLabels: "dense" })}</div>
+      <div class="ocell"><span class="hlabel">Ostatnie 12 miesięcy</span>${bars(monthBars, colors, { unit, every: 1, digits: 0, names: seriesNames, valueLabels: true })}</div>
     </div>
+    ${yearBars.length
+      ? html`<div class="ocell"><span class="hlabel">Po latach <small>od początku statystyk w HA</small></span>${bars(yearBars, colors, { unit, every: 1, digits: 0, names: seriesNames, valueLabels: true, height: 120 })}</div>`
+      : nothing}
   </section>`;
 }
 

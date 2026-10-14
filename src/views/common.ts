@@ -21,12 +21,19 @@ import type { Hass, Options } from "../types";
 
 export interface Actions {
   toggleRoom(areaId: string): void;
+  setUi(key: string, value: string): void;
+  /** Okno z mapą lokalizacji osoby. */
+  openPerson(entity: string): void;
   /** Dowolna usługa HA (bramy, termostaty kotła). */
   call(domain: string, service: string, data: Record<string, unknown>): void;
   /** Suwak number / input_number z opóźnionym zapisem. */
   stepNumber(entity: string, delta: number): void;
-  /** Nastawa dowolnego termostatu (climate / water_heater) z opóźnionym zapisem. */
+  /** Nastawa dowolnego termostatu (climate / water_heater) z opóźnionym zapisem; ogrzewanie z ebusd — przez Veto. */
   stepTarget(entity: string, delta: number): void;
+  /** Tryb pracy termostatu; przy ebusd zmiana trybu (poza „wyłączony”) kończy Veto. */
+  setHvac(entity: string, mode: string): void;
+  /** Koniec Quick Veto (ebusd: tryb specjalny z powrotem na auto). */
+  endVeto(): void;
   stepProfile(room: Room, p: Profile, delta: number): void;
   stepClimate(room: Room, delta: number): void;
   stepHumidity(entity: string, delta: number): void;
@@ -40,6 +47,8 @@ export interface Ctx {
   stats: StatsStore;
   /** Przerysowanie po dociągnięciu danych w tle (statystyki, prognoza). */
   refresh: () => void;
+  /** Drobny stan widoku (np. wybrany widok pogody), pamiętany na urządzeniu. */
+  ui: Record<string, string>;
   clock: ReturnType<typeof clock>;
   nowMinute: number;
   pending: Map<string, number>;

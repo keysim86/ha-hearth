@@ -67,20 +67,24 @@
           },
           "home": {
             "name": "Zakładka Dom",
-            "description": "Osoby, bramy, skrzynka pocztowa, odpady i pogoda.",
+            "description": "Osoby (kliknięcie = mapa), bramy, skrzynka pocztowa, odpady i pogoda (prognoza, radar, Windy).",
             "data": {
               "persons": "Osoby",
               "gates": "Bramy i garaże",
               "mailbox": "Skrzynka pocztowa — poczta",
               "mailbox_battery": "Skrzynka pocztowa — bateria",
+              "waste_calendar": "Odpady — kalendarz",
               "waste": "Odpady",
+              "waste_toggles": "Odpady — przełączniki frakcji",
               "weather": "Pogoda (encja)"
             },
             "data_description": {
               "persons": "Puste = wszystkie osoby z telefonem. Bateria i kroki z telefonu osoby.",
               "gates": "Puste = rolety klasy brama, garaż i drzwi.",
               "mailbox": "binary_sensor: on = jest poczta.",
-              "waste": "Puste = czujniki integracji Waste Collection Schedule.",
+              "waste_calendar": "Puste = kalendarz Waste Collection Schedule. Frakcja widoczna tylko, gdy ma termin.",
+              "waste": "Zamiast kalendarza: czujniki z datą odbioru (np. sensor waste_collection_schedule).",
+              "waste_toggles": "input_boolean włączający frakcję (np. odpady_bio_aktywne). Wyłączony ukrywa ją; przełącznik jest w Ustawieniach panelu. Puste = pomocniki z „odpad/waste” w nazwie.",
               "weather": "Puste = prognoza Open-Meteo (ECMWF) dla lokalizacji domu."
             }
           },
@@ -123,14 +127,20 @@
               "dhw_temperature": "Ciepła woda — temperatura",
               "dhw_target": "Ciepła woda — cel",
               "gas": "Zużycie gazu",
-              "boiler_settings": "Ustawienia (suwaki)"
+              "boiler_settings": "Ustawienia (suwaki)",
+              "ebusd_zone_topic": "ebusd — temat strefy (Veto)",
+              "boiler_sf_mode": "Tryb specjalny (SF)",
+              "veto_end_date": "Veto — data końca",
+              "veto_end_time": "Veto — godzina końca"
             },
             "data_description": {
               "boiler_state": "Gotowy stan, np. HEATING / STANDBY. Przy ebusd zostaw puste i wskaż płomień.",
               "boiler_flame": "binary_sensor on/off (np. ebusd bai/Flame).",
               "boiler_dhw_demand": "binary_sensor (np. ebusd bai/HwcDemand).",
               "gas": "Puste = gaz z panelu Energia. Wykresy dzienne i miesięczne ze statystyk.",
-              "boiler_settings": "Encje number / input_number z −/+ w zakładce Kocioł."
+              "boiler_settings": "Encje number / input_number z −/+ w zakładce Kocioł.",
+              "ebusd_zone_topic": "Np. ebusd/ctlv2/Z1. W trybie Auto −/+ ogrzewania włącza Quick Veto (MQTT …SFMode, …QuickVetoTemp), zmiana trybu je kończy. Puste = zwykła zmiana nastawy.",
+              "boiler_sf_mode": "Czujnik trybu specjalnego (np. auto / veto) — status „Veto do …”."
             }
           },
           "meters": {

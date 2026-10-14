@@ -73,6 +73,8 @@ export interface Options {
   mailbox?: string | null;
   mailbox_battery?: string | null;
   waste?: string[];
+  waste_calendar?: string | null;
+  waste_toggles?: string[];
   weather?: string | null;
   // Energia
   power_total?: string | null;
@@ -100,6 +102,10 @@ export interface Options {
   dhw_target?: string | null;
   gas?: string[];
   boiler_settings?: string[];
+  ebusd_zone_topic?: string;
+  boiler_sf_mode?: string | null;
+  veto_end_date?: string | null;
+  veto_end_time?: string | null;
   // Liczniki
   meters?: string[];
 }

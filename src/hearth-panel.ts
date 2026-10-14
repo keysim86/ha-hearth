@@ -19,7 +19,7 @@ import { outdoor } from "./views/outdoor";
 import { tile } from "./views/tiles";
 import { boilerView } from "./views/boiler";
 import { energyView } from "./views/energy";
-import { homeView } from "./views/home";
+import { homeView, personInfo, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { metersView } from "./views/meters";
 
 const STYLES: Style[] = ["tiles", "list", "dials"];
@@ -42,10 +42,19 @@ const FOOT: Record<Style, string> = {
   dials: "Pierścień pokazuje 14–30 °C, białe kółko to cel. Tło karty ma kolor temperatury w pokoju. − / + zmienia cel profilu, który teraz działa.",
 };
 const STYLE_KEY = "hearth.style";
+const UI_KEY = "hearth.ui";
 const FONTS_ID = "hearth-fonts";
 const FONTS_URL =
   "https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Atkinson+Hyperlegible:wght@400;700" +
   "&family=JetBrains+Mono:wght@400;600;800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap";
+
+function readUi(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(UI_KEY) ?? "{}") ?? {};
+  } catch {
+    return {};
+  }
+}
 
 function readStyle(): Style | null {
   try {
@@ -73,8 +82,13 @@ export class HearthPanel extends LitElement {
   @state() private cols = 1;
   @state() private localStyle: Style | null = readStyle();
   @state() private toastText = "";
+  @state() private ui: Record<string, string> = readUi();
+  @state() private person: string | null = null;
 
-  @query("dialog") private dialog?: HTMLDialogElement;
+  @query("dialog.set") private dialog?: HTMLDialogElement;
+  @query("dialog.pdlg") private personDialog?: HTMLDialogElement;
+  private mapCard?: HTMLElement & { hass?: Hass };
+  private mapFor: string | null = null;
 
   private hist = new HistoryStore();
   private stats = new StatsStore();
@@ -154,7 +168,9 @@ export class HearthPanel extends LitElement {
     }
   }
 
-  protected updated() {
+  protected updated(changed: PropertyValues<this>) {
+    if ((changed as Map<string, unknown>).has("person") && this.person && !this.personDialog?.open) this.personDialog?.showModal();
+    this.syncPersonMap();
     this.measure();
     if (!this.hass) return;
     const o = this.options;
@@ -217,6 +233,17 @@ export class HearthPanel extends LitElement {
     toggleRoom: (areaId) => {
       this.open = this.open === areaId ? null : areaId;
     },
+    setUi: (key: string, value: string) => {
+      this.ui = { ...this.ui, [key]: value };
+      try {
+        localStorage.setItem(UI_KEY, JSON.stringify(this.ui));
+      } catch {
+        /* bez pamięci przeglądarki */
+      }
+    },
+    openPerson: (entity: string) => {
+      this.person = entity;
+    },
     stepProfile: (r: Room, p: Profile, delta: number) => {
       const id = r.helpers[PROFILE_HELPER[p]];
       const cur = profileValue(this.hass!, r, p, this.pending);
@@ -260,7 +287,32 @@ export class HearthPanel extends LitElement {
       if (cur === null) return;
       const v = clamp(roundStep(cur + delta, Math.abs(delta) || 0.5), num(a.min_temp) ?? 5, num(a.max_temp) ?? 80);
       const domain = entity.split(".")[0];
+      const zone = this.options.ebusd_zone_topic?.replace(/\/+$/, "");
+      if (zone && entity === this.options.climate_heating) {
+        // Jak w starej karcie: w trybie ręcznym (heat_cool) zmiana temperatury dziennej, w Auto — Quick Veto,
+        // bo zwykła nastawa wraca do harmonogramu przy najbliższym kroku sterownika.
+        const pub = (topic: string, payload: string) => this.hass!.callService("mqtt", "publish", { topic: `${zone}${topic}/set`, payload });
+        this.setPending(key, v, async () => {
+          const t = String(v);
+          if (this.hass!.states[entity]?.state === "heat_cool") return pub("ActualRoomTempDesired", t);
+          await pub("SFMode", "veto");
+          await pub("QuickVetoTemp", t);
+          return pub("ActualRoomTempDesired", t);
+        });
+        return;
+      }
       this.setPending(key, v, () => this.hass!.callService(domain, "set_temperature", { entity_id: entity, temperature: v }));
+    },
+    setHvac: (entity: string, mode: string) => {
+      const domain = entity.split(".")[0];
+      const water = domain === "water_heater";
+      this.actions.call(domain, water ? "set_operation_mode" : "set_hvac_mode", water ? { entity_id: entity, operation_mode: mode } : { entity_id: entity, hvac_mode: mode });
+      const zone = this.options.ebusd_zone_topic?.replace(/\/+$/, "");
+      if (zone && entity === this.options.climate_heating && mode !== "off") this.actions.endVeto();
+    },
+    endVeto: () => {
+      const zone = this.options.ebusd_zone_topic?.replace(/\/+$/, "");
+      if (zone) this.actions.call("mqtt", "publish", { topic: `${zone}SFMode/set`, payload: "auto" });
     },
     toggleEntity: (entity: string) => {
       this.hass!.callService(entity.split(".")[0], "toggle", { entity_id: entity }).catch((err) =>
@@ -284,7 +336,54 @@ export class HearthPanel extends LitElement {
     window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
   }
 
-  private settings() {
+  private personDialogTpl(ctx: Ctx) {
+    const id = this.person;
+    const p = id ? ctx.hass.states[id] : undefined;
+    const lat = num(p?.attributes.latitude), lon = num(p?.attributes.longitude);
+    const helpers = typeof (window as unknown as { loadCardHelpers?: unknown }).loadCardHelpers === "function";
+    return html`<dialog class="set pdlg" aria-labelledby="osoba-tytul" @close=${() => (this.person = null)}
+        @click=${(e: Event) => e.target === this.personDialog && this.personDialog?.close()}>
+      ${id && p
+        ? html`<div class="set-in">
+            <div class="dhead"><h2 id="osoba-tytul">${p.attributes.friendly_name ?? id}</h2>
+              <button class="btn" type="button" @click=${() => this.personDialog?.close()}>Zamknij</button></div>
+            ${personInfo(ctx, id)}
+            ${lat === null || lon === null
+              ? nothing
+              : helpers
+                ? html`<div class="pmap" id="pmap"></div>`
+                : tileMap(lat, lon, 15, Boolean(ctx.hass.themes?.darkMode))}
+          </div>`
+        : nothing}
+    </dialog>`;
+  }
+
+  /** Mapa HA (ta sama co karta „Mapa”) w oknie osoby; tworzona raz na otwarcie, potem dostaje świeży `hass`. */
+  private syncPersonMap() {
+    const host = this.renderRoot.querySelector<HTMLElement>("#pmap");
+    if (!this.person || !host) {
+      this.mapFor = null;
+      this.mapCard = undefined;
+      return;
+    }
+    if (this.mapCard && this.mapFor === this.person) {
+      this.mapCard.hass = this.hass;
+      return;
+    }
+    const person = this.person;
+    this.mapFor = person;
+    const loader = (window as unknown as { loadCardHelpers?: () => Promise<{ createCardElement(c: object): HTMLElement & { hass?: Hass } }> }).loadCardHelpers;
+    loader?.().then((h) => {
+      if (this.person !== person) return;
+      const card = h.createCardElement({ type: "map", entities: [{ entity: person }], default_zoom: 15, auto_fit: true, theme_mode: "auto" });
+      card.hass = this.hass;
+      card.style.cssText = "display:block;height:100%";
+      host.replaceChildren(card);
+      this.mapCard = card;
+    });
+  }
+
+  private settings(ctx: Ctx) {
     const def = STYLES.includes(this.options.style) ? this.options.style : "tiles";
     const opt = (value: Style | null, title: string, sub: string) => html`<label class="opt">
       <input type="radio" name="styl" .checked=${this.localStyle === value} @change=${() => this.setStyle(value)} />
@@ -299,6 +398,7 @@ export class HearthPanel extends LitElement {
           ${STYLES.map((s) => opt(s, STYLE_INFO[s][0], STYLE_INFO[s][1]))}
         </div>
         <div class="rule">Wybór zapamiętuje tylko to urządzenie (przeglądarka albo aplikacja). Styl domyślny dla wszystkich, czujniki na zewnątrz, kocioł i pomocniki ogrzewania ustawisz w ustawieniach integracji.</div>
+        ${this.wasteSwitches(ctx)}
         <div class="set-foot">
           ${this.hass?.user?.is_admin
             ? html`<button class="btn" type="button" @click=${() => { this.dialog?.close(); this.navigate("/config/integrations/integration/hearth"); }}>Ustawienia integracji</button>`
@@ -307,6 +407,24 @@ export class HearthPanel extends LitElement {
         </div>
       </div>
     </dialog>`;
+  }
+
+  /** Przełączniki frakcji odpadów (pomocniki input_boolean) — wspólne dla wszystkich, działają też w automatyzacjach. */
+  private wasteSwitches(ctx: Ctx) {
+    const toggles = wasteToggles(ctx);
+    if (!toggles.length) return nothing;
+    const label = (e: string) => {
+      const name = String(ctx.hass.states[e].attributes.friendly_name ?? e);
+      for (const cat of ["Biodegradowalne", "Szkło", "Papier i tektura", "Metale i tworzywa sztuczne", "Zmieszane", "Wielkogabarytowe"])
+        if (toggleFor(ctx, cat) === e) return cat;
+      return name;
+    };
+    return html`<h3>Odpady</h3>
+      ${toggles.map((e) => html`<div class="row">
+        <span>${label(e)}<small class="sub">${e} — wyłączony ukrywa frakcję w zakładce Dom i w automatyzacjach, które go sprawdzają</small></span>
+        <button class="switch" type="button" role="switch" aria-checked=${ctx.hass.states[e].state === "on" ? "true" : "false"} aria-label="Pokazuj: ${label(e)}"
+          @click=${() => ctx.actions.call("input_boolean", "toggle", { entity_id: e })}></button>
+      </div>`)}`;
   }
 
   render() {
@@ -324,6 +442,7 @@ export class HearthPanel extends LitElement {
       actions: this.actions,
       stats: this.stats,
       refresh: () => this.requestUpdate(),
+      ui: { ...this.ui, dark: hass.themes?.darkMode ? "1" : "0" },
     };
     const tab = this.tab;
     const nav = html`<nav class="tabs" aria-label="Zakładki">
@@ -348,7 +467,8 @@ export class HearthPanel extends LitElement {
         ${this.tabs.length > 1 ? nav : nothing}
         ${body}
       </div>
-      ${this.settings()}
+      ${this.settings(ctx)}
+      ${this.personDialogTpl(ctx)}
       <div class="toast" role="status" ?hidden=${!this.toastText}>${this.toastText}</div>`;
   }
 
