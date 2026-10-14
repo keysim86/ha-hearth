@@ -571,4 +571,72 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; padding
 .mval b.onv { color: var(--ember); }
 .mspark { grid-column: 1 / -1; }
 .mspark .ospark { height: 26px; }
+
+/* zdrowie */
+.health .house .hval { font-size: 22px; }
+.health .hcell .hsub { overflow: hidden; text-overflow: ellipsis; }
+.hpeople { display: flex; flex-wrap: wrap; gap: 8px; }
+.hperson { font: inherit; color: var(--fg); display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line); cursor: pointer; text-align: left; }
+.hperson span:last-child { display: grid; line-height: 1.2; }
+.hperson small { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.hperson.on { border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember); }
+.hperson:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.avatar.sm { --pc: var(--frost); width: 34px; height: 34px; font-size: 15px; box-shadow: none; }
+.health .orow { align-items: center; }
+.bmibar { position: relative; height: 8px; border-radius: 4px; margin: 6px 0 2px;
+  background: linear-gradient(90deg, var(--frost) 0 11.7%, var(--ok) 11.7% 33.3%, var(--warn) 33.3% 50%, var(--crit) 50% 66.7%, #a32d2d 66.7% 83.3%, #701515 83.3%); }
+.bmibar i { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--fg); box-shadow: 0 0 0 2px var(--surface); }
+/* kolumny legendy = szerokości odcinków paska (skala BMI 15–45) */
+.bmilegend { display: grid; grid-template-columns: 11.67fr 21.67fr 16.67fr 16.67fr 16.67fr 16.65fr; font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; white-space: nowrap; }
+.goals { display: grid; gap: 12px 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.goal { display: grid; gap: 4px; }
+.glab { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+.gbar { display: block; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.gbar i { display: block; height: 100%; border-radius: 4px; }
+.bal { display: grid; gap: 2px; }
+.balrow { display: grid; grid-template-columns: 110px 1fr 120px; gap: 10px; align-items: center; font-size: 13px; padding: 3px 0; }
+.bname { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bbar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.bbar i { display: block; height: 100%; border-radius: 4px; }
+.bnum { display: grid; justify-items: end; line-height: 1.2; }
+.bnum b { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.bnum small { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.alertbox { border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: 14px; border: 1px solid; }
+.alertbox.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); background: color-mix(in srgb, var(--ok) 10%, var(--surface)); }
+.alertbox.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); }
+.alertbox.crit { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 45%, transparent); background: color-mix(in srgb, var(--crit) 10%, var(--surface)); }
+.health .bpbig { text-align: center; justify-items: center; }
+.health .bpbig .hval { font-size: 34px; }
+.mtile { font: inherit; color: inherit; text-align: left; border: 0; cursor: pointer; }
+.mtile .hlabel i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--mc); margin-right: 6px; }
+.mtile.on { box-shadow: inset 0 -3px 0 var(--mc); }
+.mtile:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
+.deform { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.defield { display: grid; gap: 6px; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+.defield span { font-size: 12.5px; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; }
+.defield small { color: var(--faint); }
+.defield input { font: inherit; font-family: var(--f-num); font-size: 24px; font-weight: 700; color: var(--fg); background: transparent; border: 0;
+  border-bottom: 2px solid var(--line); padding: 2px 0; width: 100%; min-width: 0; -moz-appearance: textfield; }
+.defield input:focus { outline: none; border-bottom-color: var(--ember); }
+.defield input:invalid { border-bottom-color: var(--crit); }
+.defield input:disabled { opacity: .4; }
+.defield input::-webkit-outer-spin-button, .defield input::-webkit-inner-spin-button { -webkit-appearance: none; }
+form.ocell .orow { margin-top: 6px; }
+.radar { width: 100%; max-width: 420px; justify-self: center; display: block; }
+/* wykres liniowy z dowolną osią X */
+.xy { display: grid; grid-template-columns: auto 1fr; grid-template-rows: var(--xh) 18px; gap: 4px 6px; margin-top: 6px; }
+.xyaxis { position: relative; min-width: 30px; font-size: 10.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.xyaxis span { position: absolute; right: 0; transform: translateY(50%); line-height: 1; white-space: nowrap; }
+.xyplot { position: relative; }
+.xyplot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.xyx { grid-column: 2; position: relative; font-size: 10.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.xyx span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
+.xyx span:first-child { transform: none; }
+.xyx span:last-child { transform: translateX(-100%); }
+.xymark { position: absolute; right: 2px; transform: translateY(-2px); font-style: normal; font-size: 10.5px; font-weight: 700; pointer-events: none;
+  background: color-mix(in srgb, var(--surface) 80%, transparent); padding: 0 3px; border-radius: 3px; }
+.xydot { position: absolute; width: 6px; height: 6px; margin: 0 0 -3px -3px; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 1.5px var(--surface); }
+.xypt { position: absolute; width: 0; height: 0; margin-left: -8px; margin-bottom: -6px; border: 8px solid transparent; border-bottom: 13px solid var(--pc); border-top: 0; pointer-events: none; }
+@media (max-width: 600px) { .balrow { grid-template-columns: 84px 1fr 96px; } .health .bpbig .hval { font-size: 26px; } }
 `;

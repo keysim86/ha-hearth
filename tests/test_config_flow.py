@@ -101,3 +101,60 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     assert o["helper_prefix"] == "ogrzewanie"
     assert o["fans"] == ["switch.wentylator"]
     assert o["exclude_entities"] == []
+
+
+async def test_health_person_subentry_add_and_reconfigure(hass: HomeAssistant, panel_mocks) -> None:
+    register, _ = panel_mocks
+    entry = MockConfigEntry(domain=DOMAIN, options=dict(DEFAULTS))
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "health"), context={"source": config_entries.SOURCE_USER})
+    assert result["type"] is FlowResultType.FORM
+    assert set(result["data_schema"].schema) == {"person", "body", "activity", "pressure", "measurements", "entry", "goals"}
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "person": {"name": " Ala ", "gender": "female", "weight": "sensor.waga_ala", "height": "input_number.wzrost_ala", "history_days": 365},
+            "body": {"body_fat": "sensor.tluszcz_ala"},
+            "activity": {"steps": "sensor.kroki_ala"},
+            "pressure": {},
+            "measurements": {"meas_waist": "sensor.pomiar_talia_ala"},
+            "entry": {"data_entry": True, "input_waist": "input_number.pomiar_talia_ala"},
+            "goals": {"goals": [{"label": "Lato", "weight": 60}], "centiles": False},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    (sub_id, sub), = entry.subentries.items()
+    assert sub.title == "Ala"
+    assert sub.data["weight"] == "sensor.waga_ala"
+    assert sub.data["steps_goal"] == 10000  # wartość domyślna z formularza
+    assert "bp_systolic" not in sub.data  # puste pola nie trafiają do danych
+    # Nowa osoba = przeładowanie wpisu, panel dostaje profil.
+    health = register.await_args.kwargs["config"]["health"]
+    assert [p["name"] for p in health] == ["Ala"]
+    assert health[0]["id"] == sub_id
+    assert health[0]["goals"] == [{"label": "Lato", "weight": 60}]
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "health"), context={"source": config_entries.SOURCE_RECONFIGURE, "subentry_id": sub_id}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "person": {"name": "Alicja", "gender": "female", "weight": "sensor.waga_ala", "history_days": 180},
+            "body": {}, "activity": {}, "pressure": {"bp_systolic": "sensor.bp_ala_skurczowe"}, "measurements": {}, "entry": {}, "goals": {},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    sub = entry.subentries[sub_id]
+    assert sub.title == "Alicja"
+    assert sub.data["history_days"] == 180
+    assert "body_fat" not in sub.data  # wyczyszczone pole znika
+    assert register.await_args.kwargs["config"]["health"][0]["bp_systolic"] == "sensor.bp_ala_skurczowe"

@@ -6,14 +6,15 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, ConfigSubentryFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
 
 from . import const as c
-from .const import DEFAULTS, DOMAIN, SECTIONS, STYLES, TABS
+from .const import DEFAULTS, DOMAIN, SECTIONS, STYLES, SUBENTRY_HEALTH, TABS
 from .discovery import guess_outdoor
+from .health import HealthSubentryFlow
 
 
 # Bez filtra klasy urządzenia: czujniki z MQTT (np. ebusd) czy szablonów często jej nie mają,
@@ -149,6 +150,12 @@ class HearthConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         return HearthOptionsFlow()
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry: ConfigEntry) -> dict[str, type[ConfigSubentryFlow]]:
+        # Osoby w zakładce Zdrowie: „Dodaj osobę” pod wpisem integracji.
+        return {SUBENTRY_HEALTH: HealthSubentryFlow}
 
 
 class HearthOptionsFlow(OptionsFlow):

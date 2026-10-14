@@ -4,6 +4,7 @@ import { LitElement, html, nothing, type PropertyValues } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import { clock, num } from "./format";
 import { StatsStore } from "./data/stats";
+import { RowsStore } from "./data/health";
 import { DAYS, EbusdTimers, circuits, validate, writes, type Circuit, type Slot } from "./data/ebusd";
 import type { SchedEdit } from "./views/boiler";
 import { HistoryStore } from "./history";
@@ -29,9 +30,10 @@ import { networkView, speedIds } from "./views/network";
 import { proxmoxView } from "./views/proxmox";
 import { switchesView } from "./views/switches";
 import { carsView, robotsView } from "./views/vehicles";
+import { healthView } from "./views/health";
 
 const STYLES: Style[] = ["tiles", "list", "dials"];
-const TABS: Tab[] = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "agent", "alerts"];
+const TABS: Tab[] = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "agent", "alerts"];
 const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
   home: ["dom", "Dom"],
   climate: ["klimat", "Klimat"],
@@ -44,6 +46,7 @@ const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
   cars: ["auta", "Auta"],
   robots: ["roboty", "Roboty"],
   proxmox: ["proxmox", "Proxmox"],
+  health: ["zdrowie", "Zdrowie"],
   agent: ["agent", "Agent"],
   alerts: ["alerty", "Alerty"],
 };
@@ -110,6 +113,7 @@ export class HearthPanel extends LitElement {
 
   private hist = new HistoryStore();
   private stats = new StatsStore();
+  private rows = new RowsStore();
   private pending = new Map<string, number>();
   private timers = new Map<string, number>();
   private roomsCache?: { key: unknown[]; rooms: Room[] };
@@ -123,9 +127,12 @@ export class HearthPanel extends LitElement {
   }
 
   private get tabs(): Tab[] {
-    // Kolejność z opcji (kolejność wyboru); nieznane pomijamy. Bez wyboru: wszystkie, poza Agentem bez adresu.
+    // Kolejność z opcji (kolejność wyboru); nieznane pomijamy. Bez wyboru: wszystkie, poza Agentem bez adresu
+    // i Zdrowiem bez osób.
     const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
-    return chosen.length ? chosen : TABS.filter((t) => t !== "agent" || this.options.agent_url);
+    return chosen.length
+      ? chosen
+      : TABS.filter((t) => (t !== "agent" || this.options.agent_url) && (t !== "health" || this.panel?.config?.health?.length));
   }
 
   private get tab(): Tab {
@@ -210,7 +217,7 @@ export class HearthPanel extends LitElement {
       energy: [o.power_total, ...(o.phase_power ?? [])],
       boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
       network: [...(this.hass ? speedIds({ hass: this.hass, opts: o } as Ctx) : []), ...(o.net_status ?? [])],
-      switches: [], cameras: [], cars: [], robots: [], proxmox: [], agent: [], alerts: [],
+      switches: [], cameras: [], cars: [], robots: [], proxmox: [], health: [], agent: [], alerts: [],
       meters: (o.meters ?? []).filter((id) => this.hass!.states[id]?.attributes.state_class === "measurement"),
     };
     const ids = byTab[tab].filter((x): x is string => Boolean(x));
@@ -381,6 +388,12 @@ export class HearthPanel extends LitElement {
       const zone = this.options.ebusd_zone_topic?.replace(/\/+$/, "");
       if (zone) this.actions.call("mqtt", "publish", { topic: `${zone}SFMode/set`, payload: "auto" });
     },
+    toast: (text: string) => this.toast(text),
+    saveNumbers: (values: Array<[string, number]>, done: string) => {
+      Promise.all(values.map(([entity_id, value]) => this.hass!.callService(entity_id.split(".")[0], "set_value", { entity_id, value })))
+        .then(() => this.toast(done))
+        .catch((err) => this.toast(`Nie udało się zapisać: ${(err as Error)?.message ?? err}`));
+    },
     toggleEntity: (entity: string) => {
       this.hass!.callService(entity.split(".")[0], "toggle", { entity_id: entity }).catch((err) =>
         this.toast(`Nie udało się przełączyć: ${(err as Error)?.message ?? err}`),
@@ -511,6 +524,8 @@ export class HearthPanel extends LitElement {
       refresh: () => this.requestUpdate(),
       ui: { ...this.ui, dark: hass.themes?.darkMode ? "1" : "0" },
       sched: this.sched,
+      rows: this.rows,
+      health: this.panel?.config?.health ?? [],
     };
     const cfg = circuits(this.options.ebusd_zone_topic ?? "");
     if (cfg && this.tab === "boiler") {
@@ -544,6 +559,7 @@ export class HearthPanel extends LitElement {
       cars: () => carsView(ctx),
       robots: () => robotsView(ctx, camTick),
       proxmox: () => proxmoxView(ctx),
+      health: () => healthView(ctx),
       agent: () => this.options.agent_url
         ? html`<iframe class="agent" title="Agent" src=${this.options.agent_url}></iframe>`
         : html`<div class="empty">Podaj adres strony w opcjach Hearth (sekcja Alerty i Agent).</div>`,

@@ -18,10 +18,15 @@
   const snap = await (await fetch(q.get("snap") ? `./snapshot-${q.get("snap")}.json` : "./snapshot.json")).json();
   let options = {};
   try { options = await (await fetch("./options.json")).json(); } catch { /* bez opcji: same pokoje */ }
+  // Zakładka Zdrowie: osoby i statystyki z dev/health-demo.json (fikcyjne dane, poza repo).
+  let health = { profiles: [], states: {}, stats: {} };
+  try { health = await (await fetch("./health-demo.json")).json(); } catch { /* bez zakładki Zdrowie */ }
   const shift = Date.now() - Date.parse(snap.now);
   const moved = (iso) => new Date(Date.parse(iso) + shift).toISOString();
   const states = {};
   for (const [id, s] of Object.entries(snap.states)) states[id] = { ...s, last_changed: moved(s.last_changed), last_updated: moved(s.last_updated) };
+  const hShift = health.now ? Math.round((Date.now() - Date.parse(health.now)) / 864e5) * 864e5 : 0;
+  for (const [id, s] of Object.entries(health.states ?? {})) states[id] = { ...s, last_changed: new Date(Date.parse(s.last_changed) + hShift).toISOString() };
   const dark = q.get("dark") === "1";
   // Dni migawki przenosimy o pełne doby, żeby dzisiejszy dzień migawki był „dziś”.
   const dayShift = Math.round(shift / 864e5) * 864e5;
@@ -45,6 +50,16 @@
         return { response };
       }
       if (msg.type === "energy/get_prefs") return snap.energy_prefs ?? { energy_sources: [], device_consumption: [] };
+      if (msg.type === "recorder/statistics_during_period" && msg.types?.includes("mean")) {
+        // Zdrowie: wiersze [czas, średnia, min, max, stan] przesunięte o pełne doby.
+        const from = Date.parse(msg.start_time), to = msg.end_time ? Date.parse(msg.end_time) : Infinity;
+        const out = {};
+        for (const id of msg.statistic_ids) {
+          const rows = (health.stats?.[id] ?? []).map(([t, mean, min, max, state]) => ({ start: t + hShift, mean, min, max, state })).filter((r) => r.start >= from && r.start <= to);
+          if (rows.length) out[id] = rows;
+        }
+        return out;
+      }
       if (msg.type === "recorder/statistics_during_period") {
         // Statystyki z migawki przesunięte na „teraz”; okresy dzienne i miesięczne wyrównane do północy w strefie przeglądarki.
         const rows = snap.statistics?.[msg.period] ?? {};
@@ -80,7 +95,7 @@
   el.route = { prefix: "/hearth", path: "/" + (q.get("tab") || "klimat") };
   // Klik w zakładkę: atrapa nawigacji HA (zmienia trasę panelu).
   window.addEventListener("location-changed", () => { el.route = { prefix: "/hearth", path: location.pathname.replace(/^\/hearth/, "") || "/" }; });
-  el.panel = { config: { options: { ...options, style: q.get("style") || options.style || "tiles" }, version: "dev" } };
+  el.panel = { config: { options: { ...options, style: q.get("style") || options.style || "tiles" }, health: health.profiles ?? [], version: "dev" } };
   document.body.append(el);
   window.__panel = el;
 </script>

@@ -332,3 +332,168 @@ export const doorIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path f
 export const mailIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 7h16v11H4zM4 7l8 6 8-6"></path></svg>`;
 export const boltIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"></path></svg>`;
 export const steps = html`<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M5 1.5c1.3 0 2 1.5 2 3.2 0 1.5-.6 2.6-1.8 2.6S3.4 6.2 3.4 4.7C3.4 3 4 1.5 5 1.5Zm-1.4 7h3l-.3 2.3c-.2 1-.9 1.6-1.6 1.6-.8 0-1.4-.7-1.3-1.6Zm7.4-4c1 0 1.6 1.5 1.6 3.2 0 1.5-.8 2.6-1.8 2.6S9 9.2 9 7.7C9 6 9.9 4.5 11 4.5Zm-1.4 7h3l-.2 2.3c-.1 1-.8 1.6-1.6 1.6s-1.3-.7-1.2-1.6Z"></path></svg>`;
+
+// ---- wykresy zakładki Zdrowie: dowolna oś X (czas albo wiek), pasma, kreski progów, punkty ----
+
+export interface XYLine {
+  name: string;
+  color: string;
+  pts: Array<[number, number | null]>;
+  dashed?: boolean;
+  fill?: boolean;
+  dots?: boolean;
+  /** Tylko w podpowiedzi (np. kategoria), bez linii. */
+  hidden?: boolean;
+  unit?: string;
+}
+export interface XYBand {
+  color: string;
+  lo: Array<[number, number]>;
+  hi: Array<[number, number]>;
+  /** false = pasmo nie rozciąga osi (skrajne pasma siatek sięgają do krawędzi wykresu). */
+  fit?: boolean;
+}
+export interface XYMark {
+  v: number;
+  color: string;
+  label?: string;
+  /** false = kreska tylko gdy mieści się w zakresie danych (nie rozciąga osi). */
+  fit?: boolean;
+}
+
+function niceStep(span: number, n = 4): number {
+  const raw = span / n;
+  const p = 10 ** Math.floor(Math.log10(raw));
+  return ([1, 2, 2.5, 5, 10].find((m) => m * p >= raw) ?? 10) * p;
+}
+
+/** Wykres liniowy z osią wartości, podpisami osi X, pasmami (siatki centylowe), kreskami progów i podpowiedzią po
+ *  najechaniu / dotknięciu. `xfmt` podpisuje oś X, `tipfmt` nagłówek podpowiedzi. */
+export function xyChart(o: {
+  lines: XYLine[];
+  bands?: XYBand[];
+  marks?: XYMark[];
+  points?: Array<{ x: number; y: number; color: string; label: string }>;
+  x0?: number;
+  x1?: number;
+  minSpan?: number;
+  unit?: string;
+  digits?: number;
+  height?: number;
+  xfmt: (x: number) => string;
+  tipfmt?: (x: number) => string;
+  xticks?: number[];
+}): TemplateResult | typeof nothing {
+  const lines = o.lines.filter((l) => l.pts.some(([, v]) => v !== null));
+  if (!lines.length && !o.bands?.length) return nothing;
+  const xs = lines.flatMap((l) => l.pts.filter(([, v]) => v !== null).map(([x]) => x));
+  const x0 = o.x0 ?? Math.min(...xs), x1 = Math.max(o.x1 ?? Math.max(...xs), x0 + 1);
+  const vals = [
+    ...lines.filter((l) => !l.hidden).flatMap((l) => l.pts.map(([, v]) => v).filter((v): v is number => v !== null)),
+    ...(o.bands ?? []).filter((b) => b.fit !== false).flatMap((b) => [...b.lo, ...b.hi].filter(([x]) => x >= x0 && x <= x1).map(([, v]) => v)),
+    ...(o.marks ?? []).filter((m) => m.fit !== false).map((m) => m.v),
+    ...(o.points ?? []).map((p) => p.y),
+  ];
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  const minSpan = o.minSpan ?? 1;
+  if (hi - lo < minSpan) {
+    const c = (hi + lo) / 2;
+    lo = c - minSpan / 2;
+    hi = c + minSpan / 2;
+  }
+  const step = niceStep(hi - lo);
+  lo = Math.floor(lo / step) * step;
+  hi = Math.ceil(hi / step) * step;
+  if (hi === lo) hi = lo + step;
+  const ticks: number[] = [];
+  for (let v = lo; v <= hi + step / 1e6; v += step) ticks.push(Math.round(v * 1e6) / 1e6);
+  const W = 600, H = o.height ?? 180;
+  const X = (x: number) => ((x - x0) / (x1 - x0)) * W;
+  const Y = (v: number) => H - ((v - lo) / (hi - lo)) * H;
+  const pct = (x: number) => `${((X(x) / W) * 100).toFixed(2)}%`;
+  const fmt = (v: number, unit = o.unit) => `${v.toLocaleString("pl-PL", { maximumFractionDigits: o.digits ?? 1 })}${unit ? ` ${unit}` : ""}`;
+  const path = (pts: Array<[number, number | null]>) => {
+    let d = "", pen = false;
+    for (const [x, v] of pts) {
+      if (v === null) { pen = false; continue; }
+      d += `${pen ? "L" : "M"}${X(x).toFixed(1)} ${Y(v).toFixed(1)}`;
+      pen = true;
+    }
+    return d;
+  };
+  const band = (b: XYBand) => {
+    const top = b.hi.map(([x, v]) => `${X(x).toFixed(1)} ${Y(Math.min(hi, Math.max(lo, v))).toFixed(1)}`);
+    const bottom = [...b.lo].reverse().map(([x, v]) => `${X(x).toFixed(1)} ${Y(Math.min(hi, Math.max(lo, v))).toFixed(1)}`);
+    return `M${[...top, ...bottom].join("L")}Z`;
+  };
+  const marks = (o.marks ?? []).filter((m) => m.v >= lo && m.v <= hi);
+  // Przedziały podpowiedzi: jeden na punkt (do 60), gęstsze serie grupowane w 60 okien.
+  const uniq = [...new Set(xs)].sort((a, b) => a - b);
+  const SL = Math.min(60, uniq.length);
+  const slotXs = uniq.length <= 60 ? uniq : [...Array(SL).keys()].map((i) => {
+    const a = x0 + ((x1 - x0) * i) / SL, b = x0 + ((x1 - x0) * (i + 1)) / SL;
+    return [...uniq].reverse().find((x) => x >= a && x < b) ?? null;
+  }).filter((x): x is number => x !== null);
+  const bounds = slotXs.map((x, i) => [i ? (x + slotXs[i - 1]) / 2 : x0, i < slotXs.length - 1 ? (x + slotXs[i + 1]) / 2 : x1]);
+  const at = (l: XYLine, x: number) => {
+    let v: number | null = null;
+    for (const [px, pv] of l.pts) { if (px > x) break; if (pv !== null) v = pv; }
+    return v;
+  };
+  const xt = o.xticks ?? [0, 0.25, 0.5, 0.75, 1].map((f) => x0 + (x1 - x0) * f);
+  return html`<div class="xy" style="--xh:${H}px">
+    <div class="xyaxis" aria-hidden="true">${ticks.map((t) => html`<span style="bottom:${(((t - lo) / (hi - lo)) * 100).toFixed(2)}%">${fmt(t, "")}</span>`)}</div>
+    <div class="xyplot">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label=${lines.map((l) => l.name).join(", ")}>
+        ${ticks.map((t) => svg`<line x1="0" x2=${W} y1=${Y(t)} y2=${Y(t)} stroke="var(--line)" stroke-dasharray=${t === lo ? "none" : "2 5"} vector-effect="non-scaling-stroke"></line>`)}
+        ${(o.bands ?? []).map((b) => svg`<path d=${band(b)} fill=${b.color} opacity=".2"></path>`)}
+        ${marks.map((m) => svg`<line x1="0" x2=${W} y1=${Y(m.v)} y2=${Y(m.v)} stroke=${m.color} stroke-dasharray="5 4" stroke-width="1.2" vector-effect="non-scaling-stroke"></line>`)}
+        ${lines.filter((l) => l.fill && !l.hidden).map((l) => {
+          const d = path(l.pts);
+          const first = l.pts.find(([, v]) => v !== null)!, last = [...l.pts].reverse().find(([, v]) => v !== null)!;
+          return svg`<path d="${d}L${X(last[0]).toFixed(1)} ${H}L${X(first[0]).toFixed(1)} ${H}Z" fill=${l.color} opacity=".1"></path>`;
+        })}
+        ${lines.filter((l) => !l.hidden).map((l) => svg`<path d=${path(l.pts)} fill="none" stroke=${l.color} stroke-width="2" stroke-linejoin="round" stroke-dasharray=${l.dashed ? "5 4" : "none"} vector-effect="non-scaling-stroke"></path>`)}
+      </svg>
+      ${marks.filter((m) => m.label).map((m) => html`<em class="xymark" style="bottom:${(((m.v - lo) / (hi - lo)) * 100).toFixed(2)}%;color:${m.color}">${m.label}</em>`)}
+      ${lines.filter((l) => l.dots && !l.hidden).flatMap((l) => l.pts.filter(([, v]) => v !== null).map(([x, v]) =>
+        html`<i class="xydot" style="left:${pct(x)};bottom:${(((v! - lo) / (hi - lo)) * 100).toFixed(2)}%;background:${l.color}"></i>`))}
+      ${(o.points ?? []).map((p) => html`<i class="xypt" title=${p.label} style="left:${pct(p.x)};bottom:${(((p.y - lo) / (hi - lo)) * 100).toFixed(2)}%;--pc:${p.color}"></i>`)}
+      ${slotXs.map((x, i) => {
+        const [a, b] = bounds[i];
+        const edge = X(x) / W < 0.2 ? "l" : X(x) / W > 0.8 ? "r" : "";
+        return html`<div class="mslot ${edge}" tabindex="0" style="left:${pct(a)};width:${(((X(b) - X(a)) / W) * 100).toFixed(2)}%">
+          <i class="mcross" style="left:${(((x - a) / Math.max(1e-9, b - a)) * 100).toFixed(1)}%"></i>
+          <div class="btip" role="tooltip"><b>${(o.tipfmt ?? o.xfmt)(x)}</b>
+            ${lines.map((l) => {
+              const v = at(l, x);
+              return v === null ? nothing : html`<span class="bser"><i style="background:${l.color}"></i>${l.name} <b>${fmt(v, l.unit ?? o.unit)}</b></span>`;
+            })}</div>
+        </div>`;
+      })}
+    </div>
+    <div class="xyx" aria-hidden="true">${xt.map((x) => html`<span style="left:${pct(x)}">${o.xfmt(x)}</span>`)}</div>
+  </div>`;
+}
+
+/** Profil pomiarów na „pajęczynie”: każda oś to pozycja wartości w typowym zakresie (0–100%). */
+export function radar(axes: Array<{ label: string; pct: number | null; color: string; text: string }>): TemplateResult | typeof nothing {
+  const pts = axes.filter((a) => a.pct !== null);
+  if (pts.length < 3) return nothing;
+  const S = 300, c = S / 2, R = 108;
+  const ang = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / axes.length;
+  const P = (i: number, f: number) => [c + Math.cos(ang(i)) * R * f, c + Math.sin(ang(i)) * R * f];
+  const ring = (f: number) => axes.map((_, i) => P(i, f).map((v) => v.toFixed(1)).join(" ")).join("L");
+  const shape = axes.map((a, i) => P(i, Math.max(0.02, (a.pct ?? 0) / 100)).map((v) => v.toFixed(1)).join(" ")).join("L");
+  // Margines na podpisy osi (dłuższe nazwy po bokach).
+  return html`<svg class="radar" viewBox="-60 -10 ${S + 120} ${S + 20}" role="img" aria-label="Profil pomiarów">
+    ${[0.25, 0.5, 0.75, 1].map((f) => svg`<path d="M${ring(f)}Z" fill="none" stroke="var(--line)"></path>`)}
+    ${axes.map((_, i) => svg`<line x1=${c} y1=${c} x2=${P(i, 1)[0]} y2=${P(i, 1)[1]} stroke="var(--line)"></line>`)}
+    <path d="M${shape}Z" fill="var(--frost)" fill-opacity=".18" stroke="var(--frost)" stroke-width="2"></path>
+    ${axes.map((a, i) => (a.pct === null ? nothing : svg`<circle cx=${P(i, a.pct / 100)[0]} cy=${P(i, a.pct / 100)[1]} r="4.5" fill=${a.color}><title>${a.label}: ${a.text}</title></circle>`))}
+    ${axes.map((a, i) => {
+      const [x, y] = P(i, 1.2);
+      return svg`<text x=${x} y=${y} font-size="11" fill="var(--muted)" text-anchor=${Math.abs(x - c) < 8 ? "middle" : x > c ? "start" : "end"} dominant-baseline="middle">${a.label}</text>`;
+    })}
+  </svg>`;
+}

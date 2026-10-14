@@ -44,6 +44,10 @@ export interface Actions {
   stepClimate(room: Room, delta: number): void;
   stepHumidity(entity: string, delta: number): void;
   toggleEntity(entity: string): void;
+  /** Krótki komunikat na dole ekranu. */
+  toast(text: string): void;
+  /** Zapis kilku pomocników input_number naraz (zakładka Zdrowie → Wprowadź dane). */
+  saveNumbers(values: Array<[string, number]>, done: string): void;
 }
 
 export interface Ctx {
@@ -58,6 +62,10 @@ export interface Ctx {
   /** Programy czasowe sterownika (ebusd) — gdy skonfigurowany temat strefy. */
   timers?: { week(c: import("../data/ebusd").Circuit): import("../data/ebusd").Slot[][] | null; value(name: string): string | undefined; connected: boolean };
   sched?: import("./boiler").SchedEdit | null;
+  /** Statystyki średnia/min/max (zakładka Zdrowie). */
+  rows?: import("../data/health").RowsStore;
+  /** Osoby zakładki Zdrowie (podwpisy integracji). */
+  health?: import("../types").HealthProfile[];
   clock: ReturnType<typeof clock>;
   nowMinute: number;
   pending: Map<string, number>;

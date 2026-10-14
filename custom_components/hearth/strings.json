@@ -250,6 +250,251 @@
       }
     }
   },
+  "config_subentries": {
+    "health": {
+      "entry_type": "Person (Health)",
+      "initiate_flow": {
+        "user": "Add person",
+        "reconfigure": "Edit person"
+      },
+      "step": {
+        "user": {
+          "title": "New person in the Health tab",
+          "description": "Only name, sex and a weight sensor are required. Each further section enables its own page: Body composition, Activity, Blood pressure, Measurements, Growth charts and Data entry.",
+          "sections": {
+            "person": {
+              "name": "Person",
+              "data": {
+                "name": "Name",
+                "person": "Home Assistant person",
+                "gender": "Sex",
+                "birthdate": "Date of birth",
+                "weight": "Weight",
+                "height": "Height (entity)",
+                "height_cm": "Height (fixed)",
+                "start_weight": "Starting weight",
+                "start_date": "Start date",
+                "history_days": "History (days)"
+              },
+              "data_description": {
+                "name": "Label in the panel.",
+                "person": "Optional — picture from the person profile.",
+                "gender": "Body-fat thresholds and growth charts.",
+                "birthdate": "Age in the blood-pressure report and growth charts.",
+                "weight": "Weight sensor in kg (with statistics).",
+                "height": "Sensor or input_number with height in cm — for BMI.",
+                "height_cm": "When there is no height entity.",
+                "start_weight": "Baseline for loss and goal progress; empty = first value in history.",
+                "start_date": "Empty = day of the first value in history.",
+                "history_days": "How many days of weight statistics to load."
+              }
+            },
+            "body": {
+              "name": "Body composition",
+              "description": "Sensors from a body-composition scale. Without them the Body composition page is hidden.",
+              "data": {
+                "body_fat": "Body fat (%)",
+                "fat_mass": "Fat mass",
+                "lean_mass": "Lean mass",
+                "muscle_mass": "Fat-free tissue (without bone)",
+                "skeletal_muscle": "Skeletal muscle",
+                "bone_mass": "Bone mass",
+                "body_water": "Water",
+                "bmr": "Basal metabolic rate"
+              }
+            },
+            "activity": {
+              "name": "Activity",
+              "description": "Daily step and calorie counters (reset at midnight).",
+              "data": {
+                "steps": "Steps today",
+                "calories": "Active calories today",
+                "steps_goal": "Step goal",
+                "calories_goal": "Calorie goal"
+              }
+            },
+            "pressure": {
+              "name": "Blood pressure",
+              "description": "Without a systolic sensor the Blood pressure page is hidden.",
+              "data": {
+                "bp_systolic": "Systolic pressure",
+                "bp_diastolic": "Diastolic pressure",
+                "bp_pulse": "Pulse",
+                "bp_category": "Pressure category",
+                "report_name": "Full name in the report",
+                "report_device": "Monitor in the report",
+                "bp_exclude": "Readings excluded from the report"
+              },
+              "data_description": {
+                "bp_category": "Optional text sensor; without it the category is computed from the values.",
+                "bp_exclude": "Faulty readings as YYYY-MM-DD HH:MM."
+              }
+            },
+            "measurements": {
+              "name": "Body measurements",
+              "description": "Circumferences in cm (sensors with statistics or input_number).",
+              "data": {
+                "meas_neck": "Neck",
+                "meas_chest": "Chest",
+                "meas_abdomen": "Abdomen",
+                "meas_waist": "Waist",
+                "meas_hips": "Hips",
+                "meas_thigh": "Thigh",
+                "meas_calf": "Calf",
+                "meas_biceps": "Biceps"
+              }
+            },
+            "entry": {
+              "name": "Data entry",
+              "description": "Page for manual input: blood pressure, height (when height is an input_number) and circumferences.",
+              "data": {
+                "data_entry": "Show the Data entry page",
+                "bp_systolic_input": "Input: systolic",
+                "bp_diastolic_input": "Input: diastolic",
+                "bp_pulse_input": "Input: pulse",
+                "input_neck": "Input: neck",
+                "input_chest": "Input: chest",
+                "input_abdomen": "Input: abdomen",
+                "input_waist": "Input: waist",
+                "input_hips": "Input: hips",
+                "input_thigh": "Input: thigh",
+                "input_calf": "Input: calf",
+                "input_biceps": "Input: biceps"
+              }
+            },
+            "goals": {
+              "name": "Goals and growth charts",
+              "data": {
+                "goals": "Weight goals",
+                "centiles": "Growth charts (children 2–18 years)"
+              },
+              "data_description": {
+                "goals": "Progress, forecast and lines on the weight chart.",
+                "centiles": "BMI and height against WHO 2007 references; needs the date of birth."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Person in the Health tab",
+          "description": "Only name, sex and a weight sensor are required. Each further section enables its own page: Body composition, Activity, Blood pressure, Measurements, Growth charts and Data entry.",
+          "sections": {
+            "person": {
+              "name": "Person",
+              "data": {
+                "name": "Name",
+                "person": "Home Assistant person",
+                "gender": "Sex",
+                "birthdate": "Date of birth",
+                "weight": "Weight",
+                "height": "Height (entity)",
+                "height_cm": "Height (fixed)",
+                "start_weight": "Starting weight",
+                "start_date": "Start date",
+                "history_days": "History (days)"
+              },
+              "data_description": {
+                "name": "Label in the panel.",
+                "person": "Optional — picture from the person profile.",
+                "gender": "Body-fat thresholds and growth charts.",
+                "birthdate": "Age in the blood-pressure report and growth charts.",
+                "weight": "Weight sensor in kg (with statistics).",
+                "height": "Sensor or input_number with height in cm — for BMI.",
+                "height_cm": "When there is no height entity.",
+                "start_weight": "Baseline for loss and goal progress; empty = first value in history.",
+                "start_date": "Empty = day of the first value in history.",
+                "history_days": "How many days of weight statistics to load."
+              }
+            },
+            "body": {
+              "name": "Body composition",
+              "description": "Sensors from a body-composition scale. Without them the Body composition page is hidden.",
+              "data": {
+                "body_fat": "Body fat (%)",
+                "fat_mass": "Fat mass",
+                "lean_mass": "Lean mass",
+                "muscle_mass": "Fat-free tissue (without bone)",
+                "skeletal_muscle": "Skeletal muscle",
+                "bone_mass": "Bone mass",
+                "body_water": "Water",
+                "bmr": "Basal metabolic rate"
+              }
+            },
+            "activity": {
+              "name": "Activity",
+              "description": "Daily step and calorie counters (reset at midnight).",
+              "data": {
+                "steps": "Steps today",
+                "calories": "Active calories today",
+                "steps_goal": "Step goal",
+                "calories_goal": "Calorie goal"
+              }
+            },
+            "pressure": {
+              "name": "Blood pressure",
+              "description": "Without a systolic sensor the Blood pressure page is hidden.",
+              "data": {
+                "bp_systolic": "Systolic pressure",
+                "bp_diastolic": "Diastolic pressure",
+                "bp_pulse": "Pulse",
+                "bp_category": "Pressure category",
+                "report_name": "Full name in the report",
+                "report_device": "Monitor in the report",
+                "bp_exclude": "Readings excluded from the report"
+              },
+              "data_description": {
+                "bp_category": "Optional text sensor; without it the category is computed from the values.",
+                "bp_exclude": "Faulty readings as YYYY-MM-DD HH:MM."
+              }
+            },
+            "measurements": {
+              "name": "Body measurements",
+              "description": "Circumferences in cm (sensors with statistics or input_number).",
+              "data": {
+                "meas_neck": "Neck",
+                "meas_chest": "Chest",
+                "meas_abdomen": "Abdomen",
+                "meas_waist": "Waist",
+                "meas_hips": "Hips",
+                "meas_thigh": "Thigh",
+                "meas_calf": "Calf",
+                "meas_biceps": "Biceps"
+              }
+            },
+            "entry": {
+              "name": "Data entry",
+              "description": "Page for manual input: blood pressure, height (when height is an input_number) and circumferences.",
+              "data": {
+                "data_entry": "Show the Data entry page",
+                "bp_systolic_input": "Input: systolic",
+                "bp_diastolic_input": "Input: diastolic",
+                "bp_pulse_input": "Input: pulse",
+                "input_neck": "Input: neck",
+                "input_chest": "Input: chest",
+                "input_abdomen": "Input: abdomen",
+                "input_waist": "Input: waist",
+                "input_hips": "Input: hips",
+                "input_thigh": "Input: thigh",
+                "input_calf": "Input: calf",
+                "input_biceps": "Input: biceps"
+              }
+            },
+            "goals": {
+              "name": "Goals and growth charts",
+              "data": {
+                "goals": "Weight goals",
+                "centiles": "Growth charts (children 2–18 years)"
+              },
+              "data_description": {
+                "goals": "Progress, forecast and lines on the weight chart.",
+                "centiles": "BMI and height against WHO 2007 references; needs the date of birth."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "selector": {
     "style": {
       "options": {
@@ -272,7 +517,33 @@
         "robots": "Robots",
         "proxmox": "Proxmox",
         "agent": "Agent",
-        "alerts": "Alerts"
+        "alerts": "Alerts",
+        "health": "Health"
+      }
+    },
+    "gender": {
+      "options": {
+        "male": "Male",
+        "female": "Female"
+      }
+    },
+    "goal": {
+      "fields": {
+        "label": {
+          "name": "Goal name",
+          "description": "E.g. “Christmas 2026”."
+        },
+        "weight": {
+          "name": "Target weight"
+        },
+        "date": {
+          "name": "Deadline",
+          "description": "Optional — used to compute the weekly pace needed."
+        },
+        "color": {
+          "name": "Colour",
+          "description": "Optional, e.g. #2f8a4f."
+        }
       }
     }
   }

@@ -16,7 +16,7 @@ CONF_TITLE = "sidebar_title"
 CONF_ICON = "sidebar_icon"
 CONF_ADMIN_ONLY = "require_admin"
 STYLES = ["tiles", "list", "dials"]
-TABS = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "agent", "alerts"]
+TABS = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "agent", "alerts"]
 
 # Na zewnątrz
 CONF_OUT_TEMP = "outdoor_temperature"
@@ -158,4 +158,30 @@ DEFAULTS: dict[str, object] = {
     CONF_HELPER_PREFIX: "",
     CONF_FANS: [],
     CONF_EXCLUDE: [],
+}
+
+# Zdrowie: każda osoba to podwpis (config subentry) z własnymi encjami — dodawany przyciskiem „Dodaj osobę”.
+SUBENTRY_HEALTH = "health"
+H_NAME = "name"
+MEASUREMENTS = ["neck", "chest", "abdomen", "waist", "hips", "thigh", "calf", "biceps"]
+
+HEALTH_SECTIONS: dict[str, list[str]] = {
+    "person": [H_NAME, "person", "gender", "birthdate", "weight", "height", "height_cm", "start_weight", "start_date", "history_days"],
+    "body": ["body_fat", "fat_mass", "lean_mass", "muscle_mass", "skeletal_muscle", "bone_mass", "body_water", "bmr"],
+    "activity": ["steps", "calories", "steps_goal", "calories_goal"],
+    "pressure": ["bp_systolic", "bp_diastolic", "bp_pulse", "bp_category", "report_name", "report_device", "bp_exclude"],
+    "measurements": [f"meas_{m}" for m in MEASUREMENTS],
+    "entry": ["data_entry", "bp_systolic_input", "bp_diastolic_input", "bp_pulse_input", *[f"input_{m}" for m in MEASUREMENTS]],
+    "goals": ["goals", "centiles"],
+}
+
+HEALTH_DEFAULTS: dict[str, object] = {
+    "gender": "male",
+    "history_days": 365,
+    "steps_goal": 10000,
+    "calories_goal": 800,
+    "bp_exclude": [],
+    "data_entry": False,
+    "goals": [],
+    "centiles": False,
 }

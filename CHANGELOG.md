@@ -8,6 +8,26 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 ## [Unreleased]
 
 ### Added
+- **Zakładka Zdrowie** (przeniesiona karta zdrowia) — osoby dodawane w ustawieniach integracji jako podwpisy
+  („Dodaj osobę”, zmiana przez „Zmień dane osoby”); przełącznik osób ze zdjęciem i wagą; podstrony pokazują się tylko,
+  gdy osoba ma ich encje:
+  - **Waga** — start, aktualnie (dzień ostatniej zmiany), łączna zmiana i %, tempo na tydzień, do normy BMI 25
+    z prognozą, następny cel, spalony tłuszcz (zmierzony albo szacunek); bilans miesiąca i tygodnia, średnia waga
+    i BMI z miesiąca; BMI na starcie i teraz na pasku kategorii; postęp celów z terminem, potrzebnym tempem
+    i prognozą; bilanse miesięczne / tygodniowe i średnie miesięczne wagi i BMI; historia z trendem 7 dni i kreskami
+    celów (od początku, 6 i 3 miesiące, 30, 14, 7 dni)
+  - **Skład ciała** — tkanka tłuszczowa z kategorią ACE, masy tłuszczu i beztłuszczowa, mięśnie szkieletowe, tkanka
+    beztłuszczowa, kości, woda (także % masy ciała), przemiana podstawowa; wykres składu w czasie
+  - **Aktywność** — kroki i kalorie dziś z paskiem celu (bez wczorajszego wyniku po północy), średnia i maksimum,
+    słupki 7 / 14 / 30 / 90 dni w kolorach realizacji celu
+  - **Ciśnienie** — alert z kategorii albo z wartości, bieżące wartości, czas ostatniego pomiaru (z dokładnością do
+    5 minut), średnie i min/max z 30 dni liczone z pomiarów (nie z czasu wyświetlania), historia 90 dni z kreskami
+    120/80, raport do druku / PDF (7–90 dni, tabela pomiarów z porą dnia i kategorią ESH, podsumowanie, pominięte
+    pomiary)
+  - **Pomiary** — obwody z datą, zmianą od poprzedniej sesji i od pierwszego pomiaru, sumy, profil na „pajęczynie”,
+    bilans miesięczny sumy obwodów, historia (kliknięcie kafelka = jeden obwód)
+  - **Siatki** — wiek, BMI i wzrost dziecka na tle siatek centylowych WHO 2007 z kategoriami
+  - **Wprowadź dane** — ciśnienie, wzrost i obwody zapisywane do pomocników `input_number`
 - **Zakładki Dom, Energia, Kocioł i Liczniki** obok Klimatu — przełączane w nagłówku, każda pod własnym adresem
   (`/hearth/dom`, `/hearth/energia`…); w opcjach wybór, które pokazać
 - **Dom** — domownicy (zdjęcie, gdzie i od kiedy, odległość od domu, bateria telefonu z ładowaniem, kroki dziś), bramy

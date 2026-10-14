@@ -4,3 +4,4 @@ __pycache__/
 .pytest_cache/
 dev/snapshot*.json
 dev/options.json
+dev/health*.json

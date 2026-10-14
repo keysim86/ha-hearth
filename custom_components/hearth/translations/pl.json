@@ -250,6 +250,251 @@
       }
     }
   },
+  "config_subentries": {
+    "health": {
+      "entry_type": "Osoba (Zdrowie)",
+      "initiate_flow": {
+        "user": "Dodaj osobę",
+        "reconfigure": "Zmień dane osoby"
+      },
+      "step": {
+        "user": {
+          "title": "Nowa osoba w zakładce Zdrowie",
+          "description": "Wymagane są tylko imię, płeć i czujnik wagi. Każda kolejna sekcja włącza swoją podstronę: Skład ciała, Aktywność, Ciśnienie, Pomiary, Siatki centylowe i Wprowadź dane.",
+          "sections": {
+            "person": {
+              "name": "Osoba",
+              "data": {
+                "name": "Imię",
+                "person": "Osoba w Home Assistant",
+                "gender": "Płeć",
+                "birthdate": "Data urodzenia",
+                "weight": "Waga",
+                "height": "Wzrost (encja)",
+                "height_cm": "Wzrost (stały)",
+                "start_weight": "Waga na starcie",
+                "start_date": "Data startu",
+                "history_days": "Historia (dni)"
+              },
+              "data_description": {
+                "name": "Podpis w panelu.",
+                "person": "Opcjonalna — zdjęcie z profilu osoby.",
+                "gender": "Progi tkanki tłuszczowej i siatki centylowe.",
+                "birthdate": "Wiek w raporcie ciśnienia i w siatkach centylowych.",
+                "weight": "Czujnik wagi w kg (ze statystykami).",
+                "height": "Czujnik albo input_number z wzrostem w cm — do BMI.",
+                "height_cm": "Gdy nie ma encji wzrostu.",
+                "start_weight": "Punkt wyjścia do utraty i postępu celów; puste = pierwszy pomiar z historii.",
+                "start_date": "Puste = dzień pierwszego pomiaru z historii.",
+                "history_days": "Ile dni wstecz pobierać wagę ze statystyk."
+              }
+            },
+            "body": {
+              "name": "Skład ciała",
+              "description": "Czujniki z wagi z analizą składu ciała. Bez nich podstrona Skład ciała się nie pokazuje.",
+              "data": {
+                "body_fat": "Tkanka tłuszczowa (%)",
+                "fat_mass": "Masa tłuszczu",
+                "lean_mass": "Masa beztłuszczowa",
+                "muscle_mass": "Tkanka beztłuszczowa (bez kości)",
+                "skeletal_muscle": "Mięśnie szkieletowe",
+                "bone_mass": "Masa kostna",
+                "body_water": "Woda",
+                "bmr": "Przemiana podstawowa"
+              }
+            },
+            "activity": {
+              "name": "Aktywność",
+              "description": "Dobowe liczniki kroków i kalorii (zerowane o północy).",
+              "data": {
+                "steps": "Kroki dziś",
+                "calories": "Kalorie aktywne dziś",
+                "steps_goal": "Cel kroków",
+                "calories_goal": "Cel kalorii"
+              }
+            },
+            "pressure": {
+              "name": "Ciśnienie",
+              "description": "Bez czujnika ciśnienia skurczowego podstrona Ciśnienie się nie pokazuje.",
+              "data": {
+                "bp_systolic": "Ciśnienie skurczowe",
+                "bp_diastolic": "Ciśnienie rozkurczowe",
+                "bp_pulse": "Tętno",
+                "bp_category": "Kategoria ciśnienia",
+                "report_name": "Imię i nazwisko w raporcie",
+                "report_device": "Ciśnieniomierz w raporcie",
+                "bp_exclude": "Pomiary pominięte w raporcie"
+              },
+              "data_description": {
+                "bp_category": "Opcjonalny czujnik tekstowy (np. „Prawidłowe”); bez niego kategoria liczona z wartości.",
+                "bp_exclude": "Błędne odczyty w formacie RRRR-MM-DD GG:MM."
+              }
+            },
+            "measurements": {
+              "name": "Pomiary ciała",
+              "description": "Obwody w cm (czujniki ze statystykami albo input_number).",
+              "data": {
+                "meas_neck": "Szyja",
+                "meas_chest": "Klatka piersiowa",
+                "meas_abdomen": "Brzuch",
+                "meas_waist": "Talia",
+                "meas_hips": "Biodra",
+                "meas_thigh": "Udo",
+                "meas_calf": "Łydka",
+                "meas_biceps": "Biceps"
+              }
+            },
+            "entry": {
+              "name": "Wprowadź dane",
+              "description": "Podstrona do ręcznego wpisu: ciśnienie, wzrost (gdy wzrost to input_number) i obwody.",
+              "data": {
+                "data_entry": "Pokaż podstronę Wprowadź dane",
+                "bp_systolic_input": "Wpis: ciśnienie skurczowe",
+                "bp_diastolic_input": "Wpis: ciśnienie rozkurczowe",
+                "bp_pulse_input": "Wpis: tętno",
+                "input_neck": "Wpis: szyja",
+                "input_chest": "Wpis: klatka piersiowa",
+                "input_abdomen": "Wpis: brzuch",
+                "input_waist": "Wpis: talia",
+                "input_hips": "Wpis: biodra",
+                "input_thigh": "Wpis: udo",
+                "input_calf": "Wpis: łydka",
+                "input_biceps": "Wpis: biceps"
+              }
+            },
+            "goals": {
+              "name": "Cele i siatki",
+              "data": {
+                "goals": "Cele wagowe",
+                "centiles": "Siatki centylowe (dzieci 2–18 lat)"
+              },
+              "data_description": {
+                "goals": "Postęp, prognoza i kreski na wykresie wagi.",
+                "centiles": "BMI i wzrost na tle siatek WHO 2007; wymaga daty urodzenia."
+              }
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Osoba w zakładce Zdrowie",
+          "description": "Wymagane są tylko imię, płeć i czujnik wagi. Każda kolejna sekcja włącza swoją podstronę: Skład ciała, Aktywność, Ciśnienie, Pomiary, Siatki centylowe i Wprowadź dane.",
+          "sections": {
+            "person": {
+              "name": "Osoba",
+              "data": {
+                "name": "Imię",
+                "person": "Osoba w Home Assistant",
+                "gender": "Płeć",
+                "birthdate": "Data urodzenia",
+                "weight": "Waga",
+                "height": "Wzrost (encja)",
+                "height_cm": "Wzrost (stały)",
+                "start_weight": "Waga na starcie",
+                "start_date": "Data startu",
+                "history_days": "Historia (dni)"
+              },
+              "data_description": {
+                "name": "Podpis w panelu.",
+                "person": "Opcjonalna — zdjęcie z profilu osoby.",
+                "gender": "Progi tkanki tłuszczowej i siatki centylowe.",
+                "birthdate": "Wiek w raporcie ciśnienia i w siatkach centylowych.",
+                "weight": "Czujnik wagi w kg (ze statystykami).",
+                "height": "Czujnik albo input_number z wzrostem w cm — do BMI.",
+                "height_cm": "Gdy nie ma encji wzrostu.",
+                "start_weight": "Punkt wyjścia do utraty i postępu celów; puste = pierwszy pomiar z historii.",
+                "start_date": "Puste = dzień pierwszego pomiaru z historii.",
+                "history_days": "Ile dni wstecz pobierać wagę ze statystyk."
+              }
+            },
+            "body": {
+              "name": "Skład ciała",
+              "description": "Czujniki z wagi z analizą składu ciała. Bez nich podstrona Skład ciała się nie pokazuje.",
+              "data": {
+                "body_fat": "Tkanka tłuszczowa (%)",
+                "fat_mass": "Masa tłuszczu",
+                "lean_mass": "Masa beztłuszczowa",
+                "muscle_mass": "Tkanka beztłuszczowa (bez kości)",
+                "skeletal_muscle": "Mięśnie szkieletowe",
+                "bone_mass": "Masa kostna",
+                "body_water": "Woda",
+                "bmr": "Przemiana podstawowa"
+              }
+            },
+            "activity": {
+              "name": "Aktywność",
+              "description": "Dobowe liczniki kroków i kalorii (zerowane o północy).",
+              "data": {
+                "steps": "Kroki dziś",
+                "calories": "Kalorie aktywne dziś",
+                "steps_goal": "Cel kroków",
+                "calories_goal": "Cel kalorii"
+              }
+            },
+            "pressure": {
+              "name": "Ciśnienie",
+              "description": "Bez czujnika ciśnienia skurczowego podstrona Ciśnienie się nie pokazuje.",
+              "data": {
+                "bp_systolic": "Ciśnienie skurczowe",
+                "bp_diastolic": "Ciśnienie rozkurczowe",
+                "bp_pulse": "Tętno",
+                "bp_category": "Kategoria ciśnienia",
+                "report_name": "Imię i nazwisko w raporcie",
+                "report_device": "Ciśnieniomierz w raporcie",
+                "bp_exclude": "Pomiary pominięte w raporcie"
+              },
+              "data_description": {
+                "bp_category": "Opcjonalny czujnik tekstowy (np. „Prawidłowe”); bez niego kategoria liczona z wartości.",
+                "bp_exclude": "Błędne odczyty w formacie RRRR-MM-DD GG:MM."
+              }
+            },
+            "measurements": {
+              "name": "Pomiary ciała",
+              "description": "Obwody w cm (czujniki ze statystykami albo input_number).",
+              "data": {
+                "meas_neck": "Szyja",
+                "meas_chest": "Klatka piersiowa",
+                "meas_abdomen": "Brzuch",
+                "meas_waist": "Talia",
+                "meas_hips": "Biodra",
+                "meas_thigh": "Udo",
+                "meas_calf": "Łydka",
+                "meas_biceps": "Biceps"
+              }
+            },
+            "entry": {
+              "name": "Wprowadź dane",
+              "description": "Podstrona do ręcznego wpisu: ciśnienie, wzrost (gdy wzrost to input_number) i obwody.",
+              "data": {
+                "data_entry": "Pokaż podstronę Wprowadź dane",
+                "bp_systolic_input": "Wpis: ciśnienie skurczowe",
+                "bp_diastolic_input": "Wpis: ciśnienie rozkurczowe",
+                "bp_pulse_input": "Wpis: tętno",
+                "input_neck": "Wpis: szyja",
+                "input_chest": "Wpis: klatka piersiowa",
+                "input_abdomen": "Wpis: brzuch",
+                "input_waist": "Wpis: talia",
+                "input_hips": "Wpis: biodra",
+                "input_thigh": "Wpis: udo",
+                "input_calf": "Wpis: łydka",
+                "input_biceps": "Wpis: biceps"
+              }
+            },
+            "goals": {
+              "name": "Cele i siatki",
+              "data": {
+                "goals": "Cele wagowe",
+                "centiles": "Siatki centylowe (dzieci 2–18 lat)"
+              },
+              "data_description": {
+                "goals": "Postęp, prognoza i kreski na wykresie wagi.",
+                "centiles": "BMI i wzrost na tle siatek WHO 2007; wymaga daty urodzenia."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "selector": {
     "style": {
       "options": {
@@ -272,7 +517,33 @@
         "robots": "Roboty",
         "proxmox": "Proxmox",
         "agent": "Agent",
-        "alerts": "Alerty"
+        "alerts": "Alerty",
+        "health": "Zdrowie"
+      }
+    },
+    "gender": {
+      "options": {
+        "male": "Mężczyzna / chłopiec",
+        "female": "Kobieta / dziewczynka"
+      }
+    },
+    "goal": {
+      "fields": {
+        "label": {
+          "name": "Nazwa celu",
+          "description": "Np. „Wigilia 2026”."
+        },
+        "weight": {
+          "name": "Waga docelowa"
+        },
+        "date": {
+          "name": "Termin",
+          "description": "Opcjonalny — z nim panel liczy potrzebne tempo na tydzień."
+        },
+        "color": {
+          "name": "Kolor",
+          "description": "Opcjonalny, np. #2f8a4f."
+        }
       }
     }
   }

@@ -48,7 +48,7 @@ export interface Hass {
 }
 
 export type Style = "tiles" | "list" | "dials";
-export type Tab = "home" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "agent" | "alerts";
+export type Tab = "home" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "health" | "agent" | "alerts";
 
 export interface Options {
   style: Style;
@@ -136,6 +136,56 @@ export interface Route {
   path: string;
 }
 
+export type Measurement = "neck" | "chest" | "abdomen" | "waist" | "hips" | "thigh" | "calf" | "biceps";
+
+export interface HealthGoal {
+  label: string;
+  weight: number;
+  date?: string;
+  color?: string;
+}
+
+/** Osoba z zakładki Zdrowie (podwpis integracji); puste pola nie przychodzą wcale. */
+export interface HealthProfile {
+  id: string;
+  name: string;
+  person?: string;
+  gender: "male" | "female";
+  birthdate?: string;
+  weight: string;
+  height?: string;
+  height_cm?: number;
+  start_weight?: number;
+  start_date?: string;
+  history_days: number;
+  body_fat?: string;
+  fat_mass?: string;
+  lean_mass?: string;
+  muscle_mass?: string;
+  skeletal_muscle?: string;
+  bone_mass?: string;
+  body_water?: string;
+  bmr?: string;
+  steps?: string;
+  calories?: string;
+  steps_goal: number;
+  calories_goal: number;
+  bp_systolic?: string;
+  bp_diastolic?: string;
+  bp_pulse?: string;
+  bp_category?: string;
+  report_name?: string;
+  report_device?: string;
+  bp_exclude: string[];
+  data_entry: boolean;
+  bp_systolic_input?: string;
+  bp_diastolic_input?: string;
+  bp_pulse_input?: string;
+  goals: HealthGoal[];
+  centiles: boolean;
+  [key: `meas_${string}` | `input_${string}`]: string | undefined;
+}
+
 export interface PanelInfo {
-  config: { options: Options; version: string };
+  config: { options: Options; health?: HealthProfile[]; version: string };
 }

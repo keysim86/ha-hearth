@@ -18,9 +18,12 @@ from .const import (
     DATA_STATIC_REGISTERED,
     DEFAULTS,
     DOMAIN,
+    H_NAME,
+    HEALTH_DEFAULTS,
     PANEL_COMPONENT,
     PANEL_URL_PATH,
     STATIC_URL,
+    SUBENTRY_HEALTH,
 )
 
 FRONTEND_DIR = Path(__file__).parent / "www"
@@ -37,6 +40,15 @@ def _file_digest(path: Path) -> str:
 def panel_options(entry: ConfigEntry) -> dict:
     """Opcje wpisu uzupełnione wartościami domyślnymi."""
     return {**DEFAULTS, **entry.options}
+
+
+def health_profiles(entry: ConfigEntry) -> list[dict]:
+    """Osoby zakładki Zdrowie (podwpisy) w kolejności dodania."""
+    return [
+        {**HEALTH_DEFAULTS, **sub.data, "id": sub_id, H_NAME: sub.title}
+        for sub_id, sub in entry.subentries.items()
+        if sub.subentry_type == SUBENTRY_HEALTH
+    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -61,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         module_url=f"{STATIC_URL}/hearth-panel.js?v={version}-{digest}",
         embed_iframe=False,
         require_admin=bool(options[CONF_ADMIN_ONLY]),
-        config={"options": options, "version": str(version)},
+        config={"options": options, "health": health_profiles(entry), "version": str(version)},
     )
     entry.async_on_unload(entry.add_update_listener(_options_updated))
     return True
@@ -74,5 +86,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Nowe opcje = przeładowanie wpisu, żeby panel dostał świeżą konfigurację."""
+    """Nowe opcje albo zmiana osób (podwpisów) = przeładowanie wpisu, żeby panel dostał świeżą konfigurację."""
     await hass.config_entries.async_reload(entry.entry_id)

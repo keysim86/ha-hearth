@@ -28,6 +28,7 @@
 | 📹 **Kamery** | Podglądy co 5 s, kliknięcie = obraz na żywo, stan rejestratora i magazynu |
 | 🚗 **Auta** · 🤖 **Roboty** | Paliwo, zasięg, przebieg, akumulator, zamek, mapa · kosiarki i odkurzacze: stan, bateria, mapa, przyciski |
 | 🖥️ **Proxmox** | Węzeł, magazyny, maszyny i kontenery (CPU, RAM, dysk) z uruchamianiem i restartem |
+| ❤️ **Zdrowie** | Osoby z ustawień integracji · waga: start, zmiana, tempo, BMI z paskiem, cele z prognozą, bilanse miesięczne i tygodniowe, historia z trendem 7 dni · skład ciała (tłuszcz wg progów ACE, masa beztłuszczowa, mięśnie, woda) · aktywność: kroki i kalorie dziś i w 7–90 dniach · ciśnienie: wartości, średnie z pomiarów, historia 90 dni, raport do druku / PDF · pomiary obwodów (profil, bilans, historia) · siatki centylowe WHO dla dzieci · wpis danych do pomocników |
 | 🔔 **Alerty** · 🤖 **Agent** | Reguły z licznikiem na zakładce · dowolna strona w ramce |
 | 📟 **Liczniki** | Dowolne encje pogrupowane według urządzeń (licznik, sprzedawca, zmiękczacz, zmywarka…) · liczniki narastające z zużyciem dziś i w miesiącu · pomiary z wykresem 24 h · stany drzwi, soli i daty po polsku |
 
@@ -37,6 +38,9 @@
 </tr><tr>
 <td><img src="assets/kociol.png" alt="Kocioł"/></td>
 <td><img src="assets/liczniki.png" alt="Liczniki"/></td>
+</tr><tr>
+<td><img src="assets/zdrowie.png" alt="Zdrowie — waga"/></td>
+<td><img src="assets/zdrowie-cisnienie.png" alt="Zdrowie — ciśnienie"/></td>
 </tr></table>
 
 ### Trzy style kart pokoi
@@ -92,6 +96,25 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 | **Kocioł** | termostaty ogrzewania i CWU, stan albo płomień + zapotrzebowanie na CWU, zapłon, pompa, moc, wentylator, zasilanie (+ cel), powrót, ciśnienie, krzywa, zewnątrz (+ średnia), ciepła woda (+ cel), gaz, suwaki ustawień · ebusd: temat strefy do Quick Veto, tryb specjalny, koniec Veto | gaz z panelu Energia; bez tematu ebusd zwykła nastawa |
 | **Zakładka Liczniki** | encje liczników (grupowane według urządzeń) | woda i gaz z panelu Energia |
 | **Pokoje** | obszary i ich kolejność, prefiks pomocników ogrzewania, wentylatory, pominięte encje | każdy obszar z termostatem |
+
+### Zdrowie — osoby
+
+Osoby zakładki **Zdrowie** to podwpisy integracji: **Ustawienia → Urządzenia i usługi → Hearth → Dodaj osobę**
+(zmiana: ⋮ przy osobie → Zmień dane osoby). Wymagane są tylko imię, płeć i czujnik wagi (kg, ze statystykami);
+każda kolejna sekcja włącza swoją podstronę:
+
+| Sekcja | Pola | Podstrona |
+|---|---|---|
+| **Osoba** | imię, osoba HA (zdjęcie), płeć, data urodzenia, waga, wzrost (encja albo stały), waga i data startu, dni historii | Waga |
+| **Skład ciała** | tkanka tłuszczowa %, masa tłuszczu, masa beztłuszczowa, tkanka beztłuszczowa, mięśnie szkieletowe, kości, woda, przemiana podstawowa | Skład ciała |
+| **Aktywność** | kroki i kalorie dziś (liczniki zerowane o północy), cele | Aktywność |
+| **Ciśnienie** | skurczowe, rozkurczowe, tętno, kategoria, imię i nazwisko oraz ciśnieniomierz do raportu, pominięte pomiary | Ciśnienie |
+| **Pomiary ciała** | obwody: szyja, klatka, brzuch, talia, biodra, udo, łydka, biceps | Pomiary |
+| **Wprowadź dane** | włącznik podstrony, pomocniki `input_number` ciśnienia i obwodów (wzrost — gdy jest pomocnikiem) | Wprowadź dane |
+| **Cele i siatki** | cele wagowe (nazwa, waga, termin, kolor), siatki centylowe WHO 2007 (2–18 lat, potrzebna data urodzenia) | Waga, Siatki |
+
+Panel liczy wszystko ze statystyk rekordera (waga dzień po dniu, średnie, odczyty ciśnienia z minimum i maksimum
+godziny). Kategorie BMI, tkanki tłuszczowej i ciśnienia służą tylko do kolorów — panel nie stawia diagnoz.
 
 ### Profile ogrzewania (opcjonalnie)
 
