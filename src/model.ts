@@ -35,6 +35,9 @@ export interface Room {
   fans: string[];
   dehumidifiers: Dehumidifier[];
   helpers: Helpers;
+  /** Pozostałe pomocniki przypisane do obszaru (progi automatyzacji, wymuszenia) — do zmiany w szczegółach pokoju. */
+  settings: string[];
+  toggles: string[];
 }
 
 const OPENINGS = ["window", "door", "opening", "garage_door"];
@@ -123,6 +126,11 @@ export function discoverRooms(hass: Hass, opts: Options): Room[] {
         const same = (cls: string) => (d ? ids.find((i) => sensor(i) && dev(i) === d && dc(i) === cls) : undefined);
         return { entity, power: same("power"), energy: same("energy") };
       });
+    // Pomocniki obszaru poza profilami ogrzewania (te mają własną sekcję), np. progi wentylatora, „wymuś osuszacz”.
+    const heating = opts.helper_prefix ? `${opts.helper_prefix}_${area.area_id}_` : null;
+    const own = (i: string) => !heating || !i.split(".")[1].startsWith(heating);
+    const settings = ids.filter((i) => i.startsWith("input_number.") && own(i));
+    const toggles = ids.filter((i) => i.startsWith("input_boolean.") && own(i));
     rooms.push({
       areaId: area.area_id,
       name: area.name,
@@ -135,6 +143,8 @@ export function discoverRooms(hass: Hass, opts: Options): Room[] {
       fans,
       dehumidifiers,
       helpers: helpersFor(hass, opts.helper_prefix, area.area_id),
+      settings,
+      toggles,
     });
   }
   return rooms;

@@ -89,6 +89,28 @@ function air(ctx: Ctx, r: Room) {
   </div>`;
 }
 
+/** Pomocniki przypisane do obszaru pokoju: przełączniki (np. wymuszenie osuszacza) i progi automatyzacji z − / +. */
+function automation(ctx: Ctx, r: Room) {
+  if (!r.settings.length && !r.toggles.length) return nothing;
+  // „Osuszacz – wymuś pracę (Łazienka)” → bez nazwy pokoju, w którym właśnie jesteśmy.
+  const label = (id: string) => String(ctx.hass.states[id]?.attributes.friendly_name ?? id).replace(` (${r.name})`, "");
+  return html`<div class="box"><h3>Automatyka urządzeń</h3>
+    ${r.toggles.map((id) => html`<div class="row"><span>${label(id)}</span>
+      <button class="switch" type="button" role="switch" aria-checked=${st(ctx, id) === "on" ? "true" : "false"} aria-label=${label(id)}
+        @click=${() => ctx.actions.toggleEntity(id)}></button></div>`)}
+    ${r.settings.map((id) => {
+      const a = ctx.hass.states[id]?.attributes ?? {};
+      const step = num(a.step) ?? 1;
+      const v = ctx.pending.get(id) ?? num(st(ctx, id));
+      const unit = a.unit_of_measurement ? ` ${a.unit_of_measurement}` : "";
+      const text = v === null ? "—" : `${v.toLocaleString("pl-PL", { maximumFractionDigits: step < 1 ? 1 : 0 })}${unit}`;
+      return html`<div class="prof on airp"><span class="pl">${label(id)}</span>
+        ${stepper(label(id), text, () => ctx.actions.stepNumber(id, -step), () => ctx.actions.stepNumber(id, step))}</div>`;
+    })}
+    <div class="rule">Pomocniki przypisane do tego pokoju (obszaru) w Home Assistant — zmiana działa od razu w automatyzacjach.</div>
+  </div>`;
+}
+
 export function detail(ctx: Ctx, r: Room) {
   const { z, p } = targetNow(ctx, r);
   const c = ctx.hass.states[r.climate];
@@ -120,6 +142,7 @@ export function detail(ctx: Ctx, r: Room) {
         ${r.battery ? html`<div class="row"><span>Bateria</span><b>${num(st(ctx, r.battery)) === null ? "brak odczytu" : `${round(num(st(ctx, r.battery)))}%`}</b></div>` : nothing}
       </div>
       ${air(ctx, r)}
+      ${automation(ctx, r)}
     </div>
   </section>`;
 }

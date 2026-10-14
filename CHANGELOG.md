@@ -7,6 +7,12 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Automatyka urządzeń w szczegółach pokoju** (zakładka Klimat) — pomocniki `input_number` i `input_boolean`
+  przypisane do obszaru pokoju (poza profilami ogrzewania) jako − / + i przełączniki, np. progi wentylatora
+  łazienki (włącz / wyłącz przy wilgotności, różnica z zewnątrz, dopracowanie) i „wymuś pracę” osuszacza;
+  nazwa pokoju w nawiasie na końcu nazwy pomocnika jest pomijana
+
 ## [0.2.0] - 2026-10-14
 
 ### Dodano
