@@ -7,6 +7,15 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-15
+
+### Dodano
+- **AGD: frytkownica (Tuya Local)** — karta wykrywana po przełącznikach `…_power` i `…_cooking` oraz czujniku
+  `…_time_remaining`: w trakcie pracy czas do końca i przybliżona godzina zakończenia, poza pracą stan
+  (czuwanie, gotowe…), temperatura i czas gotowania z − / +, przyciski Start / Zatrzymaj i Włącz / Wyłącz
+  (wyłączenie w trakcie pracy z potwierdzeniem), usterka
+- Opcja **AGD → Pominięte urządzenia** obejmuje też urządzenia z Tuya Local
+
 ## [0.5.0] - 2026-10-14
 
 ### Dodano
@@ -168,7 +177,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/keysim86/ha-hearth/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/keysim86/ha-hearth/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/keysim86/ha-hearth/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/keysim86/ha-hearth/compare/v0.2.0...v0.3.0

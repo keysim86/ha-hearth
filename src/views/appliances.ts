@@ -1,5 +1,5 @@
 // Zakładka AGD: karta na urządzenie wykrywana po integracji — lodówka (Home Connect), zmywarka (hOn),
-// uzdatniacz wody (EcoWater); inne urządzenia tych integracji dostają prostą kartę z odczytami.
+// uzdatniacz wody (EcoWater), frytkownica (Tuya Local); inne urządzenia tych integracji dostają prostą kartę z odczytami.
 
 import { html, nothing, type TemplateResult } from "lit";
 import { f1, num, round } from "../format";
@@ -7,7 +7,7 @@ import { areaOf } from "../model";
 import type { Hass } from "../types";
 import { cleanName, entityName, since, sinceLabel, st, valueText, type Ctx } from "./common";
 
-const PLATFORMS = ["home_connect", "hon", "ecowater_softener"];
+const PLATFORMS = ["home_connect", "hon", "ecowater_softener", "tuya_local"];
 const bulb = html`<svg class="chipico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
 interface Appliance {
@@ -15,7 +15,7 @@ interface Appliance {
   name: string;
   area?: string;
   ents: string[];
-  kind: "fridge" | "dishwasher" | "softener" | "other";
+  kind: "fridge" | "dishwasher" | "softener" | "airfryer" | "other";
 }
 
 const tk = (h: Hass, e: string) => h.entities[e]?.translation_key ?? "";
@@ -38,10 +38,12 @@ function discover(h: Hass, skip: Set<string>): Appliance[] {
         ? "dishwasher"
         : platform === "ecowater_softener"
           ? "softener"
-          : "other";
+          : platform === "tuya_local" && ents.some((e) => /^switch\..*_cooking$/.test(e)) && ents.some((e) => /^sensor\..*_time_remaining$/.test(e))
+            ? "airfryer"
+            : "other";
     out.push({ device, name: cleanName(d?.name_by_user || d?.name || ents[0]), area: areaOf(h, ents[0]), ents, kind });
   }
-  const order = { fridge: 0, dishwasher: 1, softener: 2, other: 3 };
+  const order = { fridge: 0, dishwasher: 1, airfryer: 2, softener: 3, other: 4 };
   return out.sort((a, b) => order[a.kind] - order[b.kind] || a.name.localeCompare(b.name, "pl"));
 }
 
@@ -59,13 +61,13 @@ function head(ctx: Ctx, a: Appliance, chip: string, color: string): TemplateResu
     <span class="lvl" style="background:color-mix(in srgb, ${color} 16%, transparent);color:${color}">${chip}</span></div>`;
 }
 
-function stepper(ctx: Ctx, id: string, label: string): TemplateResult {
+function stepper(ctx: Ctx, id: string, label: string, unit = "°"): TemplateResult {
   const a = ctx.hass.states[id]?.attributes ?? {};
   const v = ctx.pending.get(id) ?? num(st(ctx, id));
   const step = num(a.step) ?? 1;
   return html`<span class="step">
     <button type="button" aria-label="${label}: mniej" @click=${() => ctx.actions.stepNumber(id, -step)}>−</button>
-    <output>${v === null ? "—" : `${round(v)}°`}</output>
+    <output>${v === null ? "—" : `${round(v)}${unit}`}</output>
     <button type="button" aria-label="${label}: więcej" @click=${() => ctx.actions.stepNumber(id, step)}>+</button>
   </span>`;
 }
@@ -208,6 +210,39 @@ function softener(ctx: Ctx, a: Appliance): TemplateResult {
   </div>`;
 }
 
+// ---- frytkownica (Tuya Local; profil gotzejensen_af850t_airfryer z ha-package) ----
+
+const FRYER_STATE: Record<string, string> = { sleep: "czuwanie", standby: "czuwanie", cooking: "gotuje", working: "gotuje", pause: "pauza", done: "gotowe", finish: "gotowe", keep_warm: "podtrzymanie", preheat: "nagrzewanie" };
+
+function airfryer(ctx: Ctx, a: Appliance): TemplateResult {
+  const h = ctx.hass;
+  const end = (re: RegExp) => a.ents.find((e) => re.test(e));
+  const power = end(/^switch\..*_power$/), cooking = end(/^switch\..*_cooking$/);
+  const temp = end(/^number\..*_temperature$/), time = end(/^number\..*_cooking_time$/);
+  const remain = num(st(ctx, end(/^sensor\..*_time_remaining$/)));
+  const status = st(ctx, end(/^sensor\..*_status$/));
+  const problem = st(ctx, a.ents.find((e) => e.startsWith("binary_sensor.") && h.states[e].attributes.device_class === "problem")) === "on";
+  const on = st(ctx, power) === "on", cooks = st(ctx, cooking) === "on";
+  const offline = a.ents.every((e) => h.states[e].state === "unavailable");
+  const chip = offline ? "niedostępna" : problem ? "usterka" : cooks ? "gotuje" : on ? "włączona" : "wyłączona";
+  const color = offline || problem ? "var(--crit)" : cooks ? "var(--ok)" : "var(--muted)";
+  return html`<div class="ocell agd">
+    ${head(ctx, a, chip, color)}
+    ${cooks && remain !== null
+      ? html`<div class="orow"><span class="hval big">${round(remain)} min</span><span class="hsub">do końca · koniec ok. ${ctx.clock.hm(Date.now() + remain * 60e3)}</span></div>`
+      : html`<span class="hsub">${status ? `Stan: ${FRYER_STATE[status] ?? status}` : ""}</span>`}
+    <div class="agdtemps">
+      ${temp ? html`<div class="agdtemp"><span class="hsub">Temperatura</span>${stepper(ctx, temp, "Temperatura")}</div>` : nothing}
+      ${time ? html`<div class="agdtemp"><span class="hsub">Czas</span>${stepper(ctx, time, "Czas", " min")}</div>` : nothing}
+    </div>
+    <div class="acts">
+      ${cooking ? html`<button class="btn ${cooks ? "" : "hot"}" type="button" ?disabled=${offline || (!on && !cooks)} @click=${() => ctx.actions.toggleEntity(cooking)}>${cooks ? "Zatrzymaj" : "Start"}</button>` : nothing}
+      ${power ? html`<button class="btn" type="button" ?disabled=${offline} @click=${() => (!cooks || window.confirm("Wyłączyć frytkownicę w trakcie pracy?")) && ctx.actions.toggleEntity(power)}>${on ? "Wyłącz" : "Włącz"}</button>` : nothing}
+    </div>
+    ${problem ? html`<div class="row"><span>Usterka urządzenia</span><b class="alarm">tak</b></div>` : nothing}
+  </div>`;
+}
+
 // ---- pozostałe urządzenia wspieranych integracji ----
 
 function other(ctx: Ctx, a: Appliance): TemplateResult {
@@ -223,7 +258,7 @@ function other(ctx: Ctx, a: Appliance): TemplateResult {
 export function appliancesView(ctx: Ctx): TemplateResult {
   const list = discover(ctx.hass, new Set(ctx.opts.appliances_exclude ?? []));
   if (!list.length)
-    return html`<div class="empty">Nie znalazłem sprzętu AGD. Zakładka pokazuje urządzenia z integracji Home Connect (Bosch, Siemens), hOn (Haier, Candy) i EcoWater.</div>`;
-  const view = { fridge, dishwasher, softener, other };
+    return html`<div class="empty">Nie znalazłem sprzętu AGD. Zakładka pokazuje urządzenia z integracji Home Connect (Bosch, Siemens), hOn (Haier, Candy), EcoWater i Tuya Local.</div>`;
+  const view = { fridge, dishwasher, softener, airfryer, other };
   return html`<section class="sec"><div class="cards agds">${list.map((a) => view[a.kind](ctx, a))}</div></section>`;
 }

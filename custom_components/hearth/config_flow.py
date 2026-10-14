@@ -93,7 +93,7 @@ _FIELDS: dict[str, Any] = {
     c.CONF_APPLIANCES_EXCLUDE: selector.DeviceSelector(
         selector.DeviceSelectorConfig(
             multiple=True,
-            filter=[{"integration": i} for i in ("home_connect", "hon", "ecowater_softener")],
+            filter=[{"integration": i} for i in ("home_connect", "hon", "ecowater_softener", "tuya_local")],
         )
     ),
     c.CONF_PROXMOX_EXCLUDE: _entity("binary_sensor", many=True),
