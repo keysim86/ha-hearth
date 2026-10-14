@@ -34,7 +34,7 @@ import {
 import { daysAgo, startOfDay } from "../data/stats";
 import { num } from "../format";
 import { bars, radar, xyChart, type Bar, type XYBand, type XYLine, type XYMark } from "../svg";
-import type { HealthProfile } from "../types";
+import type { HealthGoal, HealthProfile } from "../types";
 import type { Ctx } from "./common";
 import { MONTH_NAMES } from "./energy";
 import { openReport } from "./health-report";
@@ -230,8 +230,25 @@ function weightPage(ctx: Ctx, p: HealthProfile, w: Daily, body: BodySeries | nul
   const shown = w.filter(([d]) => d >= from);
   const trend = rolling(w.map(([, v]) => v));
   const trendShown = w.map(([d], i) => [d, trend[i]] as [string, number]).filter(([d]) => d >= from);
-  const marks: XYMark[] = goals.map((g) => ({ v: g.weight, color: g.color || "var(--ok)", label: `${g.label} ${nf(g.weight, 1)}`, fit: g === next }));
+  const pending = goals.filter((g) => cur > g.weight), achieved = goals.filter((g) => cur <= g.weight);
+  const marks: XYMark[] = goals.map((g) => cur <= g.weight
+    ? { v: g.weight, color: `color-mix(in srgb, ${g.color || "var(--ok)"} 35%, transparent)`, fit: false }
+    : { v: g.weight, color: g.color || "var(--ok)", label: `${g.label} ${nf(g.weight, 1)}`, fit: g === next });
 
+  const goalRow = (g: HealthGoal) => {
+    const pct = startW === g.weight ? 100 : Math.max(0, Math.min(100, Math.round(((startW - cur) / (startW - g.weight)) * 100)));
+    const done = cur <= g.weight;
+    const left = Math.max(0, Math.round((cur - g.weight) * 100) / 100);
+    const dLeft = g.date ? Math.round((dayStart(g.date) - startOfDay().getTime()) / 864e5) : null;
+    const reached = done ? w.find(([, v]) => v <= g.weight)?.[0] : undefined;
+    const pace = dLeft === null ? "" : ` · ${dLeft} dni · ${dLeft > 0 ? `${nf(left / (dLeft / 7), 2)} kg/tydz.` : "termin minął"}`;
+    const forecast = weekly && weekly > 0 ? ` · prognoza: ${inDays(Math.round((left / weekly) * 7))}` : "";
+    return html`<div class="goal">
+      <div class="glab"><span>${done ? "✓ " : ""}${g.label} — ${nf(g.weight, 1)} kg</span><b>${pct}%</b></div>
+      <div class="gbar"><i style="width:${pct}%;background:${g.color || "var(--ok)"}"></i></div>
+      <span class="hsub">${done ? `Cel osiągnięty${reached ? ` (${dmy(reached)})` : ""}` : `Brakuje ${nf(left, 2)} kg${pace}${forecast}`}</span>
+    </div>`;
+  };
   return html`
     <div class="house">${tiles}</div>
     <div class="house">
@@ -247,20 +264,10 @@ function weightPage(ctx: Ctx, p: HealthProfile, w: Daily, body: BodySeries | nul
         </div>`
       : html`<div class="empty">Ustaw wzrost osoby (encja albo wartość stała), żeby liczyć BMI.</div>`}
     ${goals.length
-      ? html`<div class="ocell"><span class="hlabel">Postęp do celów</span><div class="goals">${goals.map((g) => {
-          const pct = startW === g.weight ? 100 : Math.max(0, Math.min(100, Math.round(((startW - cur) / (startW - g.weight)) * 100)));
-          const done = cur <= g.weight;
-          const left = Math.max(0, Math.round((cur - g.weight) * 100) / 100);
-          const dLeft = g.date ? Math.round((dayStart(g.date) - startOfDay().getTime()) / 864e5) : null;
-          const reached = done ? w.find(([, v]) => v <= g.weight)?.[0] : undefined;
-          return html`<div class="goal">
-            <div class="glab"><span>${done ? "✓ " : ""}${g.label} — ${nf(g.weight, 1)} kg</span><b>${pct}%</b></div>
-            <div class="gbar"><i style="width:${pct}%;background:${g.color || "var(--ok)"}"></i></div>
-            <span class="hsub">${done
-              ? `Cel osiągnięty${reached ? ` (${dmy(reached)})` : ""}`
-              : `Brakuje ${nf(left, 2)} kg${dLeft !== null ? ` · ${dLeft} dni · ${dLeft > 0 ? `${nf(left / (dLeft / 7), 2)} kg/tydz.` : "termin minął"}` : ""}${weekly && weekly > 0 ? ` · prognoza: ${inDays(Math.round((left / weekly) * 7))}` : ""}`}</span>
-          </div>`;
-        })}</div></div>`
+      ? html`<div class="ocell"><span class="hlabel">Postęp do celów</span>
+          ${pending.length ? html`<div class="goals">${pending.map(goalRow)}</div>` : html`<span class="hsub">Wszystkie cele osiągnięte.</span>`}
+          ${achieved.length ? html`<details><summary>Osiągnięte cele (${achieved.length})</summary><div class="goals">${achieved.map(goalRow)}</div></details>` : nothing}
+        </div>`
       : nothing}
     <div class="ocell"><div class="orow"><span class="hlabel">Bilanse</span>
       <div class="seg2">${[["month", "Miesięczne"], ["week", "Tygodniowe"], ["weight", "Waga"], ["bmi", "BMI"]].map(([k, l]) =>
@@ -279,7 +286,8 @@ function weightPage(ctx: Ctx, p: HealthProfile, w: Daily, body: BodySeries | nul
         marks, unit: "kg", digits: 2, height: 220, xfmt: dayLabel, tipfmt: dayTip,
       })}
       <div class="mlegend"><span><i style="background:var(--frost)"></i>Waga dzienna</span><span><i style="background:var(--ember)"></i>Trend 7 dni</span>
-        ${goals.map((g) => html`<span><i style="background:${g.color || "var(--ok)"}"></i>${g.label}</span>`)}</div>
+        ${pending.map((g) => html`<span><i style="background:${g.color || "var(--ok)"}"></i>${g.label}</span>`)}
+        ${achieved.length ? html`<span class="tt">bledsze kreski: cele osiągnięte (${achieved.length})</span>` : nothing}</div>
     </div>`;
 }
 
@@ -442,15 +450,15 @@ function measurementsPage(ctx: Ctx, p: HealthProfile): TemplateResult {
     const cur = stateNum(ctx, id) ?? stateNum(ctx, p[`input_${m.key}`]);
     return { ...m, id, series, cur: cur === null ? null : Math.round(cur), last: lastChangeDay(series), first: series[0] ?? null };
   });
-  // Wspólny punkt odniesienia: najnowszy dzień (z dowolnego obwodu) z wartością inną niż obecna — żeby „od poprzedniego
-  // pomiaru” porównywało całą sesję mierzenia, a nie każdy obwód z innym dniem.
-  let ref: string | null = null;
-  for (const m of data) {
-    if (!m.last || m.cur === null) continue;
-    const prev = [...m.series].reverse().find(([d, v]) => d < m.last! && v !== m.cur);
-    if (prev && (!ref || prev[0] > ref)) ref = prev[0];
-  }
-  const prevOf = (m: (typeof data)[number]) => (ref ? [...m.series].reverse().find(([d]) => d <= ref!)?.[1] ?? null : null);
+  // Sesja mierzenia bywa rozłożona na kilka dni (np. 28 i 29.09). Ostatnia sesja = zmiany w ciągu tygodnia przed
+  // najnowszą; „od poprzedniego pomiaru” porównuje z wartościami sprzed jej początku, a data w podpisie to dzień
+  // ostatniej zmiany przed sesją.
+  const lasts = data.map((m) => m.last).filter((d): d is string => Boolean(d)).sort();
+  const newest = lasts[lasts.length - 1];
+  const sessionStart = newest ? lasts.find((d) => dayStart(newest) - dayStart(d) <= 7 * 864e5) ?? newest : null;
+  const before = (m: (typeof data)[number]) => (sessionStart ? m.series.filter(([d]) => d < sessionStart) : []);
+  const ref = data.map((m) => lastChangeDay(before(m))).filter((d): d is string => Boolean(d)).sort().pop() ?? null;
+  const prevOf = (m: (typeof data)[number]) => before(m).pop()?.[1] ?? null;
   const sel = ctx.ui["health.meas"] ?? "";
   const delta = (v: number | null, label: string) =>
     v === null ? nothing : html`<span class="hsub" style="color:${diffColor(v)};font-weight:700">${diffText(v, 0, "cm")} ${label}</span>`;

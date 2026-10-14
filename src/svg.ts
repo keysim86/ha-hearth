@@ -427,6 +427,15 @@ export function xyChart(o: {
     return `M${[...top, ...bottom].join("L")}Z`;
   };
   const marks = (o.marks ?? []).filter((m) => m.v >= lo && m.v <= hi);
+  // Podpisy kresek bez nachodzenia: najpierw te, które rozciągają oś (np. najbliższy cel), potem reszta z góry na dół.
+  // Podpis po tej stronie wykresu, gdzie linia danych jest dalej od kreski (nie zasłania końca serii).
+  const main = lines.find((l) => !l.hidden);
+  const clearance = (v: number, from: number, to: number) =>
+    Math.min(Infinity, ...(main?.pts ?? []).filter(([x, y]) => y !== null && x >= from && x <= to).map(([, y]) => Math.abs(Y(y!) - Y(v))));
+  const side = (v: number) => (clearance(v, x0, x0 + (x1 - x0) * 0.3) > clearance(v, x1 - (x1 - x0) * 0.3, x1) ? "left" : "");
+  const labeled: XYMark[] = [];
+  for (const m of [...marks].filter((x) => x.label).sort((a, b) => Number(b.fit !== false) - Number(a.fit !== false) || b.v - a.v))
+    if (labeled.every((k) => Math.abs(Y(k.v) - Y(m.v)) >= 13)) labeled.push(m);
   // Przedziały podpowiedzi: jeden na punkt (do 60), gęstsze serie grupowane w 60 okien.
   const uniq = [...new Set(xs)].sort((a, b) => a - b);
   const SL = Math.min(60, uniq.length);
@@ -455,7 +464,7 @@ export function xyChart(o: {
         })}
         ${lines.filter((l) => !l.hidden).map((l) => svg`<path d=${path(l.pts)} fill="none" stroke=${l.color} stroke-width="2" stroke-linejoin="round" stroke-dasharray=${l.dashed ? "5 4" : "none"} vector-effect="non-scaling-stroke"></path>`)}
       </svg>
-      ${marks.filter((m) => m.label).map((m) => html`<em class="xymark" style="bottom:${(((m.v - lo) / (hi - lo)) * 100).toFixed(2)}%;color:${m.color}">${m.label}</em>`)}
+      ${labeled.map((m) => html`<em class="xymark ${side(m.v)}" style="bottom:${(((m.v - lo) / (hi - lo)) * 100).toFixed(2)}%;color:${m.color}">${m.label}</em>`)}
       ${lines.filter((l) => l.dots && !l.hidden).flatMap((l) => l.pts.filter(([, v]) => v !== null).map(([x, v]) =>
         html`<i class="xydot" style="left:${pct(x)};bottom:${(((v! - lo) / (hi - lo)) * 100).toFixed(2)}%;background:${l.color}"></i>`))}
       ${(o.points ?? []).map((p) => html`<i class="xypt" title=${p.label} style="left:${pct(p.x)};bottom:${(((p.y - lo) / (hi - lo)) * 100).toFixed(2)}%;--pc:${p.color}"></i>`)}

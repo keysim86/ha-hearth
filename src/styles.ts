@@ -634,6 +634,7 @@ form.ocell .orow { margin-top: 6px; }
 .xyx span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
 .xyx span:first-child { transform: none; }
 .xyx span:last-child { transform: translateX(-100%); }
+.xymark.left { right: auto; left: 2px; }
 .xymark { position: absolute; right: 2px; transform: translateY(-2px); font-style: normal; font-size: 10.5px; font-weight: 700; pointer-events: none;
   background: color-mix(in srgb, var(--surface) 80%, transparent); padding: 0 3px; border-radius: 3px; }
 .xydot { position: absolute; width: 6px; height: 6px; margin: 0 0 -3px -3px; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 1.5px var(--surface); }

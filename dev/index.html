@@ -18,9 +18,9 @@
   const snap = await (await fetch(q.get("snap") ? `./snapshot-${q.get("snap")}.json` : "./snapshot.json")).json();
   let options = {};
   try { options = await (await fetch("./options.json")).json(); } catch { /* bez opcji: same pokoje */ }
-  // Zakładka Zdrowie: osoby i statystyki z dev/health-demo.json (fikcyjne dane, poza repo).
+  // Zakładka Zdrowie: osoby i statystyki z dev/health-<nazwa>.json (?health=demo — fikcyjne dane; poza repo).
   let health = { profiles: [], states: {}, stats: {} };
-  try { health = await (await fetch("./health-demo.json")).json(); } catch { /* bez zakładki Zdrowie */ }
+  try { health = await (await fetch(`./health-${q.get("health") || "demo"}.json`)).json(); } catch { /* bez zakładki Zdrowie */ }
   const shift = Date.now() - Date.parse(snap.now);
   const moved = (iso) => new Date(Date.parse(iso) + shift).toISOString();
   const states = {};
