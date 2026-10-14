@@ -32,10 +32,22 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
   ekranie), po najechaniu albo dotknięciu data, suma i rozbicie; prąd w podziale na strefy taryfy (sezony i dni się
   sumują), gaz na CO i CWU
 - **Kocioł: Quick Veto przez ebusd** — opcja tematu strefy (np. `ebusd/ctlv2/Z1`): w trybie Harmonogram −/+
-  ogrzewania włącza Veto (SFMode, QuickVetoTemp), w trybie dziennym zmienia temperaturę dzienną, zmiana trybu kończy
+  ogrzewania włącza Veto (najpierw QuickVetoTemp, potem SFMode — bez zapisu ActualRoomTempDesired, który kończył Veto), w trybie dziennym zmienia temperaturę dzienną, zmiana trybu kończy
   Veto; status „Veto do …” z czujników końca i przycisk Zakończ Veto; tryby podpisane jak w sterowniku
 - **Kocioł: gaz po latach** i podpowiedź na wykresie temperatur z 24 h (godzina i wartości wszystkich serii), wartości
   bieżące w legendzie
+- **Zakładka Przełączniki** — światła, gniazdka i wentylatory z obszarów HA pogrupowane według pokoi, czas włączenia,
+  pobór mocy z urządzenia, wyszukiwarka; przełącznik zamieniony na światło (switch_as_x) pokazany raz
+- **Zakładka Kamery** — podglądy odświeżane co 5 s (`camera_proxy`), kliknięcie = okno kamery HA z obrazem na żywo;
+  stan rejestratora (dostępność, wersja, kanały, magazyn); bez wyboru kamery Frigate
+- **Zakładki Auta i Roboty** — auto z urządzenia lokalizatora (paliwo, zasięg, przebieg, akumulator, zamek, otwarte
+  drzwi, wiek danych, mapa); kosiarki i odkurzacze ze stanem, baterią, mapą z kamery urządzenia i przyciskami
+- **Zakładka Proxmox** — węzeł (CPU, RAM, czas pracy, ile działa), magazyny, maszyny i kontenery z paskami CPU / RAM /
+  dysku i przyciskami Uruchom / Restart / Wyłącz (z potwierdzeniem); dane z wbudowanej integracji Proxmox VE
+- **Zakładka Sieć** — prędkość internetu z wykresem 24 h, łącza z dostępnością i przerwami z 24 h, aktualizacje
+  oprogramowania (z instalacją), porty i PoE pogrupowane według urządzeń
+- **Zakładki Alerty i Agent** — reguły w opcjach (`< 20`, `== open`, `!= on`…) z licznikiem na zakładce; strona Agenta
+  w ramce
 - **Kocioł: harmonogramy sterownika (ebusd)** — tydzień ogrzewania, ciepłej wody i cyrkulacji na paskach (odczyt
   zachowanych tematów MQTT `…Timer_<dzień><nr>`), edycja dnia (do 3 przedziałów, godziny co 10 min, temperatura),
   zapis dla dnia, dni roboczych, weekendu albo całego tygodnia (`…Timer_<dzień>/set`) z odczytem kontrolnym;

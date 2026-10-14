@@ -170,6 +170,78 @@
               "fans": "Switches and fans shown as the room fan (fan.* and names with “fan” are found automatically).",
               "exclude_entities": "E.g. a dishwasher door sensor detected as a room door."
             }
+          },
+          "switches": {
+            "name": "Switches tab",
+            "description": "Lights, plugs and fans from HA areas, grouped by room.",
+            "data": {
+              "switch_exclude": "Exclude entities"
+            },
+            "data_description": {
+              "switch_exclude": "E.g. technical relays that shouldn't be at hand."
+            }
+          },
+          "cameras": {
+            "name": "Cameras tab",
+            "description": "Camera previews and recorder status.",
+            "data": {
+              "cameras": "Cameras",
+              "nvr_status": "Recorder — available",
+              "nvr_version": "Recorder — version",
+              "nvr_channels": "Recorder — channels",
+              "nvr_storage_used": "Recorder — used space",
+              "nvr_storage_total": "Recorder — capacity"
+            },
+            "data_description": {
+              "cameras": "Empty = Frigate cameras (or all when there is no Frigate). Drag to reorder."
+            }
+          },
+          "vehicles": {
+            "name": "Cars and Robots tabs",
+            "description": "Cars from trackers (data from the device: fuel, range, odometer, battery, lock); mowers and vacuums are found automatically.",
+            "data": {
+              "vehicles": "Cars (trackers)",
+              "robots_exclude": "Exclude robots"
+            },
+            "data_description": {
+              "vehicles": "Empty = trackers whose device has an odometer or range."
+            }
+          },
+          "proxmox": {
+            "name": "Proxmox tab",
+            "description": "Nodes, VMs, containers and storage from the built-in Proxmox VE integration.",
+            "data": {
+              "proxmox_exclude": "Exclude guests (status sensor)"
+            },
+            "data_description": {}
+          },
+          "network": {
+            "name": "Network tab",
+            "description": "Internet, links, updates and ports.",
+            "data": {
+              "net_speed": "Internet speed",
+              "net_status": "Link status",
+              "net_updates": "Firmware updates",
+              "net_ports": "Ports and PoE"
+            },
+            "data_description": {
+              "net_speed": "Download, upload, ping in order.",
+              "net_status": "Connectivity binary_sensors (e.g. ping to router, Google).",
+              "net_updates": "Update entities of network devices.",
+              "net_ports": "Port status and PoE switches — grouped by device."
+            }
+          },
+          "extras": {
+            "name": "Alerts and Agent",
+            "description": "Alert rules (badge on the tab) and the Agent tab page.",
+            "data": {
+              "alerts": "Alert rules",
+              "agent_url": "Agent page URL"
+            },
+            "data_description": {
+              "alerts": "List: - entity: sensor.x, condition: \"< 20\" (or \"== open\", \"!= on\"), message: text, severity: error / warn / info.",
+              "agent_url": "Page shown in the Agent tab (e.g. a path under HA)."
+            }
           }
         }
       }
@@ -187,9 +259,17 @@
       "options": {
         "home": "Home",
         "climate": "Climate",
+        "switches": "Switches",
         "energy": "Energy",
         "boiler": "Boiler",
-        "meters": "Meters"
+        "meters": "Meters",
+        "network": "Network",
+        "cameras": "Cameras",
+        "cars": "Cars",
+        "robots": "Robots",
+        "proxmox": "Proxmox",
+        "agent": "Agent",
+        "alerts": "Alerts"
       }
     }
   }

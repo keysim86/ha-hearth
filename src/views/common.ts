@@ -22,8 +22,10 @@ import type { Hass, Options } from "../types";
 export interface Actions {
   toggleRoom(areaId: string): void;
   setUi(key: string, value: string): void;
-  /** Okno z mapą lokalizacji osoby. */
+  /** Okno z mapą lokalizacji osoby (albo innego lokalizatora, np. auta). */
   openPerson(entity: string): void;
+  /** Okno „więcej informacji” HA (np. kamera na żywo, historia encji). */
+  moreInfo(entity: string): void;
   /** Dowolna usługa HA (bramy, termostaty kotła). */
   call(domain: string, service: string, data: Record<string, unknown>): void;
   /** Suwak number / input_number z opóźnionym zapisem. */
@@ -234,4 +236,25 @@ export function since(t: number | string): string {
   const h = Math.floor(m / 60);
   if (h < 48) return `${h} h${m % 60 ? ` ${m % 60} min` : ""}`;
   return `${Math.floor(h / 24)} dni`;
+}
+
+/** Encje urządzenia (bez ukrytych), opcjonalnie tylko z wybranych domen. */
+export function deviceEntities(hass: Hass, deviceId: string | null | undefined, domains?: string[]): string[] {
+  if (!deviceId) return [];
+  return Object.values(hass.entities)
+    .filter((e) => e.device_id === deviceId && !e.hidden && hass.states[e.entity_id] && (!domains || domains.includes(e.entity_id.split(".")[0])))
+    .map((e) => e.entity_id);
+}
+
+export const deviceOf = (hass: Hass, id: string) => hass.entities[id]?.device_id ?? undefined;
+
+/** Wartość z jednostką do pokazania („73 %”, „12 340 km”, „—”). */
+export function valueText(hass: Hass, id: string | undefined, digits = 1): string {
+  if (!id) return "—";
+  const s = hass.states[id];
+  if (!s || s.state === "unavailable" || s.state === "unknown") return "—";
+  const n = num(s.state);
+  const u = s.attributes.unit_of_measurement ?? "";
+  if (n === null) return s.state;
+  return `${n.toLocaleString("pl-PL", { maximumFractionDigits: Math.abs(n) >= 100 ? 0 : digits })}${u ? ` ${u}` : ""}`;
 }

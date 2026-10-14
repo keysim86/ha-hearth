@@ -23,15 +23,29 @@ import { boilerView } from "./views/boiler";
 import { energyView } from "./views/energy";
 import { homeView, personInfo, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { metersView } from "./views/meters";
+import { activeAlerts, alertsView } from "./views/alerts";
+import { camerasView } from "./views/cameras";
+import { networkView, speedIds } from "./views/network";
+import { proxmoxView } from "./views/proxmox";
+import { switchesView } from "./views/switches";
+import { carsView, robotsView } from "./views/vehicles";
 
 const STYLES: Style[] = ["tiles", "list", "dials"];
-const TABS: Tab[] = ["home", "climate", "energy", "boiler", "meters"];
+const TABS: Tab[] = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "agent", "alerts"];
 const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
   home: ["dom", "Dom"],
   climate: ["klimat", "Klimat"],
+  switches: ["przelaczniki", "Przełączniki"],
   energy: ["energia", "Energia"],
   boiler: ["kociol", "Kocioł"],
   meters: ["liczniki", "Liczniki"],
+  network: ["siec", "Sieć"],
+  cameras: ["kamery", "Kamery"],
+  cars: ["auta", "Auta"],
+  robots: ["roboty", "Roboty"],
+  proxmox: ["proxmox", "Proxmox"],
+  agent: ["agent", "Agent"],
+  alerts: ["alerty", "Alerty"],
 };
 const STYLE_INFO: Record<Style, [string, string]> = {
   tiles: ["Kafelki", "Łuk, wykres 24 h, oś dnia i urządzenia; ustawienia po kliknięciu."],
@@ -100,6 +114,7 @@ export class HearthPanel extends LitElement {
   private timers = new Map<string, number>();
   private roomsCache?: { key: unknown[]; rooms: Room[] };
   private tick?: number;
+  private lastTick = 0;
   private toastTimer?: number;
   private resize?: ResizeObserver;
 
@@ -108,9 +123,9 @@ export class HearthPanel extends LitElement {
   }
 
   private get tabs(): Tab[] {
-    // Kolejność z opcji (kolejność wyboru); nieznane pomijamy, pusta lista = wszystkie w kolejności domyślnej.
+    // Kolejność z opcji (kolejność wyboru); nieznane pomijamy. Bez wyboru: wszystkie, poza Agentem bez adresu.
     const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
-    return chosen.length ? chosen : TABS;
+    return chosen.length ? chosen : TABS.filter((t) => t !== "agent" || this.options.agent_url);
   }
 
   private get tab(): Tab {
@@ -139,7 +154,13 @@ export class HearthPanel extends LitElement {
       const link = Object.assign(document.createElement("link"), { id: FONTS_ID, rel: "stylesheet", href: FONTS_URL });
       document.head.append(link);
     }
-    this.tick = window.setInterval(() => this.requestUpdate(), 60e3);
+    // Co minutę przerysowanie (czas, oś dnia); na zakładkach z obrazem z kamer co 5 s (nowy podgląd).
+    this.tick = window.setInterval(() => {
+      if (["cameras", "robots"].includes(this.tab) || Date.now() - this.lastTick > 60e3) {
+        this.lastTick = Date.now();
+        this.requestUpdate();
+      }
+    }, 5000);
     this.resize = new ResizeObserver(() => this.measure());
     this.resize.observe(this);
   }
@@ -188,6 +209,8 @@ export class HearthPanel extends LitElement {
       home: [],
       energy: [o.power_total, ...(o.phase_power ?? [])],
       boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
+      network: [...(this.hass ? speedIds({ hass: this.hass, opts: o } as Ctx) : []), ...(o.net_status ?? [])],
+      switches: [], cameras: [], cars: [], robots: [], proxmox: [], agent: [], alerts: [],
       meters: (o.meters ?? []).filter((id) => this.hass!.states[id]?.attributes.state_class === "measurement"),
     };
     const ids = byTab[tab].filter((x): x is string => Boolean(x));
@@ -249,6 +272,9 @@ export class HearthPanel extends LitElement {
     openPerson: (entity: string) => {
       this.person = entity;
     },
+    moreInfo: (entity: string) => {
+      this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: entity }, bubbles: true, composed: true }));
+    },
     stepProfile: (r: Room, p: Profile, delta: number) => {
       const id = r.helpers[PROFILE_HELPER[p]];
       const cur = profileValue(this.hass!, r, p, this.pending);
@@ -300,9 +326,10 @@ export class HearthPanel extends LitElement {
         this.setPending(key, v, async () => {
           const t = String(v);
           if (this.hass!.states[entity]?.state === "heat_cool") return pub("ActualRoomTempDesired", t);
-          await pub("SFMode", "veto");
+          // Kolejność jak w ebusd dla VRC720: najpierw temperatura Veto, potem włączenie trybu. Bez zapisu
+          // ActualRoomTempDesired — sterownik ustawia go sam, a zapis z zewnątrz potrafi zakończyć Veto.
           await pub("QuickVetoTemp", t);
-          return pub("ActualRoomTempDesired", t);
+          return pub("SFMode", "veto");
         });
         return;
       }
@@ -495,15 +522,35 @@ export class HearthPanel extends LitElement {
       };
     }
     const tab = this.tab;
+    const alertCount = this.tabs.includes("alerts") ? activeAlerts(ctx).length : 0;
     const nav = html`<nav class="tabs" aria-label="Zakładki">
       ${this.tabs.map((t) => html`<a href="${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}" class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"}
         @click=${(e: MouseEvent) => {
           if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
           e.preventDefault();
           this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}`);
-        }}>${TAB_INFO[t][1]}</a>`)}
+        }}>${TAB_INFO[t][1]}${t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}</a>`)}
     </nav>`;
-    const body = tab === "climate" ? this.climate(ctx) : tab === "home" ? homeView(ctx) : tab === "energy" ? energyView(ctx) : tab === "boiler" ? boilerView(ctx) : metersView(ctx);
+    const camTick = Math.floor(Date.now() / 5000);
+    const views: Record<Tab, () => unknown> = {
+      climate: () => this.climate(ctx),
+      home: () => homeView(ctx),
+      switches: () => switchesView(ctx),
+      energy: () => energyView(ctx),
+      boiler: () => boilerView(ctx),
+      meters: () => metersView(ctx),
+      network: () => networkView(ctx),
+      cameras: () => camerasView(ctx, camTick),
+      cars: () => carsView(ctx),
+      robots: () => robotsView(ctx, camTick),
+      proxmox: () => proxmoxView(ctx),
+      agent: () => this.options.agent_url
+        ? html`<iframe class="agent" title="Agent" src=${this.options.agent_url}></iframe>`
+        : html`<div class="empty">Podaj adres strony w opcjach Hearth (sekcja Alerty i Agent).</div>`,
+      alerts: () => alertsView(ctx),
+    };
+    const body = views[tab]();
+
     return html`<div class="wrap s-${this.cardStyle}">
         <header class="top">
           <div class="top-l">

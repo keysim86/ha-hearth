@@ -152,7 +152,7 @@ function gas(ctx: Ctx): TemplateResult | typeof nothing {
   const t0 = startOfDay().getTime(), m0 = startOfMonth().getTime();
   return html`<section class="sec"><h2>Gaz</h2>
     <div class="house">
-      ${ids.map((id, i) => html`<div class="hcell"><span class="hlabel"><i class="sw" style="background:${colors[i % 3]}"></i>${label(i)}</span>
+      ${ids.map((id, i) => html`<div class="hcell"><span class="hlabel"><i class="swatch" style="background:${colors[i % 3]}"></i>${label(i)}</span>
         <span class="hval">${f1(sumSince(day[id], t0))}<span class="u"> ${unit}</span></span>
         <span class="hsub">dziś · w miesiącu ${f1(sumSince(day[id], m0))} ${unit}</span></div>`)}
     </div>

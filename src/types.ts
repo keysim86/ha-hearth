@@ -24,6 +24,8 @@ export interface DeviceReg {
   name?: string | null;
   name_by_user?: string | null;
   area_id?: string | null;
+  model?: string | null;
+  manufacturer?: string | null;
 }
 
 export interface AreaReg {
@@ -46,7 +48,7 @@ export interface Hass {
 }
 
 export type Style = "tiles" | "list" | "dials";
-export type Tab = "home" | "climate" | "energy" | "boiler" | "meters";
+export type Tab = "home" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "agent" | "alerts";
 
 export interface Options {
   style: Style;
@@ -109,6 +111,23 @@ export interface Options {
   veto_end_time?: string | null;
   // Liczniki
   meters?: string[];
+  // Przełączniki, kamery, auta, roboty, Proxmox, sieć, alerty, agent
+  switch_exclude?: string[];
+  cameras?: string[];
+  nvr_status?: string | null;
+  nvr_version?: string | null;
+  nvr_channels?: string | null;
+  nvr_storage_used?: string | null;
+  nvr_storage_total?: string | null;
+  vehicles?: string[];
+  robots_exclude?: string[];
+  proxmox_exclude?: string[];
+  net_speed?: string[];
+  net_status?: string[];
+  net_updates?: string[];
+  net_ports?: string[];
+  alerts?: Array<{ entity: string; condition: string; message: string; severity?: string }>;
+  agent_url?: string;
 }
 
 export interface Route {

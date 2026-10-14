@@ -16,7 +16,7 @@ CONF_TITLE = "sidebar_title"
 CONF_ICON = "sidebar_icon"
 CONF_ADMIN_ONLY = "require_admin"
 STYLES = ["tiles", "list", "dials"]
-TABS = ["home", "climate", "energy", "boiler", "meters"]
+TABS = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "agent", "alerts"]
 
 # Na zewnątrz
 CONF_OUT_TEMP = "outdoor_temperature"
@@ -78,6 +78,24 @@ CONF_BOILER_SETTINGS = "boiler_settings"
 # Liczniki
 CONF_METERS = "meters"
 
+# Przełączniki, kamery, auta, roboty, Proxmox, sieć, alerty, agent
+CONF_SWITCH_EXCLUDE = "switch_exclude"
+CONF_CAMERAS = "cameras"
+CONF_NVR_STATUS = "nvr_status"
+CONF_NVR_VERSION = "nvr_version"
+CONF_NVR_CHANNELS = "nvr_channels"
+CONF_NVR_USED = "nvr_storage_used"
+CONF_NVR_TOTAL = "nvr_storage_total"
+CONF_VEHICLES = "vehicles"
+CONF_ROBOTS_EXCLUDE = "robots_exclude"
+CONF_PROXMOX_EXCLUDE = "proxmox_exclude"
+CONF_NET_SPEED = "net_speed"
+CONF_NET_STATUS = "net_status"
+CONF_NET_UPDATES = "net_updates"
+CONF_NET_PORTS = "net_ports"
+CONF_ALERTS = "alerts"
+CONF_AGENT_URL = "agent_url"
+
 # Pokoje
 CONF_AREAS = "areas"
 CONF_HELPER_PREFIX = "helper_prefix"
@@ -97,6 +115,12 @@ SECTIONS: dict[str, list[str]] = {
                CONF_BOILER_OUTDOOR_AVG, CONF_DHW_TEMP, CONF_DHW_TARGET, CONF_GAS, CONF_BOILER_SETTINGS,
                CONF_EBUSD_ZONE, CONF_SF_MODE, CONF_VETO_END_DATE, CONF_VETO_END_TIME],
     "meters": [CONF_METERS],
+    "switches": [CONF_SWITCH_EXCLUDE],
+    "cameras": [CONF_CAMERAS, CONF_NVR_STATUS, CONF_NVR_VERSION, CONF_NVR_CHANNELS, CONF_NVR_USED, CONF_NVR_TOTAL],
+    "vehicles": [CONF_VEHICLES, CONF_ROBOTS_EXCLUDE],
+    "proxmox": [CONF_PROXMOX_EXCLUDE],
+    "network": [CONF_NET_SPEED, CONF_NET_STATUS, CONF_NET_UPDATES, CONF_NET_PORTS],
+    "extras": [CONF_ALERTS, CONF_AGENT_URL],
     "rooms": [CONF_AREAS, CONF_HELPER_PREFIX, CONF_FANS, CONF_EXCLUDE],
 }
 
@@ -118,6 +142,16 @@ DEFAULTS: dict[str, object] = {
     CONF_GAS: [],
     CONF_BOILER_SETTINGS: [],
     CONF_METERS: [],
+    CONF_SWITCH_EXCLUDE: [],
+    CONF_CAMERAS: [],
+    CONF_VEHICLES: [],
+    CONF_ROBOTS_EXCLUDE: [],
+    CONF_PROXMOX_EXCLUDE: [],
+    CONF_NET_SPEED: [],
+    CONF_NET_STATUS: [],
+    CONF_NET_UPDATES: [],
+    CONF_NET_PORTS: [],
+    CONF_ALERTS: [],
     CONF_AREAS: [],
     CONF_HELPER_PREFIX: "",
     CONF_FANS: [],

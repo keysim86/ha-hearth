@@ -9,7 +9,8 @@
 [![HA](https://img.shields.io/badge/Home%20Assistant-2026.10%2B-blue?style=flat-square)](https://www.home-assistant.io/)
 [![License](https://img.shields.io/github/license/keysim86/ha-hearth.svg?style=flat-square)](LICENSE)
 
-> Panel Home Assistant dla całego domu w pięciu zakładkach: **Dom**, **Klimat**, **Energia**, **Kocioł**, **Liczniki**.
+> Panel Home Assistant dla całego domu: **Dom**, **Klimat**, **Przełączniki**, **Energia**, **Kocioł**, **Liczniki**, **Sieć**,
+> **Kamery**, **Auta**, **Roboty**, **Proxmox**, **Agent** i **Alerty** — każdą zakładkę włączasz i ustawiasz w kolejności w opcjach.
 > Pokoje budują się same z **obszarów HA**, zużycie z **panelu Energia** HA — bez list encji w YAML-u.
 
 ![Klimat — styl Kafelki](assets/kafelki.png)
@@ -22,6 +23,12 @@
 | 🌡️ **Klimat** | Na zewnątrz (temperatura, ciśnienie z trendem, słońce i światło, CAQI, PM2,5/PM10 wg GIOŚ) · pasek domu · pokoje: temperatura i cel, wykres 24 h, oś dnia, wentylatory i osuszacze · po kliknięciu ustawienia pokoju (profile −/+, automatyka, osuszacz, wentylator) |
 | ⚡ **Energia** | Moc całkowita z wykresem 24 h · fazy L1–L3 z kontrolą napięcia · zużycie dziś i w miesiącu ze źródeł panelu Energia, z podziałem na strefy i kosztem · 30 dni i 12 miesięcy w strefach, z etykietami i podpowiedzią · ranking odbiorników (moc teraz, kWh dziś) |
 | 🔥 **Kocioł** | Stan (płomień, zapłon, pompa, ciepła woda), moc palnika, wentylator, ciśnienie, krzywa · zasilanie, powrót, zewnątrz, ciepła woda z wykresem 24 h i podpowiedzią · termostaty ogrzewania i ciepłej wody (tryby, presety, −/+, Quick Veto przez ebusd) · harmonogramy ogrzewania, ciepłej wody i cyrkulacji ze sterownika (ebusd) z edycją · gaz: dziś, miesiąc, 30 dni, 12 miesięcy, lata · suwaki ustawień |
+| 🔌 **Przełączniki** | Światła, gniazdka i wentylatory według pokoi (obszary HA), czas włączenia, moc, wyszukiwarka |
+| 🌐 **Sieć** | Prędkość internetu z wykresem, łącza z dostępnością i przerwami, aktualizacje, porty i PoE |
+| 📹 **Kamery** | Podglądy co 5 s, kliknięcie = obraz na żywo, stan rejestratora i magazynu |
+| 🚗 **Auta** · 🤖 **Roboty** | Paliwo, zasięg, przebieg, akumulator, zamek, mapa · kosiarki i odkurzacze: stan, bateria, mapa, przyciski |
+| 🖥️ **Proxmox** | Węzeł, magazyny, maszyny i kontenery (CPU, RAM, dysk) z uruchamianiem i restartem |
+| 🔔 **Alerty** · 🤖 **Agent** | Reguły z licznikiem na zakładce · dowolna strona w ramce |
 | 📟 **Liczniki** | Dowolne encje pogrupowane według urządzeń (licznik, sprzedawca, zmiękczacz, zmywarka…) · liczniki narastające z zużyciem dziś i w miesiącu · pomiary z wykresem 24 h · stany drzwi, soli i daty po polsku |
 
 <table><tr>

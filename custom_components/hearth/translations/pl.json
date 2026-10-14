@@ -170,6 +170,78 @@
               "fans": "Przełączniki i wentylatory pokazywane jako wentylator pokoju (encje fan.* i nazwy z „wentylator/fan” wykrywane same).",
               "exclude_entities": "Np. czujnik drzwi zmywarki rozpoznany jako drzwi pokoju."
             }
+          },
+          "switches": {
+            "name": "Zakładka Przełączniki",
+            "description": "Światła, gniazdka i wentylatory z obszarów HA, pogrupowane według pokoi.",
+            "data": {
+              "switch_exclude": "Pomiń encje"
+            },
+            "data_description": {
+              "switch_exclude": "Np. przekaźniki techniczne, które nie powinny być pod ręką."
+            }
+          },
+          "cameras": {
+            "name": "Zakładka Kamery",
+            "description": "Podglądy kamer i stan rejestratora.",
+            "data": {
+              "cameras": "Kamery",
+              "nvr_status": "Rejestrator — dostępny",
+              "nvr_version": "Rejestrator — wersja",
+              "nvr_channels": "Rejestrator — kanały",
+              "nvr_storage_used": "Rejestrator — zajęte miejsce",
+              "nvr_storage_total": "Rejestrator — pojemność"
+            },
+            "data_description": {
+              "cameras": "Puste = kamery Frigate (albo wszystkie, gdy Frigate nie ma). Kolejność przeciąganiem."
+            }
+          },
+          "vehicles": {
+            "name": "Zakładki Auta i Roboty",
+            "description": "Auta z lokalizatorów (dane z urządzenia: paliwo, zasięg, przebieg, akumulator, zamek); kosiarki i odkurzacze wykrywane same.",
+            "data": {
+              "vehicles": "Auta (lokalizatory)",
+              "robots_exclude": "Pomiń roboty"
+            },
+            "data_description": {
+              "vehicles": "Puste = lokalizatory, których urządzenie ma przebieg albo zasięg."
+            }
+          },
+          "proxmox": {
+            "name": "Zakładka Proxmox",
+            "description": "Węzły, maszyny, kontenery i magazyny z wbudowanej integracji Proxmox VE.",
+            "data": {
+              "proxmox_exclude": "Pomiń maszyny (czujnik stanu)"
+            },
+            "data_description": {}
+          },
+          "network": {
+            "name": "Zakładka Sieć",
+            "description": "Internet, łącza, aktualizacje i porty.",
+            "data": {
+              "net_speed": "Prędkość internetu",
+              "net_status": "Stan łączy",
+              "net_updates": "Aktualizacje oprogramowania",
+              "net_ports": "Porty i PoE"
+            },
+            "data_description": {
+              "net_speed": "Kolejno pobieranie, wysyłanie, ping.",
+              "net_status": "binary_sensor łączności (np. ping do routera, Google).",
+              "net_updates": "Encje update urządzeń sieciowych.",
+              "net_ports": "Stan portów i przełączniki PoE — grupowane według urządzeń."
+            }
+          },
+          "extras": {
+            "name": "Alerty i Agent",
+            "description": "Reguły alertów (licznik na zakładce) i strona zakładki Agent.",
+            "data": {
+              "alerts": "Reguły alertów",
+              "agent_url": "Adres strony Agent"
+            },
+            "data_description": {
+              "alerts": "Lista: - entity: sensor.x, condition: \"< 20\" (albo \"== open\", \"!= on\"), message: tekst, severity: error / warn / info.",
+              "agent_url": "Strona wyświetlana w zakładce Agent (np. ścieżka pod HA)."
+            }
           }
         }
       }
@@ -187,9 +259,17 @@
       "options": {
         "home": "Dom",
         "climate": "Klimat",
+        "switches": "Przełączniki",
         "energy": "Energia",
         "boiler": "Kocioł",
-        "meters": "Liczniki"
+        "meters": "Liczniki",
+        "network": "Sieć",
+        "cameras": "Kamery",
+        "cars": "Auta",
+        "robots": "Roboty",
+        "proxmox": "Proxmox",
+        "agent": "Agent",
+        "alerts": "Alerty"
       }
     }
   }

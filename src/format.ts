@@ -37,5 +37,8 @@ export const tempColor = (t: number | null): string =>
 
 export const duration = (ms: number): string => {
   const m = Math.round(ms / 60000);
-  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}`;
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h} h${m % 60 ? ` ${m % 60} min` : ""}`;
+  return `${Math.floor(h / 24)} dni${h % 24 ? ` ${h % 24} h` : ""}`;
 };
