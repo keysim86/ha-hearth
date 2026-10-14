@@ -7,114 +7,118 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
-### Added
-- **Zakładka Zdrowie** (przeniesiona karta zdrowia) — osoby dodawane w ustawieniach integracji jako podwpisy
-  („Dodaj osobę”, zmiana przez „Zmień dane osoby”); przełącznik osób ze zdjęciem i wagą; podstrony pokazują się tylko,
-  gdy osoba ma ich encje:
-  - **Waga** — start, aktualnie (dzień ostatniej zmiany), łączna zmiana i %, tempo na tydzień, do normy BMI 25
-    z prognozą, następny cel, spalony tłuszcz (zmierzony albo szacunek); bilans miesiąca i tygodnia, średnia waga
-    i BMI z miesiąca; BMI na starcie i teraz na pasku kategorii; postęp celów z terminem, potrzebnym tempem
-    i prognozą; bilanse miesięczne / tygodniowe i średnie miesięczne wagi i BMI; historia z trendem 7 dni i kreskami
-    celów (od początku, 6 i 3 miesiące, 30, 14, 7 dni)
-  - **Skład ciała** — tkanka tłuszczowa z kategorią ACE, masy tłuszczu i beztłuszczowa, mięśnie szkieletowe, tkanka
-    beztłuszczowa, kości, woda (także % masy ciała), przemiana podstawowa; wykres składu w czasie
-  - **Aktywność** — kroki i kalorie dziś z paskiem celu (bez wczorajszego wyniku po północy), średnia i maksimum,
-    słupki 7 / 14 / 30 / 90 dni w kolorach realizacji celu
-  - **Ciśnienie** — alert z kategorii albo z wartości, bieżące wartości, czas ostatniego pomiaru (z dokładnością do
-    5 minut), średnie i min/max z 30 dni liczone z pomiarów (nie z czasu wyświetlania), historia 90 dni z kreskami
-    120/80, raport do druku / PDF (7–90 dni, tabela pomiarów z porą dnia i kategorią ESH, podsumowanie, pominięte
-    pomiary)
-  - **Pomiary** — obwody z datą, zmianą od poprzedniej sesji i od pierwszego pomiaru, sumy, profil na „pajęczynie”,
-    bilans miesięczny sumy obwodów, historia (kliknięcie kafelka = jeden obwód)
-  - **Siatki** — wiek, BMI i wzrost dziecka na tle siatek centylowych WHO 2007 z kategoriami
-  - **Wprowadź dane** — obwody ciała zapisywane do pomocników `input_number` (waga, skład ciała, ciśnienie, wzrost
-    i aktywność przychodzą z telefonów i wagi; wzrost z telefonu w metrach przeliczany na centymetry)
-- **Zakładki Dom, Energia, Kocioł i Liczniki** obok Klimatu — przełączane w nagłówku, każda pod własnym adresem
-  (`/hearth/dom`, `/hearth/energia`…); w opcjach wybór, które pokazać
-- **Dom** — domownicy (zdjęcie, gdzie i od kiedy, odległość od domu, bateria telefonu z ładowaniem, kroki dziś), bramy
-  i garaże z przyciskiem Otwórz / Zamknij / Zatrzymaj i czasem otwarcia, skrzynka pocztowa, odpady z kolorami
-  pojemników (najbliższe na górze), prognoza ECMWF na 14 dni z Open-Meteo dla lokalizacji domu
-- **Energia** — moc całkowita z wykresem 24 h, fazy L1–L3 z kontrolą napięcia (207–253 V), zużycie i koszt dziś
-  i w miesiącu ze źródeł panelu Energia z podziałem na strefy taryfy, 30 dni i 12 miesięcy na słupkach, ranking
-  odbiorników (moc teraz i kWh dziś; moc z urządzenia z panelu Energia)
-- **Kocioł** — stan z płomienia, zapłonu, pompy i zapotrzebowania na CWU, moc palnika, wentylator, ciśnienie
-  z oceną, krzywa; zasilanie, powrót, zewnątrz i ciepła woda z wykresem 24 h; termostaty ogrzewania i ciepłej wody
-  (tryby, presety, −/+); gaz dziś, w miesiącu, 30 dni i 12 miesięcy (CO i CWU warstwowo); suwaki ustawień
-- **Liczniki** — dowolne encje pogrupowane według urządzeń; liczniki narastające z zużyciem dziś i w miesiącu ze
-  statystyk, pomiary z wykresem 24 h, stany i daty po polsku
-- **Dom: mapa osoby** — kliknięcie domownika otwiera okno z mapą HA (jak karta „Mapa”), miejscem, czasem, odległością,
-  dokładnością GPS i linkiem do Map Google
-- **Dom: radar opadów i Windy** — przełącznik Prognoza 14 dni / Radar opadów (RainViewer) / Windy, wyśrodkowane na
-  lokalizacji domu; wybór zapamiętuje urządzenie
-- **Dom: odpady z kalendarza** — frakcje i najbliższe terminy z kalendarza Waste Collection Schedule; frakcja bez
-  terminu (np. wielkogabarytowe poza zbiórką) jest ukryta; przełączniki frakcji (pomocniki `input_boolean`, np.
-  `odpady_bio_aktywne`) w Ustawieniach panelu — wyłączony ukrywa frakcję także w automatyzacjach, które go sprawdzają
-- **Wykresy słupkowe z osią i podpowiedzią** — podziałka wartości, etykiety nad słupkami (gęste chowają się na wąskim
-  ekranie), po najechaniu albo dotknięciu data, suma i rozbicie; prąd w podziale na strefy taryfy (sezony i dni się
-  sumują), gaz na CO i CWU
-- **Kocioł: Quick Veto przez ebusd** — opcja tematu strefy (np. `ebusd/ctlv2/Z1`): w trybie Harmonogram −/+
-  ogrzewania włącza Veto (najpierw QuickVetoTemp, potem SFMode — bez zapisu ActualRoomTempDesired, który kończył Veto), w trybie dziennym zmienia temperaturę dzienną, zmiana trybu kończy
-  Veto; status „Veto do …” z czujników końca i przycisk Zakończ Veto; tryby podpisane jak w sterowniku
-- **Kocioł: gaz po latach** i podpowiedź na wykresie temperatur z 24 h (godzina i wartości wszystkich serii), wartości
-  bieżące w legendzie
-- **Zakładka Przełączniki** — światła, gniazdka i wentylatory z obszarów HA pogrupowane według pokoi, czas włączenia,
-  pobór mocy z urządzenia, wyszukiwarka; przełącznik zamieniony na światło (switch_as_x) pokazany raz
-- **Zakładka Kamery** — podglądy odświeżane co 5 s (`camera_proxy`), kliknięcie = okno kamery HA z obrazem na żywo;
-  stan rejestratora (dostępność, wersja, kanały, magazyn); bez wyboru kamery Frigate
-- **Zakładki Auta i Roboty** — auto z urządzenia lokalizatora (paliwo, zasięg, przebieg, akumulator, zamek, otwarte
-  drzwi, wiek danych, mapa); kosiarki i odkurzacze ze stanem, baterią, mapą z kamery urządzenia i przyciskami
-- **Zakładka Proxmox** — węzeł (CPU, RAM, czas pracy, ile działa), magazyny, maszyny i kontenery z paskami CPU / RAM /
-  dysku i przyciskami Uruchom / Restart / Wyłącz (z potwierdzeniem); dane z wbudowanej integracji Proxmox VE
-- **Zakładka Sieć** — prędkość internetu z wykresem 24 h, łącza z dostępnością i przerwami z 24 h, aktualizacje
-  oprogramowania (z instalacją), porty i PoE pogrupowane według urządzeń
-- **Roboty po polsku i ze szczegółami** — nazwy czujników z kluczy tłumaczeń integracji, duża mapa (kliknięcie =
-  powiększenie), Teraz / Statystyki, koszenie stref i Stop, moc ssania odkurzacza, materiały eksploatacyjne z paskiem
-  zużycia i resetem (z potwierdzeniem)
-- **Proxmox: dyski z własnych czujników** — opcja {maszyna, etykieta, zajęte, pojemność} albo konwencja
-  `sensor.<maszyna>_dysk_zajety` / `_dysk_rozmiar` dla maszyn, których dysku Proxmox nie zna; kilka dysków na maszynę
-- **Zakładki Alerty i Agent** — reguły w opcjach (`< 20`, `== open`, `!= on`…) z licznikiem na zakładce; strona Agenta
-  w ramce
-- **Kocioł: harmonogramy sterownika (ebusd)** — tydzień ogrzewania, ciepłej wody i cyrkulacji na paskach (odczyt
-  zachowanych tematów MQTT `…Timer_<dzień><nr>`), edycja dnia (do 3 przedziałów, godziny co 10 min, temperatura),
-  zapis dla dnia, dni roboczych, weekendu albo całego tygodnia (`…Timer_<dzień>/set`) z odczytem kontrolnym;
-  sprawdzanie kolejności i nakładania przedziałów; wymaga tematu strefy ebusd i konta administratora (subskrypcja MQTT)
-- **Kolejność zakładek w opcjach** — kolejność wyboru w polu Zakładki = kolejność w panelu; pierwsza otwiera się
-  domyślnie
-- **Światło przy bramie** — przycisk światła przy bramie, gdy obszar ma dokładnie jedną bramę i 1–2 światła (np.
-  „Garaż …”); obszar ze wspólnymi bramami nie dostaje cudzego światła
-- **Kroki z własnego czujnika osoby** — `sensor.kroki_<osoba>` (albo `steps_…`) przed dziennymi krokami z telefonu
-- **Energia: pomijane odbiorniki** — opcja z listą czujników mocy albo energii, których nie pokazywać (np. urządzenia
-  zasilane z UPS-a, gdy UPS ma własny pomiar)
-- **Czytelne nazwy** — bez numerów seryjnych, PPE i identyfikatorów (słowa z 6+ cyframi) oraz prefiksów węzłów
-  ESPHome; nazwa urządzenia nie powtarza się w nazwie encji
+## [0.1.0] - 2026-10-14
+
+Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 zakładek.
+
+### Dodano
+
+#### Integracja i opcje
 - **Integracja `hearth` z panelem w menu bocznym** — jeden wpis na instalację; panel rejestrowany przez `panel_custom`,
-  pliki panelu serwowane z integracji (`/hearth_files`), wersja w adresie wymusza świeży plik po aktualizacji
-- **Pokoje z obszarów HA** — pokój to obszar z termostatem; termometr, wilgotność, okna i drzwi (tylko kontaktrony),
-  zawór w %, bateria głowicy, osuszacze (z mocą i energią z gniazdka) i wentylatory dobierane same po obszarze i klasie
-- **Zakładka Klimat w trzech stylach** — Kafelki (łuk 16–28 °C, wykres 24 h, oś dnia), Lista (wiersz na pokój, skala
-  z celem i pomiarem) i Pokrętła (karta w kolorze temperatury, pierścień, − / + na karcie)
-- **Na zewnątrz** — temperatura i wilgotność z wykresem, ciśnienie z trendem 3 h, światło i słońce, CAQI z poziomem
-  oraz PM2,5 / PM10 według indeksu GIOŚ
-- **Pasek domu** — kocioł, ile pokoi grzeje, okna, tryb domu, ciepła woda, wentylacja i osuszanie z taryfą
+  pliki panelu serwowane z integracji (`/hearth_files`); w adresie pliku wersja i skrót zawartości, więc przeglądarka
+  nie weźmie starej wersji z pamięci; po aktualizacji w otwartej karcie bez błędu podwójnej rejestracji `hearth-panel`
+- **Opcje w zwijanych sekcjach** — Wygląd, Na zewnątrz, Pasek domu, Dom, Energia, Kocioł, Liczniki, Przełączniki,
+  Kamery, Auta i roboty, Proxmox, Sieć, Alerty i Agent, Pokoje; puste pole albo lista = panel wykrywa sam; podpowiedź
+  czujników zewnętrznych przy dodawaniu integracji
+- **Wybór zakładek i ich kolejności** — kolejność wyboru w polu Zakładki = kolejność w panelu; pierwsza otwiera się
+  domyślnie; każda zakładka pod własnym adresem (`/hearth/dom`, `/hearth/klimat`, `/hearth/zdrowie`…)
+- **Dowolny czujnik w opcjach** — bez filtra klasy urządzenia, bo czujniki z MQTT (np. ebusd) często jej nie mają
+- **Osoby zakładki Zdrowie jako podwpisy integracji** — „Dodaj osobę” / „Zmień dane osoby”, każda z własnymi encjami
+  w 7 sekcjach (osoba, skład ciała, aktywność, ciśnienie, pomiary, wpis danych, cele i siatki)
+- **Ustawienia panelu na urządzeniu** — własny styl kart pokoi dla telefonu, tabletu czy komputera, przełączniki
+  frakcji odpadów, skrót do opcji integracji dla administratora
+- **Logo i ikona** w katalogu `brand/` integracji (HA pokazuje je bez wpisu w repozytorium brands)
+- Jasny i ciemny motyw z motywu HA, układ na telefon, baner wersji w konsoli przeglądarki
+
+#### Dom
+- **Domownicy** — zdjęcie, gdzie i od kiedy, odległość od domu, bateria telefonu z ładowaniem, kroki dziś (najpierw
+  `sensor.kroki_<osoba>`); kliknięcie otwiera okno z mapą HA, miejscem, czasem, dokładnością GPS i linkiem do Map Google
+- **Bramy i garaże** — Otwórz / Zamknij / Zatrzymaj, czas otwarcia; światło przy bramie, gdy obszar ma dokładnie jedną
+  bramę i 1–2 światła
+- **Skrzynka pocztowa** z baterią czujnika
+- **Odpady** — z kalendarza Waste Collection Schedule albo czujników, kolory pojemników, najbliższe na górze; frakcja
+  bez terminu ukryta; przełączniki frakcji (`input_boolean`) działają też w automatyzacjach
+- **Pogoda** — prognoza ECMWF na 14 dni z Open-Meteo, radar opadów RainViewer i Windy dla lokalizacji domu
+
+#### Klimat
+- **Pokoje z obszarów HA** — pokój to obszar z termostatem; termometr, wilgotność, okna i drzwi (kontaktrony), zawór
+  w %, bateria głowicy, osuszacze (moc i energia z gniazdka) i wentylatory dobierane same po obszarze i klasie
+- **Trzy style kart** — Kafelki (łuk 16–28 °C, wykres 24 h, oś dnia), Lista (wiersz na pokój, skala z celem
+  i pomiarem), Pokrętła (karta w kolorze temperatury, pierścień, − / + na karcie)
+- **Na zewnątrz** — temperatura i wilgotność z wykresem, ciśnienie z trendem 3 h, światło i słońce, CAQI z poziomem,
+  PM2,5 / PM10 według indeksu GIOŚ
+- **Pasek domu** — kocioł, ile pokoi grzeje, okna, tryb domu, ciepła woda, wentylacja, osuszanie, taryfa
+- **Ustawienia pokoju po kliknięciu** — dlaczego taki cel, profile −/+ (zapis do pomocników, seria kliknięć = jeden
+  zapis), plan dnia, automatyka, dane głowicy, wilgotność wobec celu osuszacza, praca urządzeń w 24 h, energia
+  osuszacza, wentylator; bez pomocników −/+ zmienia nastawę termostatu
+
+#### Energia
+- Moc całkowita z wykresem 24 h, fazy L1–L3 z kontrolą napięcia (207–253 V)
+- Zużycie i koszt dziś i w miesiącu ze źródeł panelu Energia z podziałem na strefy taryfy; 30 dni i 12 miesięcy
+  na słupkach (strefy warstwowo)
+- Ranking odbiorników (moc teraz, kWh dziś) z panelu Energia albo z opcji; lista pomijanych odbiorników (np. zasilanych
+  z UPS-a)
+
+#### Kocioł
+- **Prosto z ebusd** — stan z płomienia i zapotrzebowania na ciepłą wodę („Grzeje”, „Grzeje wodę”, „Czuwa”), moc
+  palnika, wentylator, ciśnienie z oceną, krzywa; zasilanie, powrót, zewnątrz i ciepła woda z wykresem 24 h
+  i podpowiedzią; albo gotowa encja stanu z integracji producenta
+- **Termostaty ogrzewania i ciepłej wody** — tryby, presety, −/+; **Quick Veto przez ebusd** (QuickVetoTemp, potem
+  SFMode), status „Veto do …” i Zakończ Veto
+- **Harmonogramy sterownika (ebusd)** — tydzień ogrzewania, ciepłej wody i cyrkulacji z edycją dnia (do 3 przedziałów,
+  temperatura) i zapisem dla dnia, dni roboczych, weekendu albo tygodnia, z odczytem kontrolnym
+- **Gaz** — dziś, miesiąc, 30 dni, 12 miesięcy i lata (CO i CWU warstwowo); suwaki ustawień
+
+#### Liczniki
+- Dowolne encje pogrupowane według urządzeń; liczniki narastające z zużyciem dziś i w miesiącu ze statystyk, pomiary
+  z wykresem 24 h, stany i daty po polsku; bez wyboru: woda i gaz z panelu Energia
+
+#### Przełączniki, Sieć, Kamery, Auta, Roboty, Proxmox
+- **Przełączniki** — światła, gniazdka i wentylatory według pokoi, czas włączenia, pobór mocy, wyszukiwarka;
+  przełącznik zamieniony na światło (switch_as_x) pokazany raz
+- **Sieć** — prędkość internetu z wykresem 24 h, łącza z dostępnością i przerwami, aktualizacje z instalacją, porty
+  i PoE według urządzeń
+- **Kamery** — podglądy co 5 s, kliknięcie = obraz na żywo, stan rejestratora (dostępność, wersja, kanały, magazyn)
+- **Auta** — paliwo, zasięg, przebieg, akumulator, zamek, otwarte drzwi, wiek danych, mapa
+- **Roboty** — kosiarki i odkurzacze po polsku: stan, bateria, duża mapa, Teraz / Statystyki, koszenie stref, Stop, moc
+  ssania, materiały eksploatacyjne z resetem (z potwierdzeniem)
+- **Proxmox** — węzeł, magazyny, maszyny i kontenery z paskami CPU / RAM / dysku, Uruchom / Restart / Wyłącz
+  (z potwierdzeniem); dyski maszyn, których Proxmox nie zna, z własnych czujników
+
+#### Zdrowie (przeniesiona karta zdrowia)
+- **Przełącznik osób** ze zdjęciem i wagą; podstrona pokazuje się tylko, gdy osoba ma jej encje
+- **Waga** — start, aktualnie, łączna zmiana i %, tempo na tydzień, do normy BMI 25 z prognozą, następny cel, spalony
+  tłuszcz; bilans miesiąca i tygodnia, średnie z miesiąca; BMI na starcie i teraz na pasku kategorii; postęp celów
+  z terminem, potrzebnym tempem i prognozą (osiągnięte zwinięte); bilanse miesięczne i tygodniowe, średnie miesięczne
+  wagi i BMI; historia z trendem 7 dni i kreskami celów (od początku, 6 i 3 miesiące, 30, 14, 7 dni)
+- **Skład ciała** — tkanka tłuszczowa z kategorią ACE, masy tłuszczu i beztłuszczowa, mięśnie szkieletowe, tkanka
+  beztłuszczowa, kości, woda (także % masy ciała), przemiana podstawowa; wykres składu w czasie
+- **Aktywność** — kroki i kalorie dziś z paskiem celu (bez wczorajszego wyniku po północy), średnia i maksimum,
+  słupki 7 / 14 / 30 / 90 dni w kolorach realizacji celu
+- **Ciśnienie** — alert z kategorii albo z wartości, bieżące wartości, czas ostatniego pomiaru, średnie i min/max
+  z 30 dni liczone z pomiarów, historia 90 dni z kreskami 120/80, raport do druku / PDF (7–90 dni, kategorie ESH,
+  pominięte pomiary)
+- **Pomiary** — obwody ze zmianą od poprzedniej sesji mierzenia i od pierwszego pomiaru, sumy, profil na
+  „pajęczynie”, bilans miesięczny, historia (kliknięcie kafelka = jeden obwód)
+- **Siatki** — wiek, BMI i wzrost dziecka na tle siatek centylowych WHO 2007
+- **Wprowadź dane** — obwody ciała do pomocników `input_number`; reszta danych przychodzi z telefonów i wagi (wzrost
+  z telefonu w metrach przeliczany na centymetry)
+
+#### Alerty i Agent
+- **Alerty** — reguły w opcjach (`< 20`, `== open`, `!= on`…) z licznikiem na zakładce
+- **Agent** — dowolna strona w ramce; panel przekazuje jej motyw (jasny / ciemny i kolory HA), więc strona, która go
+  odbiera, wygląda jak reszta panelu
+
+#### Wspólne
+- **Wykresy słupkowe z osią i podpowiedzią** — podziałka, etykiety nad słupkami (gęste chowane na wąskim ekranie),
+  data, suma i rozbicie po najechaniu albo dotknięciu
+- **Wykresy liniowe z dowolną osią** — pasma, kreski progów z podpisami bez nachodzenia, podpowiedź
 - **Sumy ze statystyk bez ujemnych skoków** — zerowanie licznika (dobowego albo kosztu przy zmianie taryfy) nie
   zaniża zużycia ani kosztu
-- **Kocioł prosto z ebusd** — stan wyliczany z płomienia i zapotrzebowania na ciepłą wodę („Grzeje”, „Grzeje wodę”,
-  „Czuwa”) z mocą palnika w %; zasilanie, powrót, ciśnienie, temperatura i cel ciepłej wody; dalej można podać gotową
-  encję stanu z integracji producenta
-- **Ustawienia pokoju po kliknięciu** — dlaczego taki cel, temperatury profili −/+ (zapis do pomocników, seria kliknięć
-  = jeden zapis), plan dnia, przełącznik automatyki, dane głowicy, wilgotność wobec celu osuszacza z −/+, praca
-  urządzeń w 24 h, energia osuszacza, włączanie wentylatora; bez pomocników −/+ zmienia nastawę termostatu
-- **Ustawienia panelu na urządzeniu** — własny styl kart dla telefonu, tabletu czy komputera (pamięć przeglądarki),
-  skrót do opcji integracji dla administratora
-- **Wybór dowolnego czujnika w opcjach** — bez filtra klasy urządzenia, bo czujniki z MQTT (np. ebusd) często jej
-  nie mają; klasy używa tylko podpowiedź przy dodawaniu integracji
-- **Świeży plik panelu po aktualizacji** — w adresie pliku jest skrót jego zawartości, więc przeglądarka nie weźmie
-  starej wersji z pamięci
-- **Opcje integracji w sekcjach** — Wygląd, Na zewnątrz, Dom, Pokoje (obszary i kolejność, prefiks pomocników
-  ogrzewania, wentylatory, pominięte encje); podpowiedź czujników zewnętrznych przy dodawaniu integracji
-- **Logo i ikona** w katalogu `brand/` integracji (HA pokazuje je bez wpisu w repozytorium brands)
-- **Bez błędu po aktualizacji w otwartej karcie** — panel nie rejestruje drugi raz elementu `hearth-panel`; nowa
-  wersja działa po odświeżeniu strony
-- Jasny i ciemny motyw z motywu HA, układ na telefon, baner wersji w konsoli przeglądarki
-- Testy (konfiguracja, opcje, rejestracja panelu), CI: typy i budowanie panelu, pytest, hassfest, HACS; wydania
-  z opisem z CHANGELOG
+- **Czytelne nazwy** — bez numerów seryjnych, PPE i identyfikatorów (słowa z 6+ cyframi) oraz prefiksów węzłów
+  ESPHome; nazwa urządzenia nie powtarza się w nazwie encji
+- Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
+  wydania z opisem z CHANGELOG
+
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/keysim86/ha-hearth/releases/tag/v0.1.0
