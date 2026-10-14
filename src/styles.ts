@@ -512,8 +512,13 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; padding
 .camcap small { color: var(--muted); }
 
 /* auta, roboty */
-.robmap { padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface-2); cursor: pointer; }
-.robmap img { width: 100%; max-height: 260px; object-fit: contain; display: block; }
+.cards.robots { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }
+.robmap { padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface-2); cursor: zoom-in; }
+.robmap img { width: 100%; max-height: 520px; object-fit: contain; display: block; }
+.robot .hlabel { margin-top: 6px; }
+.robot b.alarm { color: var(--crit); }
+.wear .sub { display: block; font-size: 11.5px; color: var(--muted); }
+.wear { display: grid; grid-template-columns: minmax(140px, 1fr) 1.2fr auto; gap: 10px; align-items: center; font-size: 13.5px; }
 
 /* proxmox */
 .pxrow { display: grid; grid-template-columns: minmax(170px, 1.4fr) repeat(3, minmax(90px, 1fr)) 190px; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }

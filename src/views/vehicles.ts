@@ -60,43 +60,98 @@ export function carsView(ctx: Ctx): TemplateResult {
 // Częste stany tekstowe czujników robotów.
 const ENUM_PL: Record<string, string> = {
   charging: "ładuje", not_charging: "nie ładuje", charging_completed: "naładowana", charged: "naładowana", discharging: "rozładowuje",
-  no_error: "brak", none: "brak", ok: "OK", idle: "czeka", docked: "w stacji", mowing: "kosi", cleaning: "sprząta", paused: "pauza", returning: "wraca",
+  no_error: "brak", none: "brak", ok: "brak", idle: "czeka", docked: "w stacji", mowing: "kosi", cleaning: "sprząta", paused: "pauza",
+  returning: "wraca do stacji", error: "błąd", on: "tak", off: "nie", quiet: "cicha", standard: "standardowa", turbo: "turbo", max: "maksymalna", ultra: "ultra",
 };
 const ROBOT_STATE: Record<string, string> = {
   docked: "w stacji", mowing: "kosi", cleaning: "sprząta", paused: "pauza", returning: "wraca do stacji", error: "błąd", idle: "czeka", unavailable: "niedostępny",
 };
+// Nazwy czujników po kluczu tłumaczenia integracji (Dreame, Tapo i podobne); [kosiarka, odkurzacz].
+const LABEL: Record<string, [string, string]> = {
+  state: ["Stan szczegółowy", "Stan szczegółowy"], charging_status: ["Ładowanie", "Ładowanie"], current_zone_state: ["Bieżąca strefa", "Bieżący pokój"],
+  error: ["Błąd", "Błąd"], vacuum_error: ["Błąd", "Błąd"], overheated: ["Przegrzanie", "Przegrzanie"], scheduled_clean: ["Koszenie z harmonogramu", "Sprzątanie z harmonogramu"],
+  cleaning_count: ["Liczba koszeń", "Liczba sprzątań"], total_cleaned_area: ["Łącznie skoszono", "Łącznie posprzątano"], total_cleaning_time: ["Łączny czas pracy", "Łączny czas pracy"],
+  first_cleaning_date: ["Pierwsze koszenie", "Pierwsze sprzątanie"], clean_area: ["Ostatnio — powierzchnia", "Ostatnio — powierzchnia"], clean_time: ["Ostatnio — czas", "Ostatnio — czas"],
+  filter_remaining: ["Filtr", "Filtr"], main_brush_remaining: ["Szczotka główna", "Szczotka główna"], side_brush_remaining: ["Szczotka boczna", "Szczotka boczna"],
+  sensor_remaining: ["Czujniki", "Czujniki"], charging_contacts_remaining: ["Styki ładowania", "Styki ładowania"], blade_remaining: ["Noże", "Noże"],
+  firmware_version: ["Oprogramowanie", "Oprogramowanie"], rssi: ["Sygnał Wi-Fi", "Sygnał Wi-Fi"], has_saved_map: ["Zapisana mapa", "Zapisana mapa"],
+};
+const NOW_KEYS = ["state", "charging_status", "current_zone_state", "error", "vacuum_error", "overheated", "scheduled_clean"];
+const STAT_KEYS = ["clean_area", "clean_time", "cleaning_count", "total_cleaned_area", "total_cleaning_time", "first_cleaning_date"];
+
+function robotValue(ctx: Ctx, id: string, tk: string): string {
+  const s = ctx.hass.states[id];
+  if (!s || s.state === "unavailable" || s.state === "unknown") return "—";
+  if (ENUM_PL[s.state]) return ENUM_PL[s.state];
+  const u = s.attributes.unit_of_measurement;
+  const n = num(s.state);
+  if (n !== null && u === "min" && /total/.test(tk)) return `${round(n / 60)} h`;
+  if (s.attributes.device_class === "timestamp" || /date/.test(tk)) {
+    const t = Date.parse(s.state);
+    if (Number.isFinite(t)) { const d = new Date(t); return `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`; }
+  }
+  return valueText(ctx.hass, id);
+}
 
 export function robotsView(ctx: Ctx, tick: number): TemplateResult {
   const h = ctx.hass;
   const skip = new Set(ctx.opts.robots_exclude ?? []);
   const robots = Object.keys(h.states).filter((e) => (e.startsWith("lawn_mower.") || e.startsWith("vacuum.")) && !skip.has(e) && !h.entities[e]?.hidden);
   if (!robots.length) return html`<div class="empty">Nie ma kosiarek ani odkurzaczy.</div>`;
-  return html`<section class="sec"><div class="cards two">${robots.map((id) => {
+  return html`<section class="sec"><div class="cards robots">${robots.map((id) => {
     const mower = id.startsWith("lawn_mower.");
+    const k = mower ? 0 : 1;
     const s = h.states[id];
     const ents = deviceEntities(h, h.entities[id]?.device_id);
-    const battId = ents.find((e) => e.startsWith("sensor.") && h.states[e].attributes.device_class === "battery");
+    const tk = (e: string) => h.entities[e]?.translation_key ?? "";
+    const byKey = (key: string) => ents.find((e) => tk(e) === key);
+    const battId = byKey("battery_level") ?? ents.find((e) => e.startsWith("sensor.") && h.states[e].attributes.device_class === "battery");
     const batt = num(s.attributes.battery_level) ?? num(st(ctx, battId));
-    const map = ents.find((e) => e.startsWith("camera.") && /map|mapa/i.test(e) && !/data/.test(e));
-    const seen = new Set<string>();
-    const info = ents
-      .filter((e) => e.startsWith("sensor.") && !h.entities[e]?.entity_category && e !== battId && !["unknown", "unavailable", ""].includes(h.states[e].state))
-      .filter((e) => !seen.has(entityName(h, e)) && Boolean(seen.add(entityName(h, e))))
-      .slice(0, 6);
+    const map = ents.find((e) => e.startsWith("camera.") && tk(e) === "map") ?? ents.find((e) => e.startsWith("camera.") && /map|mapa/i.test(e) && !/data|_\d+$/.test(e));
     const busy = ["mowing", "cleaning", "returning"].includes(s.state);
-    const act = (svc: string) => ctx.actions.call(mower ? "lawn_mower" : "vacuum", svc, { entity_id: id });
+    const act = (svc: string, data: Record<string, unknown> = {}) => ctx.actions.call(mower ? "lawn_mower" : "vacuum", svc, { entity_id: id, ...data });
     const src = map ? camImg(ctx, map, Math.floor(tick / 6)) : null;
+    const row = (key: string) => {
+      const e = byKey(key);
+      if (!e) return nothing;
+      const v = robotValue(ctx, e, key);
+      if (v === "—" && /zone|error/.test(key)) return nothing;
+      return html`<div class="row"><span>${LABEL[key]?.[k] ?? entityName(h, e)}</span><b class=${/error/.test(key) && v !== "brak" ? "alarm" : ""}>${v}</b></div>`;
+    };
+    // Materiały eksploatacyjne: pozostało / (pozostało + zużyte) z przyciskiem resetu.
+    const wear = ents
+      .filter((e) => /_remaining$/.test(tk(e)) && e.startsWith("sensor."))
+      .map((e) => {
+        const base = tk(e).replace(/_remaining$/, "");
+        const left = num(st(ctx, e)), used = num(st(ctx, byKey(`${base}_used`)));
+        const pct = left !== null && used !== null && left + used > 0 ? (left / (left + used)) * 100 : null;
+        return { e, base, left, pct, reset: ents.find((b) => b.startsWith("button.") && tk(b) === `${base}_reset`) };
+      });
+    const zones = ents.filter((e) => e.startsWith("button.") && tk(e) === "mow_zone").sort();
+    const stop = byKey("stop_mowing");
+    const fan: string[] = s.attributes.fan_speed_list ?? [];
     return html`<div class="ocell robot">
       <div class="orow"><span class="hlabel">${cleanName(deviceName(h, id) ?? entityName(h, id))}</span>
         <span class="lvl" style="background:color-mix(in srgb, ${busy ? "var(--ok)" : s.state === "error" ? "var(--crit)" : "var(--muted)"} 15%, transparent)">${ROBOT_STATE[s.state] ?? s.state}</span></div>
       <div class="orow"><span class="hval big">${batt === null ? "—" : `${round(batt)}%`}</span><span class="hsub">bateria · ${sinceLabel(ctx, s.last_changed)}</span></div>
-      ${src ? html`<button type="button" class="robmap" @click=${() => ctx.actions.moreInfo(map!)} aria-label="Mapa"><img src=${src} alt="Mapa" loading="lazy" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} /></button>` : nothing}
-      ${info.map((e) => html`<div class="row"><span>${entityName(h, e)}</span><b>${ENUM_PL[h.states[e].state] ?? valueText(h, e)}</b></div>`)}
+      ${src ? html`<button type="button" class="robmap" @click=${() => ctx.actions.moreInfo(map!)} aria-label="Mapa — powiększ"><img src=${src} alt="Mapa" loading="lazy" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} /></button>` : nothing}
       <div class="acts">
         <button class="btn hot" type="button" ?disabled=${busy} @click=${() => act(mower ? "start_mowing" : "start")}>${mower ? "Koś" : "Sprzątaj"}</button>
         <button class="btn" type="button" ?disabled=${!busy} @click=${() => act("pause")}>Pauza</button>
+        ${stop ? html`<button class="btn" type="button" ?disabled=${!busy} @click=${() => ctx.actions.call("button", "press", { entity_id: stop })}>Stop</button>` : nothing}
         <button class="btn" type="button" ?disabled=${s.state === "docked"} @click=${() => act(mower ? "dock" : "return_to_base")}>Do stacji</button>
       </div>
+      ${zones.length ? html`<div class="acts">${zones.map((z, i) => html`<button class="btn" type="button" ?disabled=${busy}
+          @click=${() => window.confirm(`Kosić strefę ${i + 1}?`) && ctx.actions.call("button", "press", { entity_id: z })}>Koś strefę ${i + 1}</button>`)}</div>` : nothing}
+      ${fan.length ? html`<span class="hlabel">Moc ssania</span><div class="chips">${fan.map((f) => html`<button type="button" class="mchip ${s.attributes.fan_speed === f ? "on" : ""}"
+          @click=${() => act("set_fan_speed", { fan_speed: f })}>${ENUM_PL[f] ?? f}</button>`)}</div>` : nothing}
+      <span class="hlabel">Teraz</span>${NOW_KEYS.map(row)}
+      <span class="hlabel">Statystyki</span>${STAT_KEYS.map(row)}
+      ${wear.length ? html`<span class="hlabel">Materiały eksploatacyjne</span>${wear.map((w) => html`<div class="wear">
+          <span>${LABEL[`${w.base}_remaining`]?.[k] ?? entityName(h, w.e)}<small class="sub">zostało ${w.left === null ? "—" : `${round(w.left)} h`}</small></span>
+          <span class="pmbar"><i style="width:${(w.pct ?? 0).toFixed(0)}%;background:${(w.pct ?? 100) < 10 ? "var(--crit)" : (w.pct ?? 100) < 25 ? "var(--warn)" : "var(--ok)"}"></i></span>
+          ${w.reset ? html`<button class="btn" type="button" @click=${() => window.confirm(`Wyzerować licznik: ${LABEL[`${w.base}_remaining`]?.[k] ?? w.base}? (po wymianie)`) && ctx.actions.call("button", "press", { entity_id: w.reset })}>Reset</button>` : nothing}
+        </div>`)}` : nothing}
     </div>`;
   })}</div></section>`;
 }

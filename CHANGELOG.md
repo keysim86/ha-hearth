@@ -46,6 +46,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
   dysku i przyciskami Uruchom / Restart / Wyłącz (z potwierdzeniem); dane z wbudowanej integracji Proxmox VE
 - **Zakładka Sieć** — prędkość internetu z wykresem 24 h, łącza z dostępnością i przerwami z 24 h, aktualizacje
   oprogramowania (z instalacją), porty i PoE pogrupowane według urządzeń
+- **Roboty po polsku i ze szczegółami** — nazwy czujników z kluczy tłumaczeń integracji, duża mapa (kliknięcie =
+  powiększenie), Teraz / Statystyki, koszenie stref i Stop, moc ssania odkurzacza, materiały eksploatacyjne z paskiem
+  zużycia i resetem (z potwierdzeniem)
+- **Proxmox: dyski z własnych czujników** — opcja {maszyna, etykieta, zajęte, pojemność} albo konwencja
+  `sensor.<maszyna>_dysk_zajety` / `_dysk_rozmiar` dla maszyn, których dysku Proxmox nie zna; kilka dysków na maszynę
 - **Zakładki Alerty i Agent** — reguły w opcjach (`< 20`, `== open`, `!= on`…) z licznikiem na zakładce; strona Agenta
   w ramce
 - **Kocioł: harmonogramy sterownika (ebusd)** — tydzień ogrzewania, ciepłej wody i cyrkulacji na paskach (odczyt

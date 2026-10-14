@@ -71,6 +71,25 @@ export function proxmoxView(ctx: Ctx): TemplateResult {
       @click=${() => (!ask || window.confirm(`${label}: ${g.name}?`)) && ctx.actions.call("button", "press", { entity_id: btn })}>${label}</button>`;
   };
 
+  // Dyski z własnych czujników (opcja) albo z konwencji sensor.<maszyna>_dysk_zajety / _dysk_rozmiar.
+  const slug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const ownDisks = (g: Guest) => {
+    const cfg = (ctx.opts.proxmox_disks ?? []).filter((d) => slug(d.guest ?? "") === slug(g.name));
+    if (cfg.length) return cfg;
+    const used = [`sensor.${slug(g.name)}_dysk_zajety`, `sensor.${slug(g.name)}_disk_used`].find((e) => h.states[e]);
+    const total = [`sensor.${slug(g.name)}_dysk_rozmiar`, `sensor.${slug(g.name)}_disk_size`].find((e) => h.states[e]);
+    return used && total ? [{ guest: g.name, used, total }] : [];
+  };
+  const diskCell = (g: Guest, dUsed: number | null, dMax: number | null) => {
+    const own = ownDisks(g);
+    if (own.length)
+      return html`${own.map((d) => {
+        const u = num(h.states[d.used]?.state), t = num(h.states[d.total]?.state);
+        return html`${d.label ? html`<small>${d.label}</small>` : nothing}${u !== null && t ? bar((u / t) * 100) : html`<span class="hsub">—</span>`}`;
+      })}`;
+    return dUsed && dMax ? bar((dUsed / dMax) * 100) : html`<span class="hsub" title="Proxmox nie zna zajętości dysku maszyny bez agenta gościa — wskaż czujniki w opcjach">—</span>`;
+  };
+
   const rows = guests.map((g) => {
     const on = running(g);
     const cpu = num(h.states[pick(ctx, g.ents, (tk) => /_cpu$/.test(tk)) ?? ""]?.state);
@@ -82,7 +101,7 @@ export function proxmoxView(ctx: Ctx): TemplateResult {
       <span class="pxname"><span class="dot ${on ? "ok" : "warn"}"></span><b>${g.name}</b><small>${/container|lxc/i.test(g.kind) ? "kontener" : "maszyna"} · ${on ? `działa ${uptimeText(ctx, up)}` : "zatrzymana"}</small></span>
       <span class="pxm"><small>CPU</small>${on ? bar(cpu) : html`<span class="hsub">—</span>`}</span>
       <span class="pxm"><small>RAM</small>${on ? bar(mem) : html`<span class="hsub">—</span>`}</span>
-      <span class="pxm"><small>Dysk</small>${dUsed && dMax ? bar((dUsed / dMax) * 100) : html`<span class="hsub" title="Proxmox nie zna zajętości dysku maszyny bez agenta gościa">—</span>`}</span>
+      <span class="pxm"><small>Dysk</small>${diskCell(g, dUsed, dMax)}</span>
       <span class="acts">${on ? html`${press(g, "reboot", "Restart", true)}${press(g, "shutdown", "Wyłącz", true)}` : press(g, "start", "Uruchom", false)}</span>
     </div>`;
   });

@@ -122,6 +122,7 @@ export interface Options {
   vehicles?: string[];
   robots_exclude?: string[];
   proxmox_exclude?: string[];
+  proxmox_disks?: Array<{ guest: string; label?: string; used: string; total: string }>;
   net_speed?: string[];
   net_status?: string[];
   net_updates?: string[];

@@ -85,6 +85,8 @@ _FIELDS: dict[str, Any] = {
     c.CONF_VEHICLES: _entity("device_tracker", many=True),
     c.CONF_ROBOTS_EXCLUDE: _entity(["lawn_mower", "vacuum"], many=True),
     c.CONF_PROXMOX_EXCLUDE: _entity("binary_sensor", many=True),
+    # Dyski maszyn, których Proxmox nie zna (VM bez agenta gościa): {guest, label?, used, total}.
+    c.CONF_PROXMOX_DISKS: selector.ObjectSelector(),
     c.CONF_NET_SPEED: _entity("sensor", many=True),
     c.CONF_NET_STATUS: _entity("binary_sensor", many=True),
     c.CONF_NET_UPDATES: _entity("update", many=True),

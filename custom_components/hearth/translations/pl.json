@@ -211,9 +211,12 @@
             "name": "Zakładka Proxmox",
             "description": "Węzły, maszyny, kontenery i magazyny z wbudowanej integracji Proxmox VE.",
             "data": {
-              "proxmox_exclude": "Pomiń maszyny (czujnik stanu)"
+              "proxmox_exclude": "Pomiń maszyny (czujnik stanu)",
+              "proxmox_disks": "Dyski maszyn (własne czujniki)"
             },
-            "data_description": {}
+            "data_description": {
+              "proxmox_disks": "Lista: - guest: mir-ha (nazwa maszyny), label: boot (opcjonalnie), used: sensor.zajete, total: sensor.rozmiar. Bez wpisu panel szuka sensor.MASZYNA_dysk_zajety / _dysk_rozmiar."
+            }
           },
           "network": {
             "name": "Zakładka Sieć",

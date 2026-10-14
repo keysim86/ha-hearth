@@ -211,9 +211,12 @@
             "name": "Proxmox tab",
             "description": "Nodes, VMs, containers and storage from the built-in Proxmox VE integration.",
             "data": {
-              "proxmox_exclude": "Exclude guests (status sensor)"
+              "proxmox_exclude": "Exclude guests (status sensor)",
+              "proxmox_disks": "Guest disks (own sensors)"
             },
-            "data_description": {}
+            "data_description": {
+              "proxmox_disks": "List: - guest: vm-name, label: boot (optional), used: sensor.used, total: sensor.size. Without an entry the panel looks for sensor.GUEST_disk_used / _disk_size."
+            }
           },
           "network": {
             "name": "Network tab",
