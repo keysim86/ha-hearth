@@ -119,6 +119,7 @@ export class HearthPanel extends LitElement {
   private roomsCache?: { key: unknown[]; rooms: Room[] };
   private tick?: number;
   private lastTick = 0;
+  private lastDark?: boolean;
   private toastTimer?: number;
   private resize?: ResizeObserver;
 
@@ -203,6 +204,11 @@ export class HearthPanel extends LitElement {
 
   protected updated(changed: PropertyValues<this>) {
     if ((changed as Map<string, unknown>).has("person") && this.person && !this.personDialog?.open) this.personDialog?.showModal();
+    const dark = Boolean(this.hass?.themes?.darkMode);
+    if (dark !== this.lastDark) {
+      this.lastDark = dark;
+      this.postTheme();
+    }
     this.syncPersonMap();
     this.measure();
     if (!this.hass) return;
@@ -225,6 +231,19 @@ export class HearthPanel extends LitElement {
       .ensure(this.hass, ids)
       .then((fresh) => fresh && this.requestUpdate())
       .catch(() => undefined);
+  }
+
+  /** Motyw panelu (jasny / ciemny i kolory z motywu HA) do strony agenta w ramce — wygląda wtedy jak reszta panelu.
+   *  Same kolory, nic poufnego, więc dowolny odbiorca. */
+  private postTheme(frame?: HTMLIFrameElement | null) {
+    const target = frame ?? this.renderRoot.querySelector<HTMLIFrameElement>("iframe.agent");
+    if (!target?.contentWindow) return;
+    const cs = getComputedStyle(this.renderRoot.querySelector(".wrap") ?? this);
+    const vars = Object.fromEntries(
+      ["--bg", "--surface", "--surface-2", "--line", "--fg", "--muted", "--faint", "--ember", "--ember-soft", "--ok", "--crit", "--shadow"]
+        .map((v) => [v, cs.getPropertyValue(v).trim()]),
+    );
+    target.contentWindow.postMessage({ type: "hearth-theme", dark: Boolean(this.hass?.themes?.darkMode), vars }, "*");
   }
 
   private measure() {
@@ -561,7 +580,7 @@ export class HearthPanel extends LitElement {
       proxmox: () => proxmoxView(ctx),
       health: () => healthView(ctx),
       agent: () => this.options.agent_url
-        ? html`<iframe class="agent" title="Agent" src=${this.options.agent_url}></iframe>`
+        ? html`<iframe class="agent" title="Agent" src=${this.options.agent_url} @load=${(e: Event) => this.postTheme(e.target as HTMLIFrameElement)}></iframe>`
         : html`<div class="empty">Podaj adres strony w opcjach Hearth (sekcja Alerty i Agent).</div>`,
       alerts: () => alertsView(ctx),
     };

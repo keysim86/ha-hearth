@@ -18,6 +18,8 @@
   const snap = await (await fetch(q.get("snap") ? `./snapshot-${q.get("snap")}.json` : "./snapshot.json")).json();
   let options = {};
   try { options = await (await fetch("./options.json")).json(); } catch { /* bez opcji: same pokoje */ }
+  // ?agent=<adres> podmienia stronę agenta (np. lokalna kopia web/index.html z mirdom-agent).
+  if (q.get("agent")) options.agent_url = q.get("agent");
   // Zakładka Zdrowie: osoby i statystyki z dev/health-<nazwa>.json (?health=demo — fikcyjne dane; poza repo).
   let health = { profiles: [], states: {}, stats: {} };
   try { health = await (await fetch(`./health-${q.get("health") || "demo"}.json`)).json(); } catch { /* bez zakładki Zdrowie */ }
