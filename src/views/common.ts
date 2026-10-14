@@ -34,6 +34,10 @@ export interface Actions {
   setHvac(entity: string, mode: string): void;
   /** Koniec Quick Veto (ebusd: tryb specjalny z powrotem na auto). */
   endVeto(): void;
+  schedOpen(c: import("../data/ebusd").Circuit, day: number, slots: import("../data/ebusd").Slot[]): void;
+  schedEdit(slots: import("../data/ebusd").Slot[]): void;
+  schedSave(days: number[]): void;
+  schedClose(): void;
   stepProfile(room: Room, p: Profile, delta: number): void;
   stepClimate(room: Room, delta: number): void;
   stepHumidity(entity: string, delta: number): void;
@@ -49,6 +53,9 @@ export interface Ctx {
   refresh: () => void;
   /** Drobny stan widoku (np. wybrany widok pogody), pamiętany na urządzeniu. */
   ui: Record<string, string>;
+  /** Programy czasowe sterownika (ebusd) — gdy skonfigurowany temat strefy. */
+  timers?: { week(c: import("../data/ebusd").Circuit): import("../data/ebusd").Slot[][] | null; value(name: string): string | undefined; connected: boolean };
+  sched?: import("./boiler").SchedEdit | null;
   clock: ReturnType<typeof clock>;
   nowMinute: number;
   pending: Map<string, number>;

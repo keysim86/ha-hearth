@@ -8,6 +8,7 @@ import { bars, multiLine, type Bar } from "../svg";
 import { entityName, st, unitOf, type Ctx } from "./common";
 import { MONTH_NAMES } from "./energy";
 import { boilerState } from "./house";
+import { DAY_PL, DAY_SHORT, toMin, type Circuit, type Slot } from "../data/ebusd";
 
 const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 // Nazwy trybów jak w polskim interfejsie HA.
@@ -185,8 +186,105 @@ function settings(ctx: Ctx): TemplateResult | typeof nothing {
 export function boilerView(ctx: Ctx): TemplateResult {
   const o = ctx.opts;
   const thermos = [thermostat(ctx, o.climate_heating, "Ogrzewanie"), thermostat(ctx, o.climate_dhw, "Ciepła woda", o.dhw_temperature)];
-  const parts = [status(ctx), thermos.some((t) => t !== nothing) ? html`<section class="sec"><h2>Sterowanie</h2><div class="cards two">${thermos}</div></section>` : nothing, gas(ctx), settings(ctx)];
+  const parts = [status(ctx), thermos.some((t) => t !== nothing) ? html`<section class="sec"><h2>Sterowanie</h2><div class="cards two">${thermos}</div></section>` : nothing, schedules(ctx), gas(ctx), settings(ctx)];
   return parts.every((p) => p === nothing)
     ? html`<div class="empty">Brak danych kotła. Wskaż encje w opcjach Hearth (sekcja Kocioł) — np. z ebusd.</div>`
     : html`${parts}`;
+}
+
+// ---- harmonogramy sterownika (ebusd) ----
+
+export interface SchedEdit {
+  circuit: Circuit;
+  day: number;
+  slots: Slot[];
+  error?: string;
+}
+
+const CIRCUITS: Array<[Circuit, string, boolean]> = [["zone", "Ogrzewanie", true], ["hwc", "Ciepła woda", true], ["cc", "Cyrkulacja", false]];
+
+export function schedules(ctx: Ctx): TemplateResult | typeof nothing {
+  const t = ctx.timers;
+  if (!t) return nothing;
+  const available = CIRCUITS.filter(([c]) => t.week(c));
+  if (!available.length)
+    return t.connected ? nothing : html`<section class="sec"><h2>Harmonogramy</h2><div class="empty">Harmonogramy ze sterownika czytam przez MQTT — wymaga konta administratora HA.</div></section>`;
+  const circuit = (available.find(([c]) => c === ctx.ui.sched)?.[0] ?? available[0][0]) as Circuit;
+  const withTemp = CIRCUITS.find(([c]) => c === circuit)![2];
+  const week = t.week(circuit)!;
+  const edit = ctx.sched?.circuit === circuit ? ctx.sched : null;
+  const setback = circuit === "zone" ? t.value("NightTemp") : null;
+  const pct = (m: number) => `${((m / 1440) * 100).toFixed(2)}%`;
+  const label = (s: Slot) => `${s.from}–${s.to}${s.temp !== null && withTemp ? ` ${f1(s.temp)}°` : ""}`;
+  return html`<section class="sec"><h2>Harmonogramy <small>sterownik przez ebusd</small></h2>
+    <div class="seg2" role="tablist" aria-label="Obwód">${available.map(
+      ([c, name]) => html`<button type="button" role="tab" aria-selected=${c === circuit ? "true" : "false"} class=${c === circuit ? "on" : ""}
+        @click=${() => { ctx.actions.setUi("sched", c); ctx.actions.schedClose(); }}>${name}</button>`,
+    )}</div>
+    <div class="ocell week">
+      ${week.map((slots, d) => html`<button type="button" class="wday ${edit?.day === d ? "sel" : ""}" @click=${() => ctx.actions.schedOpen(circuit, d, slots)}>
+        <b>${DAY_SHORT[d]}</b>
+        <span class="wbar">${slots.map((s) => html`<i style="left:${pct(toMin(s.from))};width:${pct(toMin(s.to) - toMin(s.from))}" title=${label(s)}></i>`)}
+          ${[6, 12, 18].map((h) => html`<em style="left:${pct(h * 60)}"></em>`)}</span>
+        <span class="wtxt">${slots.length ? slots.map(label).join(" · ") : "wyłączone cały dzień"}</span>
+      </button>`)}
+      <div class="wday wscale" aria-hidden="true"><span></span><span class="wticks">${[0, 6, 12, 18, 24].map((h) => html`<em style="left:${pct(h * 60)}">${h}</em>`)}</span><span></span></div>
+      <span class="hsub">${circuit === "zone"
+        ? `W przedziałach temperatura z przedziału, poza nimi obniżona${setback ? ` (${setback.replace(".", ",")} °C)` : ""}.`
+        : circuit === "hwc" ? "W przedziałach zasobnik jest grzany do temperatury z przedziału." : "W przedziałach pracuje pompa cyrkulacji."} Kliknij dzień, żeby zmienić.</span>
+    </div>
+    ${edit ? editor(ctx, edit, withTemp) : nothing}
+  </section>`;
+}
+
+/** Godzina jako dwie listy (00–23 i minuty co 10) — format 24 h niezależnie od języka systemu, krok sterownika. */
+function timeSel(value: string, label: string, set: (v: string) => void): TemplateResult {
+  const [h, m] = value.split(":");
+  const hours = [...Array(24).keys()].map((x) => String(x).padStart(2, "0"));
+  const mins = ["00", "10", "20", "30", "40", "50"];
+  return html`<span class="tsel" role="group" aria-label=${label}>
+    <select aria-label="${label}: godzina" @change=${(ev: Event) => set(`${(ev.target as HTMLSelectElement).value}:${m}`)}>
+      ${hours.map((x) => html`<option value=${x} ?selected=${x === h}>${x}</option>`)}</select>:<select aria-label="${label}: minuty"
+      @change=${(ev: Event) => set(`${h}:${(ev.target as HTMLSelectElement).value}`)}>
+      ${mins.map((x) => html`<option value=${x} ?selected=${x === m}>${x}</option>`)}</select>
+  </span>`;
+}
+
+function editor(ctx: Ctx, e: SchedEdit, withTemp: boolean): TemplateResult {
+  const upd = (i: number, k: keyof Slot, v: string) => {
+    const slots = e.slots.map((s, j) => (j === i ? { ...s, [k]: k === "temp" ? parseFloat(v.replace(",", ".")) : v } : s));
+    ctx.actions.schedEdit(slots);
+  };
+  const add = () => {
+    const last = e.slots[e.slots.length - 1];
+    const start = last ? Math.min(toMin(last.to) + 60, 22 * 60) : 6 * 60;
+    const hm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+    ctx.actions.schedEdit([...e.slots, { from: hm(start), to: hm(Math.min(start + 120, 1440 - 10)), temp: last?.temp ?? (e.circuit === "hwc" ? 45 : 21) }]);
+  };
+  const tmin = e.circuit === "hwc" ? 35 : 5, tmax = e.circuit === "hwc" ? 70 : 30;
+  return html`<div class="ocell sched">
+    <div class="dhead"><h3>${DAY_PL[e.day]} — ${CIRCUITS.find(([c]) => c === e.circuit)![1].toLowerCase()}</h3>
+      <button class="btn" type="button" @click=${() => ctx.actions.schedClose()}>Anuluj</button></div>
+    ${e.slots.map((s, i) => html`<div class="srow">
+      <span class="snum">${i + 1}.</span>
+      <label>od ${timeSel(s.from, `Przedział ${i + 1} od`, (v) => upd(i, "from", v))}</label>
+      <label>do ${timeSel(s.to, `Przedział ${i + 1} do`, (v) => upd(i, "to", v))}</label>
+      ${withTemp
+        ? html`<label><input type="number" min=${tmin} max=${tmax} step="0.5" .value=${String(s.temp ?? "")} @change=${(ev: Event) => upd(i, "temp", (ev.target as HTMLInputElement).value)} /> °C</label>`
+        : nothing}
+      <button class="btn" type="button" ?disabled=${e.slots.length <= 1} @click=${() => ctx.actions.schedEdit(e.slots.filter((_, j) => j !== i))} aria-label="Usuń przedział ${i + 1}">Usuń</button>
+    </div>`)}
+    <div class="acts">
+      <button class="btn" type="button" ?disabled=${e.slots.length >= 3} @click=${add}>+ Dodaj przedział</button>
+    </div>
+    ${e.error ? html`<div class="serr" role="alert">${e.error}</div>` : nothing}
+    <div class="acts">
+      <span class="hsub">Zapisz dla:</span>
+      <button class="btn hot" type="button" @click=${() => ctx.actions.schedSave([e.day])}>${DAY_PL[e.day]}</button>
+      <button class="btn" type="button" @click=${() => ctx.actions.schedSave([0, 1, 2, 3, 4])}>Dni robocze</button>
+      <button class="btn" type="button" @click=${() => ctx.actions.schedSave([5, 6])}>Weekend</button>
+      <button class="btn" type="button" @click=${() => ctx.actions.schedSave([0, 1, 2, 3, 4, 5, 6])}>Cały tydzień</button>
+    </div>
+    <span class="hsub">Godziny co 10 minut, najwyżej 3 przedziały. Zapis trafia do sterownika przez ebusd; po kilku sekundach tydzień odświeży się odczytem ze sterownika.</span>
+  </div>`;
 }

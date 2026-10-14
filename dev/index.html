@@ -66,6 +66,14 @@
       }
     },
   };
+  // Atrapa subskrypcji MQTT (zachowane tematy ebusd z migawki).
+  hass.connection = {
+    async subscribeMessage(cb, msg) {
+      const prefix = String(msg.topic).replace(/\+$/, "");
+      for (const [topic, payload] of Object.entries(snap.mqtt ?? {})) if (topic.startsWith(prefix)) setTimeout(() => cb({ topic, payload }), 50);
+      return () => {};
+    },
+  };
   const el = document.createElement("hearth-panel");
   el.hass = hass;
   el.narrow = innerWidth < 870;

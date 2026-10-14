@@ -36,6 +36,10 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
   Veto; status „Veto do …” z czujników końca i przycisk Zakończ Veto; tryby podpisane jak w sterowniku
 - **Kocioł: gaz po latach** i podpowiedź na wykresie temperatur z 24 h (godzina i wartości wszystkich serii), wartości
   bieżące w legendzie
+- **Kocioł: harmonogramy sterownika (ebusd)** — tydzień ogrzewania, ciepłej wody i cyrkulacji na paskach (odczyt
+  zachowanych tematów MQTT `…Timer_<dzień><nr>`), edycja dnia (do 3 przedziałów, godziny co 10 min, temperatura),
+  zapis dla dnia, dni roboczych, weekendu albo całego tygodnia (`…Timer_<dzień>/set`) z odczytem kontrolnym;
+  sprawdzanie kolejności i nakładania przedziałów; wymaga tematu strefy ebusd i konta administratora (subskrypcja MQTT)
 - **Kolejność zakładek w opcjach** — kolejność wyboru w polu Zakładki = kolejność w panelu; pierwsza otwiera się
   domyślnie
 - **Światło przy bramie** — przycisk światła przy bramie, gdy obszar ma dokładnie jedną bramę i 1–2 światła (np.

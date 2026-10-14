@@ -4,6 +4,8 @@ import { LitElement, html, nothing, type PropertyValues } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import { clock, num } from "./format";
 import { StatsStore } from "./data/stats";
+import { DAYS, EbusdTimers, circuits, validate, writes, type Circuit, type Slot } from "./data/ebusd";
+import type { SchedEdit } from "./views/boiler";
 import { HistoryStore } from "./history";
 import { climateTarget, discoverRooms, hasProfiles, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
 import { styles } from "./styles";
@@ -84,6 +86,8 @@ export class HearthPanel extends LitElement {
   @state() private toastText = "";
   @state() private ui: Record<string, string> = readUi();
   @state() private person: string | null = null;
+  @state() private sched: SchedEdit | null = null;
+  private ebusd = new EbusdTimers();
 
   @query("dialog.set") private dialog?: HTMLDialogElement;
   @query("dialog.pdlg") private personDialog?: HTMLDialogElement;
@@ -142,6 +146,7 @@ export class HearthPanel extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.ebusd.disconnect();
     window.clearInterval(this.tick);
     this.resize?.disconnect();
   }
@@ -310,6 +315,41 @@ export class HearthPanel extends LitElement {
       const zone = this.options.ebusd_zone_topic?.replace(/\/+$/, "");
       if (zone && entity === this.options.climate_heating && mode !== "off") this.actions.endVeto();
     },
+    schedOpen: (c: Circuit, day: number, slots: Slot[]) => {
+      this.sched = { circuit: c, day, slots: slots.length ? slots.map((s) => ({ ...s })) : [{ from: "06:00", to: "22:00", temp: c === "hwc" ? 45 : c === "zone" ? 21 : null }] };
+    },
+    schedEdit: (slots: Slot[]) => {
+      if (this.sched) this.sched = { ...this.sched, slots, error: undefined };
+    },
+    schedClose: () => {
+      this.sched = null;
+    },
+    schedSave: async (days: number[]) => {
+      const e = this.sched, cfg = circuits(this.options.ebusd_zone_topic ?? "");
+      if (!e || !cfg) return;
+      const withTemp = e.circuit !== "cc";
+      const slots = [...e.slots].sort((a, b) => a.from.localeCompare(b.from));
+      const err = validate(slots, withTemp);
+      if (err) {
+        this.sched = { ...e, slots, error: err };
+        return;
+      }
+      const prefix = cfg.prefix[e.circuit];
+      try {
+        for (const d of days)
+          for (const w of writes(cfg.base, prefix, DAYS[d], slots, withTemp))
+            await this.hass!.callService("mqtt", "publish", { topic: w.topic, payload: w.payload });
+        // Odczyt kontrolny: ebusd odpowie bieżącymi wartościami ze sterownika (zachowane tematy się zaktualizują).
+        await this.hass!.callService("mqtt", "publish", { topic: `${cfg.base}${prefix}Timer_Timeframes/get`, payload: "" });
+        for (const d of days)
+          for (let i = 0; i < slots.length; i++)
+            await this.hass!.callService("mqtt", "publish", { topic: `${cfg.base}${prefix}Timer_${DAYS[d]}${i}/get`, payload: "" });
+        this.sched = null;
+        this.toast(`Zapisano harmonogram (${days.length === 1 ? "1 dzień" : `${days.length} dni`}) — sterownik potwierdzi za kilka sekund.`);
+      } catch (err) {
+        this.sched = { ...e, error: `Nie udało się zapisać: ${(err as Error)?.message ?? err}` };
+      }
+    },
     endVeto: () => {
       const zone = this.options.ebusd_zone_topic?.replace(/\/+$/, "");
       if (zone) this.actions.call("mqtt", "publish", { topic: `${zone}SFMode/set`, payload: "auto" });
@@ -443,7 +483,17 @@ export class HearthPanel extends LitElement {
       stats: this.stats,
       refresh: () => this.requestUpdate(),
       ui: { ...this.ui, dark: hass.themes?.darkMode ? "1" : "0" },
+      sched: this.sched,
     };
+    const cfg = circuits(this.options.ebusd_zone_topic ?? "");
+    if (cfg && this.tab === "boiler") {
+      this.ebusd.connect(hass as never, cfg.base, () => this.requestUpdate());
+      ctx.timers = {
+        week: (c) => this.ebusd.week(cfg.base, cfg.prefix[c]),
+        value: (name) => this.ebusd.values.get(`${cfg.base}${cfg.prefix.zone}${name}`),
+        connected: this.ebusd.connected,
+      };
+    }
     const tab = this.tab;
     const nav = html`<nav class="tabs" aria-label="Zakładki">
       ${this.tabs.map((t) => html`<a href="${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}" class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"}
