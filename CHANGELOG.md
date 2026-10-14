@@ -7,6 +7,15 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-15
+
+### Dodano
+- **AGD: pralki, suszarki i inny sprzęt z gniazdka** — nowa opcja *AGD → Pralki, suszarki i inne z gniazdka*
+  (lista: nazwa, rodzaj, czujnik mocy, opcjonalnie energia, flaga „cykl w toku” i licznik energii na starcie
+  cyklu); karta na maszynę: pracuje / wolna, w trakcie pracy czas od startu, pobór teraz i energia bieżącego
+  cyklu, poza pracą godzina końca ostatniej pracy, pasek pracy z ostatnich 24 h z podziałką; czasy liczone
+  z historii mocy, a nie z flagi cyklu (flaga dostaje nowy czas zmiany przy restarcie HA)
+
 ## [0.6.0] - 2026-10-15
 
 ### Dodano
@@ -177,7 +186,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/keysim86/ha-hearth/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/keysim86/ha-hearth/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/keysim86/ha-hearth/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/keysim86/ha-hearth/compare/v0.3.0...v0.4.0

@@ -264,7 +264,8 @@ export class HearthPanel extends LitElement {
       energy: [o.power_total, ...(o.phase_power ?? [])],
       boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
       network: [...(this.hass ? speedIds({ hass: this.hass, opts: o } as Ctx) : []), ...(o.net_status ?? [])],
-      switches: [], cameras: [], cars: [], robots: [], proxmox: [], health: [], appliances: [], agent: [], alerts: [],
+      switches: [], cameras: [], cars: [], robots: [], proxmox: [], health: [], agent: [], alerts: [],
+      appliances: (o.appliance_plugs ?? []).map((p) => p.power),
       meters: (o.meters ?? []).filter((id) => this.hass!.states[id]?.attributes.state_class === "measurement"),
     };
     const ids = byTab[tab].filter((x): x is string => Boolean(x));

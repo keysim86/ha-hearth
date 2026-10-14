@@ -29,7 +29,7 @@
 | 🚗 **Auta** · 🤖 **Roboty** | Paliwo, zasięg, przebieg, akumulator, zamek, mapa · kosiarki i odkurzacze: stan, bateria, mapa, przyciski |
 | 🖥️ **Proxmox** | Węzeł, magazyny, maszyny i kontenery (CPU, RAM, dysk) z uruchamianiem i restartem · realny RAM maszyn z czujnika `sensor.<maszyna>_ram_zajeta` (z wnętrza systemu), gdy jest — Proxmox podaje dla VM pamięć przydzieloną |
 | ❤️ **Zdrowie** | Osoby z ustawień integracji · waga: start, zmiana, tempo, BMI z paskiem, cele z prognozą, bilanse miesięczne i tygodniowe, historia z trendem 7 dni · skład ciała (tłuszcz wg progów ACE, masa beztłuszczowa, mięśnie, woda) · aktywność: kroki i kalorie dziś i w 7–90 dniach · ciśnienie: wartości, średnie z pomiarów, historia 90 dni, raport do druku / PDF · pomiary obwodów (profil, bilans, historia) · siatki centylowe WHO dla dzieci · wpis obwodów do pomocników |
-| 🧊 **AGD** | Karta na urządzenie, wykrywana po integracji · lodówka (Home Connect): temperatury chłodziarki i zamrażarki z −/+, drzwi, alarmy, tryby (urlopowy i szabatowy z potwierdzeniem), światło; zasilania nie da się stąd wyłączyć · zmywarka (hOn): czas do końca i godzina zakończenia, program, sól, nabłyszczacz, błąd · uzdatniacz (EcoWater): sól w % i na ile dni, woda dziś i średnio, przepływ, zapas do regeneracji, ostatnia regeneracja · frytkownica (Tuya Local): czas do końca, temperatura i czas z −/+, start/stop, zasilanie · inne urządzenia tych integracji: odczyty |
+| 🧊 **AGD** | Karta na urządzenie, wykrywana po integracji · lodówka (Home Connect): temperatury chłodziarki i zamrażarki z −/+, drzwi, alarmy, tryby (urlopowy i szabatowy z potwierdzeniem), światło; zasilania nie da się stąd wyłączyć · zmywarka (hOn): czas do końca i godzina zakończenia, program, sól, nabłyszczacz, błąd · uzdatniacz (EcoWater): sól w % i na ile dni, woda dziś i średnio, przepływ, zapas do regeneracji, ostatnia regeneracja · frytkownica (Tuya Local): czas do końca, temperatura i czas z −/+, start/stop, zasilanie · pralki i suszarki z gniazdka z pomiarem (opcja): stan, czas od startu, energia cyklu, pasek pracy 24 h · inne urządzenia tych integracji: odczyty |
 | 🔔 **Alerty** · 🤖 **Agent** | Reguły z licznikiem na zakładce · dowolna strona w ramce |
 | 📟 **Liczniki** | Dowolne encje pogrupowane według urządzeń (licznik, sprzedawca, zmiękczacz, zmywarka…) · liczniki narastające z zużyciem dziś i w miesiącu · pomiary z wykresem 24 h · stany drzwi, soli i daty po polsku |
 
@@ -97,7 +97,7 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 | **Zakładka Energia** | moc całkowita, moc i napięcie faz, odbiorniki | zużycie, koszty i odbiorniki z panelu Energia |
 | **Kocioł** | termostaty ogrzewania i CWU, stan albo płomień + zapotrzebowanie na CWU, zapłon, pompa, moc, wentylator, zasilanie (+ cel), powrót, ciśnienie, krzywa, zewnątrz (+ średnia), ciepła woda (+ cel), gaz, suwaki ustawień · ebusd: temat strefy do Quick Veto, tryb specjalny, koniec Veto | gaz z panelu Energia; bez tematu ebusd zwykła nastawa |
 | **Zakładka Liczniki** | encje liczników (grupowane według urządzeń) | woda i gaz z panelu Energia |
-| **AGD** | pominięte urządzenia (Home Connect, hOn, EcoWater, Tuya Local) | wszystkie wykryte |
+| **AGD** | pominięte urządzenia (Home Connect, hOn, EcoWater, Tuya Local), pralki, suszarki i inne z gniazdka (moc, energia, flaga cyklu, energia na starcie) | wszystkie wykryte, bez sprzętu z gniazdka |
 | **Pokoje** | obszary i ich kolejność, prefiks pomocników ogrzewania, wentylatory, pominięte encje | każdy obszar z termostatem |
 
 ### Zdrowie — osoby

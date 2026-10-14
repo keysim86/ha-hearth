@@ -2,9 +2,11 @@
 // uzdatniacz wody (EcoWater), frytkownica (Tuya Local); inne urządzenia tych integracji dostają prostą kartę z odczytami.
 
 import { html, nothing, type TemplateResult } from "lit";
-import { f1, num, round } from "../format";
+import { duration, f1, num, round } from "../format";
+import { sumPeriods } from "../history";
 import { areaOf } from "../model";
-import type { Hass } from "../types";
+import { activity } from "../svg";
+import type { Hass, Options } from "../types";
 import { cleanName, entityName, since, sinceLabel, st, valueText, type Ctx } from "./common";
 
 const PLATFORMS = ["home_connect", "hon", "ecowater_softener", "tuya_local"];
@@ -243,6 +245,42 @@ function airfryer(ctx: Ctx, a: Appliance): TemplateResult {
   </div>`;
 }
 
+// ---- sprzęt znany tylko z gniazdka z pomiarem (opcja „Pralki, suszarki i inne z gniazdka”) ----
+
+type Plug = NonNullable<Options["appliance_plugs"]>[number];
+const PLUG_WORK = 5; // W — powyżej tego gniazdko uznajemy za pracujące, gdy nie ma flagi cyklu
+
+function plugCard(ctx: Ctx, p: Plug): TemplateResult {
+  const h = ctx.hass;
+  const w = num(st(ctx, p.power));
+  const flag = p.running ? st(ctx, p.running) : undefined;
+  const flagKnown = flag === "on" || flag === "off";
+  const running = flagKnown ? flag === "on" : (w ?? 0) > PLUG_WORK;
+  const cycle = running && p.energy && p.energy_start ? (num(st(ctx, p.energy)) ?? NaN) - (num(st(ctx, p.energy_start)) ?? NaN) : NaN;
+  const periods = ctx.hist.periods(h, p.power, (v) => (num(v) ?? 0) > PLUG_WORK);
+  const worked = sumPeriods(periods);
+  // Czasy z historii mocy, nie z flagi cyklu: flaga dostaje nowy czas zmiany przy każdym restarcie HA.
+  const last = periods.length ? periods[periods.length - 1] : null;
+  const ongoing = last !== null && Date.now() - last[1] < 90e3;
+  const flagT = p.running && h.states[p.running] ? Date.parse(h.states[p.running].last_changed) : NaN;
+  const changed = running ? (ongoing ? last![0] : flagT) : last && !ongoing ? last[1] : NaN;
+  const offline = !h.states[p.power] || ["unavailable", "unknown"].includes(h.states[p.power].state);
+  const chip = running ? "pracuje" : offline ? "brak odczytu" : "wolna";
+  const color = running ? "var(--ok)" : offline ? "var(--warn)" : "var(--muted)";
+  const a: Appliance = { device: p.power, name: p.name, area: areaOf(h, p.power), ents: [], kind: "other" };
+  return html`<div class="ocell agd">
+    ${head(ctx, a, chip, color)}
+    ${running
+      ? html`<div class="orow"><span class="hval big">${Number.isFinite(changed) ? duration(Date.now() - changed) : "—"}</span>
+          <span class="hsub">${Number.isFinite(changed) ? `od ${ctx.clock.hm(changed)}` : ""}${w !== null ? ` · teraz ${round(w)} W` : ""}</span></div>
+          ${Number.isFinite(cycle) && cycle >= 0 ? html`<span class="hsub">Ten cykl: <b>${f1(cycle)} kWh</b></span>` : nothing}`
+      : html`<span class="hsub">${Number.isFinite(changed) ? `Ostatnio pracowała do ${ctx.clock.hm(changed)} (${since(changed)} temu)` : offline ? "Gniazdko nie podaje mocy." : "Nie pracowała w ostatnich 24 h."}</span>`}
+    <span class="hlabel">Praca w ostatnich 24 h <small>· ${worked > 0 ? duration(worked) : "brak"}</small></span>
+    ${activity(periods)}
+    <div class="tticks"><span>−24 h</span><span>−18</span><span>−12</span><span>−6</span><span>teraz</span></div>
+  </div>`;
+}
+
 // ---- pozostałe urządzenia wspieranych integracji ----
 
 function other(ctx: Ctx, a: Appliance): TemplateResult {
@@ -257,8 +295,9 @@ function other(ctx: Ctx, a: Appliance): TemplateResult {
 
 export function appliancesView(ctx: Ctx): TemplateResult {
   const list = discover(ctx.hass, new Set(ctx.opts.appliances_exclude ?? []));
-  if (!list.length)
+  const plugs = (ctx.opts.appliance_plugs ?? []).filter((p) => p.power && ctx.hass.states[p.power]);
+  if (!list.length && !plugs.length)
     return html`<div class="empty">Nie znalazłem sprzętu AGD. Zakładka pokazuje urządzenia z integracji Home Connect (Bosch, Siemens), hOn (Haier, Candy), EcoWater i Tuya Local.</div>`;
   const view = { fridge, dishwasher, softener, airfryer, other };
-  return html`<section class="sec"><div class="cards agds">${list.map((a) => view[a.kind](ctx, a))}</div></section>`;
+  return html`<section class="sec"><div class="cards agds">${list.map((a) => view[a.kind](ctx, a))}${plugs.map((p) => plugCard(ctx, p))}</div></section>`;
 }

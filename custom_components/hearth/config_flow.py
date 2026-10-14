@@ -96,6 +96,22 @@ _FIELDS: dict[str, Any] = {
             filter=[{"integration": i} for i in ("home_connect", "hon", "ecowater_softener", "tuya_local")],
         )
     ),
+    # Sprzęt bez integracji, znany tylko z gniazdka z pomiarem: {name, kind, power, energy?, running?, energy_start?}.
+    c.CONF_APPLIANCE_PLUGS: selector.ObjectSelector(
+        selector.ObjectSelectorConfig(
+            multiple=True,
+            label_field="name",
+            translation_key="appliance_plug",
+            fields={
+                "name": {"selector": {"text": {}}, "required": True},
+                "kind": {"selector": {"select": {"options": ["washer", "dryer", "dishwasher", "other"], "translation_key": "appliance_kind"}}, "required": True},
+                "power": {"selector": {"entity": {"domain": "sensor"}}, "required": True},
+                "energy": {"selector": {"entity": {"domain": "sensor"}}},
+                "running": {"selector": {"entity": {"domain": ["input_boolean", "binary_sensor"]}}},
+                "energy_start": {"selector": {"entity": {"domain": "input_number"}}},
+            },
+        )
+    ),
     c.CONF_PROXMOX_EXCLUDE: _entity("binary_sensor", many=True),
     # Dyski maszyn, których Proxmox nie zna (VM bez agenta gościa): {guest, label?, used, total}.
     c.CONF_PROXMOX_DISKS: selector.ObjectSelector(),

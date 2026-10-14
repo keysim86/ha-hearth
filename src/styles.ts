@@ -663,6 +663,8 @@ form.ocell .orow { margin-top: 6px; }
 .agd b.alarm, .agd .alarm { color: var(--crit); }
 .agd .mchip { display: inline-flex; align-items: center; gap: 5px; }
 .agd .chipico { width: 14px; height: 14px; }
+.agd .hbar { background: var(--surface-2); height: 12px; border-radius: 6px; }
+.agd .hbar i { background: var(--ok); }
 .agd .alarmchip { border-color: color-mix(in srgb, var(--crit) 55%, var(--line)); color: var(--crit); }
 .agdtemps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .agdtemp { display: grid; gap: 6px; justify-items: start; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }

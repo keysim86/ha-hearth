@@ -213,10 +213,12 @@
             "name": "Appliances",
             "description": "The Appliances tab finds fridges and other Home Connect appliances, hOn dishwashers and EcoWater softeners by itself.",
             "data": {
-              "appliances_exclude": "Hidden devices"
+              "appliances_exclude": "Hidden devices",
+              "appliance_plugs": "Washers, dryers and other plug-monitored"
             },
             "data_description": {
-              "appliances_exclude": "Devices not to show in the Appliances tab."
+              "appliances_exclude": "Devices not to show in the Appliances tab.",
+              "appliance_plugs": "Appliances without their own integration, known only from a metering plug: name, kind, power sensor, optionally energy, a \"cycle running\" flag and the energy counter at cycle start."
             }
           },
           "proxmox": {
@@ -563,6 +565,40 @@
           "name": "Colour",
           "description": "Optional, e.g. #2f8a4f."
         }
+      }
+    },
+    "appliance_plug": {
+      "fields": {
+        "name": {
+          "name": "Name"
+        },
+        "kind": {
+          "name": "Kind"
+        },
+        "power": {
+          "name": "Power sensor",
+          "description": "Plug power (W)."
+        },
+        "energy": {
+          "name": "Energy sensor",
+          "description": "Plug kWh counter — for the current cycle usage."
+        },
+        "running": {
+          "name": "Cycle running",
+          "description": "input_boolean or binary_sensor; without it \"running\" = power above 5 W."
+        },
+        "energy_start": {
+          "name": "Energy at cycle start",
+          "description": "input_number with the kWh counter saved at cycle start."
+        }
+      }
+    },
+    "appliance_kind": {
+      "options": {
+        "washer": "Washer",
+        "dryer": "Dryer",
+        "dishwasher": "Dishwasher",
+        "other": "Other"
       }
     }
   }

@@ -71,7 +71,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
             "switches": {},
             "cameras": {},
             "vehicles": {},
-            "appliances": {},
+            "appliances": {"appliance_plugs": [{"name": "Pralka", "kind": "washer", "power": "sensor.pralka_power"}]},
             "proxmox": {},
             "network": {},
             "extras": {"alerts": [{"entity": "sensor.cisnienie", "condition": "< 1.2", "message": "Ciśnienie za niskie", "severity": "error"}], "agent_url": "/agent/"},
@@ -100,6 +100,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     assert o["agent_url"] == "/agent/"
     assert o["cameras"] == []
     assert o["appliances_exclude"] == []
+    assert o["appliance_plugs"][0]["kind"] == "washer"
     assert o["areas"] == ["salon", "lazienka"]
     assert o["helper_prefix"] == "ogrzewanie"
     assert o["fans"] == ["switch.wentylator"]

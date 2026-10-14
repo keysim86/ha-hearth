@@ -213,10 +213,12 @@
             "name": "AGD",
             "description": "Zakładka AGD sama znajduje lodówki i inny sprzęt z Home Connect, zmywarki z hOn i uzdatniacze EcoWater.",
             "data": {
-              "appliances_exclude": "Pominięte urządzenia"
+              "appliances_exclude": "Pominięte urządzenia",
+              "appliance_plugs": "Pralki, suszarki i inne z gniazdka"
             },
             "data_description": {
-              "appliances_exclude": "Urządzenia, których nie pokazywać w zakładce AGD."
+              "appliances_exclude": "Urządzenia, których nie pokazywać w zakładce AGD.",
+              "appliance_plugs": "Sprzęt bez własnej integracji, znany tylko z gniazdka z pomiarem: nazwa, rodzaj, czujnik mocy, opcjonalnie energia, flaga „cykl w toku” i licznik energii na starcie cyklu."
             }
           },
           "proxmox": {
@@ -563,6 +565,40 @@
           "name": "Kolor",
           "description": "Opcjonalny, np. #2f8a4f."
         }
+      }
+    },
+    "appliance_plug": {
+      "fields": {
+        "name": {
+          "name": "Nazwa"
+        },
+        "kind": {
+          "name": "Rodzaj"
+        },
+        "power": {
+          "name": "Czujnik mocy",
+          "description": "Moc z gniazdka (W)."
+        },
+        "energy": {
+          "name": "Czujnik energii",
+          "description": "Licznik kWh z gniazdka — do zużycia w bieżącym cyklu."
+        },
+        "running": {
+          "name": "Cykl w toku",
+          "description": "input_boolean albo binary_sensor; bez niego „pracuje” = moc powyżej 5 W."
+        },
+        "energy_start": {
+          "name": "Energia na starcie cyklu",
+          "description": "input_number z licznikiem kWh zapisanym na początku cyklu."
+        }
+      }
+    },
+    "appliance_kind": {
+      "options": {
+        "washer": "Pralka",
+        "dryer": "Suszarka",
+        "dishwasher": "Zmywarka",
+        "other": "Inne"
       }
     }
   }
