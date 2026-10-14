@@ -81,6 +81,7 @@ export interface Options {
   phase_power?: string[];
   phase_voltage?: string[];
   consumers?: string[];
+  consumers_exclude?: string[];
   // Kocioł
   climate_heating?: string | null;
   climate_dhw?: string | null;

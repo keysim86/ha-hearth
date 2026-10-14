@@ -28,7 +28,7 @@
             },
             "data_description": {
               "style": "Tiles, list or dials.",
-              "tabs": "Which tabs to show (fixed order).",
+              "tabs": "Which tabs to show and in what order: selection order = panel order (remove and add again to move one). The first opens by default.",
               "sidebar_title": "Sidebar entry text.",
               "sidebar_icon": "Sidebar entry icon.",
               "require_admin": "Hides the panel from regular users."
@@ -95,13 +95,15 @@
               "power_total": "Total power",
               "phase_power": "Phase power",
               "phase_voltage": "Phase voltage",
-              "consumers": "Consumers (power)"
+              "consumers": "Consumers (power)",
+              "consumers_exclude": "Exclude consumers"
             },
             "data_description": {
               "power_total": "Power sensor in W or kW (e.g. from a meter/analyser).",
               "phase_power": "L1, L2, L3 in order.",
               "phase_voltage": "L1, L2, L3 in order.",
-              "consumers": "Empty = devices from the Energy dashboard (power from the same device)."
+              "consumers": "Empty = devices from the Energy dashboard (power from the same device).",
+              "consumers_exclude": "Power or energy sensors of devices to hide (e.g. powered from a UPS that is measured itself)."
             }
           },
           "boiler": {

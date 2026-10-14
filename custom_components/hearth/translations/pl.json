@@ -28,7 +28,7 @@
             },
             "data_description": {
               "style": "Kafelki, lista albo pokrętła.",
-              "tabs": "Które zakładki pokazać (kolejność stała).",
+              "tabs": "Które zakładki pokazać i w jakiej kolejności: kolejność wyboru = kolejność w panelu (usuń i dodaj ponownie, żeby przesunąć). Pierwsza otwiera się domyślnie.",
               "sidebar_title": "Tekst pozycji w menu bocznym.",
               "sidebar_icon": "Ikona pozycji w menu bocznym.",
               "require_admin": "Ukrywa panel przed zwykłymi użytkownikami."
@@ -95,13 +95,15 @@
               "power_total": "Moc całkowita",
               "phase_power": "Moc na fazach",
               "phase_voltage": "Napięcie na fazach",
-              "consumers": "Odbiorniki (moc)"
+              "consumers": "Odbiorniki (moc)",
+              "consumers_exclude": "Pomiń odbiorniki"
             },
             "data_description": {
               "power_total": "Czujnik mocy w W albo kW (np. z licznika/analizatora).",
               "phase_power": "Kolejno L1, L2, L3.",
               "phase_voltage": "Kolejno L1, L2, L3.",
-              "consumers": "Puste = urządzenia z panelu Energia (moc z tego samego urządzenia)."
+              "consumers": "Puste = urządzenia z panelu Energia (moc z tego samego urządzenia).",
+              "consumers_exclude": "Czujniki mocy albo energii urządzeń, których nie pokazywać (np. zasilane z UPS-a, gdy UPS ma własny pomiar)."
             }
           },
           "boiler": {

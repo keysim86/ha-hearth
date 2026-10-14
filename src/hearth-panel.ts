@@ -104,9 +104,9 @@ export class HearthPanel extends LitElement {
   }
 
   private get tabs(): Tab[] {
-    const chosen = this.options.tabs ?? [];
-    const list = TABS.filter((t) => !chosen.length || chosen.includes(t));
-    return list.length ? list : TABS;
+    // Kolejność z opcji (kolejność wyboru); nieznane pomijamy, pusta lista = wszystkie w kolejności domyślnej.
+    const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
+    return chosen.length ? chosen : TABS;
   }
 
   private get tab(): Tab {

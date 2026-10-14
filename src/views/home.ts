@@ -5,7 +5,9 @@ import { stem, wasteEvents } from "../data/waste";
 import { forecast, wmo } from "../data/weather";
 import { f1, num, round } from "../format";
 import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } from "../svg";
+import { areaOf } from "../model";
 import { entityName, since, sinceLabel, st, type Ctx } from "./common";
+const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
 const COLORS = ["#38bdf8", "#f472b6", "#a78bfa", "#fbbf24", "#34d399", "#fb7185", "#60a5fa", "#f59e0b"];
 const DAY_NAMES = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"];
@@ -30,7 +32,12 @@ function persons(ctx: Ctx): TemplateResult | typeof nothing {
       dev ? Object.values(h.entities).find((e) => e.device_id === dev && e.entity_id.startsWith("sensor.") && test(e.entity_id))?.entity_id : undefined;
     const battery = onDev((e) => h.states[e]?.attributes.device_class === "battery" && /battery_level|bateria/.test(e)) ?? onDev((e) => h.states[e]?.attributes.device_class === "battery");
     const charging = onDev((e) => /battery_state/.test(e));
-    const stepsId = onDev((e) => h.states[e]?.attributes.unit_of_measurement === "steps" && /daily/.test(e)) ?? onDev((e) => h.states[e]?.attributes.unit_of_measurement === "steps");
+    // Kroki: najpierw własny czujnik osoby (np. sensor.kroki_<osoba> z szablonu), potem dzienne kroki z telefonu.
+    const pid = id.split(".")[1];
+    const stepsId =
+      [`sensor.kroki_${pid}`, `sensor.steps_${pid}`, `sensor.${pid}_kroki`, `sensor.${pid}_steps`].find((e) => h.states[e]) ??
+      onDev((e) => h.states[e]?.attributes.unit_of_measurement === "steps" && /daily/.test(e)) ??
+      onDev((e) => h.states[e]?.attributes.unit_of_measurement === "steps");
     const lat = num(p.attributes.latitude), lon = num(p.attributes.longitude);
     const homeLat = h.config?.latitude, homeLon = h.config?.longitude;
     const dist = p.state !== "home" && lat !== null && lon !== null && homeLat !== undefined && homeLon !== undefined ? km(homeLat, homeLon, lat, lon) : null;
@@ -59,6 +66,18 @@ function persons(ctx: Ctx): TemplateResult | typeof nothing {
 
 const GATE_STATE: Record<string, string> = { open: "Otwarta", closed: "Zamknięta", opening: "Otwiera się…", closing: "Zamyka się…", unavailable: "Niedostępna", unknown: "Nie wiadomo" };
 
+/** Światło przy bramie: obszar z dokładnie jedną bramą i 1–2 światłami (np. „Garaż Grzegorza”). */
+function gateLights(ctx: Ctx, cover: string, gateIds: string[]): string[] {
+  const h = ctx.hass;
+  const area = areaOf(h, cover);
+  if (!area) return [];
+  // Wszystkie bramy w obszarze (także niepokazane w panelu) — przy kilku nie wiadomo, czyje to światło.
+  const covers = new Set([...gateIds, ...Object.keys(h.states).filter((e) => e.startsWith("cover.") && ["gate", "garage", "door"].includes(h.states[e].attributes.device_class))]);
+  if ([...covers].filter((g) => areaOf(h, g) === area).length !== 1) return [];
+  const lights = Object.keys(h.states).filter((e) => e.startsWith("light.") && areaOf(h, e) === area && !h.entities[e]?.hidden);
+  return lights.length >= 1 && lights.length <= 2 ? lights : [];
+}
+
 function gates(ctx: Ctx): TemplateResult | typeof nothing {
   const h = ctx.hass;
   const ids = ctx.opts.gates?.length
@@ -72,13 +91,19 @@ function gates(ctx: Ctx): TemplateResult | typeof nothing {
     const canStop = (Number(c.attributes.supported_features) & 8) === 8;
     const action = moving ? (canStop ? ["stop_cover", "Zatrzymaj"] : null) : open ? ["close_cover", "Zamknij"] : ["open_cover", "Otwórz"];
     const garage = c.attributes.device_class === "garage";
+    const lights = gateLights(ctx, id, ids);
     return html`<div class="gate ${open ? "open" : ""} ${moving ? "moving" : ""}">
       <span class="gico">${garage ? gateIcon : doorIcon}</span>
       <span class="gtxt"><b>${entityName(h, id)}</b>
         <small>${GATE_STATE[c.state] ?? c.state}${open ? ` · ${since(c.last_changed)}` : moving ? "" : ` · ${sinceLabel(ctx, c.last_changed)}`}</small></span>
-      ${action
-        ? html`<button class="btn ${open ? "hot" : ""}" type="button" @click=${() => ctx.actions.call("cover", action[0], { entity_id: id })}>${action[1]}</button>`
-        : nothing}
+      <span class="gacts">
+        ${lights.map((l) => html`<button class="bulb ${st(ctx, l) === "on" ? "on" : ""}" type="button" title="Światło: ${entityName(h, l)}"
+          aria-label="Światło ${entityName(h, l)}: ${st(ctx, l) === "on" ? "wyłącz" : "włącz"}" aria-pressed=${st(ctx, l) === "on" ? "true" : "false"}
+          @click=${() => ctx.actions.call("light", "toggle", { entity_id: l })}>${bulbIcon}</button>`)}
+        ${action
+          ? html`<button class="btn ${open ? "hot" : ""}" type="button" @click=${() => ctx.actions.call("cover", action[0], { entity_id: id })}>${action[1]}</button>`
+          : nothing}
+      </span>
     </div>`;
   });
   return html`<section class="sec"><h2>Bramy i garaże</h2><div class="cards gates">${tiles}</div></section>`;

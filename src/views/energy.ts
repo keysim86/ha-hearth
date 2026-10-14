@@ -156,7 +156,8 @@ function consumersList(ctx: Ctx): Consumer[] {
 }
 
 function consumers(ctx: Ctx): TemplateResult | typeof nothing {
-  const list = consumersList(ctx);
+  const skip = new Set(ctx.opts.consumers_exclude ?? []);
+  const list = consumersList(ctx).filter((c) => !(c.power && skip.has(c.power)) && !(c.energy && skip.has(c.energy)));
   if (!list.length) return nothing;
   const today = ctx.stats.get(ctx.hass, list.map((c) => c.energy ?? "").filter(Boolean), "day", startOfDay(), ctx.refresh);
   const rows = list

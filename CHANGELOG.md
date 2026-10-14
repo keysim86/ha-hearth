@@ -36,6 +36,13 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
   Veto; status „Veto do …” z czujników końca i przycisk Zakończ Veto; tryby podpisane jak w sterowniku
 - **Kocioł: gaz po latach** i podpowiedź na wykresie temperatur z 24 h (godzina i wartości wszystkich serii), wartości
   bieżące w legendzie
+- **Kolejność zakładek w opcjach** — kolejność wyboru w polu Zakładki = kolejność w panelu; pierwsza otwiera się
+  domyślnie
+- **Światło przy bramie** — przycisk światła przy bramie, gdy obszar ma dokładnie jedną bramę i 1–2 światła (np.
+  „Garaż …”); obszar ze wspólnymi bramami nie dostaje cudzego światła
+- **Kroki z własnego czujnika osoby** — `sensor.kroki_<osoba>` (albo `steps_…`) przed dziennymi krokami z telefonu
+- **Energia: pomijane odbiorniki** — opcja z listą czujników mocy albo energii, których nie pokazywać (np. urządzenia
+  zasilane z UPS-a, gdy UPS ma własny pomiar)
 - **Czytelne nazwy** — bez numerów seryjnych, PPE i identyfikatorów (słowa z 6+ cyframi) oraz prefiksów węzłów
   ESPHome; nazwa urządzenia nie powtarza się w nazwie encji
 - **Integracja `hearth` z panelem w menu bocznym** — jeden wpis na instalację; panel rejestrowany przez `panel_custom`,

@@ -347,6 +347,11 @@ dialog.pdlg { width: min(720px, calc(100% - 24px)); }
 .gtxt b { font-size: 15px; }
 .gtxt small { font-size: 12.5px; color: var(--muted); }
 .gate.open { border-color: var(--ember); }
+.gacts { display: flex; gap: 6px; align-items: center; }
+.bulb { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--faint); cursor: pointer; display: grid; place-items: center; }
+.bulb svg { width: 20px; height: 20px; }
+.bulb.on { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, var(--surface)); border-color: color-mix(in srgb, var(--warn) 50%, var(--line)); }
+.bulb:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
 .gate.open .gico { background: var(--ember-soft); color: var(--ember); }
 .gate.moving .gico { color: var(--warn); }
 @media (prefers-reduced-motion: no-preference) { .gate.moving .gico { animation: pulse 1.2s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .45; } } }

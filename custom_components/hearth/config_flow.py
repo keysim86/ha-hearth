@@ -34,8 +34,9 @@ _FIELDS: dict[str, Any] = {
     c.CONF_STYLE: selector.SelectSelector(
         selector.SelectSelectorConfig(options=STYLES, translation_key="style", mode=selector.SelectSelectorMode.LIST)
     ),
+    # Lista rozwijana z „pastylkami” zachowuje kolejność wyboru = kolejność zakładek w panelu.
     c.CONF_TABS: selector.SelectSelector(
-        selector.SelectSelectorConfig(options=TABS, translation_key="tabs", multiple=True, mode=selector.SelectSelectorMode.LIST)
+        selector.SelectSelectorConfig(options=TABS, translation_key="tabs", multiple=True, mode=selector.SelectSelectorMode.DROPDOWN)
     ),
     c.CONF_TITLE: selector.TextSelector(),
     c.CONF_ICON: selector.IconSelector(),
@@ -56,6 +57,7 @@ _FIELDS: dict[str, Any] = {
     c.CONF_PHASE_POWER: _entity("sensor", many=True),
     c.CONF_PHASE_VOLTAGE: _entity("sensor", many=True),
     c.CONF_CONSUMERS: _entity("sensor", many=True),
+    c.CONF_CONSUMERS_EXCLUDE: _entity("sensor", many=True),
     c.CONF_CLIMATE_HEATING: _entity("climate"),
     c.CONF_CLIMATE_DHW: _entity(["climate", "water_heater"]),
     c.CONF_BOILER_STATE: _ANY,
