@@ -137,6 +137,21 @@ export const styles = css`
 .switch[aria-checked="true"]::after { left: 23px; }
 .why { font-size: 13.5px; color: var(--fg); background: var(--surface); border-radius: 10px; padding: 10px 12px; border: 1px solid var(--line); }
 .why b { font-family: var(--f-num); }
+.row > span > small { display: block; color: var(--muted); font-size: 12px; }
+.trange { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.fld { display: grid; gap: 6px; font-size: 14px; min-width: 0; }
+.fld select { font: inherit; font-size: 13.5px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; width: 100%; min-width: 0; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12.5px; padding: 3px 4px 3px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--fg); }
+.tag.open { border-color: var(--frost); color: var(--frost); }
+.tag button { font: inherit; font-size: 15px; line-height: 1; border: 0; background: none; color: var(--muted); cursor: pointer; width: 24px; height: 24px; border-radius: 50%; }
+.tag button:hover { background: var(--surface-2); color: var(--fg); }
+.tag.pick { cursor: pointer; padding: 6px 12px; font-weight: 600; }
+.tag.pick small { color: var(--muted); font-weight: 400; }
+.tag.pick.on { border-color: var(--accent); background: var(--accent-soft); }
+.tag.pick:hover { border-color: var(--faint); }
+.tag.pick.on:hover { border-color: var(--accent); }
+.tag button:focus-visible, .tag.pick:focus-visible, .fld select:focus-visible, .tsel select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg);
   padding: 9px 14px; border-radius: 10px; font-size: 13.5px; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
 @media (max-width: 420px) { .wrap { padding-inline: 16px; } .tbig { font-size: 40px; } .gauge { width: 96px; height: 62px; } }

@@ -5,7 +5,7 @@ import { energyPrefs, sourcesOf } from "../data/energy";
 import { daysAgo, monthsAgo, startOfDay, startOfMonth, sumSince } from "../data/stats";
 import { f1, num, round } from "../format";
 import { bars, multiLine, type Bar } from "../svg";
-import { entityName, st, unitOf, type Ctx } from "./common";
+import { entityName, st, timeSel, unitOf, type Ctx } from "./common";
 import { MONTH_NAMES } from "./energy";
 import { boilerState } from "./house";
 import { DAY_PL, DAY_SHORT, toMin, type Circuit, type Slot } from "../data/ebusd";
@@ -237,18 +237,6 @@ export function schedules(ctx: Ctx): TemplateResult | typeof nothing {
   </section>`;
 }
 
-/** Godzina jako dwie listy (00–23 i minuty co 10) — format 24 h niezależnie od języka systemu, krok sterownika. */
-function timeSel(value: string, label: string, set: (v: string) => void): TemplateResult {
-  const [h, m] = value.split(":");
-  const hours = [...Array(24).keys()].map((x) => String(x).padStart(2, "0"));
-  const mins = ["00", "10", "20", "30", "40", "50"];
-  return html`<span class="tsel" role="group" aria-label=${label}>
-    <select aria-label="${label}: godzina" @change=${(ev: Event) => set(`${(ev.target as HTMLSelectElement).value}:${m}`)}>
-      ${hours.map((x) => html`<option value=${x} ?selected=${x === h}>${x}</option>`)}</select>:<select aria-label="${label}: minuty"
-      @change=${(ev: Event) => set(`${h}:${(ev.target as HTMLSelectElement).value}`)}>
-      ${mins.map((x) => html`<option value=${x} ?selected=${x === m}>${x}</option>`)}</select>
-  </span>`;
-}
 
 function editor(ctx: Ctx, e: SchedEdit, withTemp: boolean): TemplateResult {
   const upd = (i: number, k: keyof Slot, v: string) => {

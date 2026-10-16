@@ -266,3 +266,19 @@ export function valueText(hass: Hass, id: string | undefined, digits = 1): strin
   if (n === null) return s.state;
   return `${n.toLocaleString("pl-PL", { maximumFractionDigits: Math.abs(n) >= 100 ? 0 : digits })}${u ? ` ${u}` : ""}`;
 }
+
+/**
+ * Godzina jako dwie listy (00–23 i minuty co `step`) — format 24 h niezależnie od języka systemu.
+ * Minuta spoza kroku (np. ustawiona w HA) też jest na liście, żeby nie zniknęła.
+ */
+export function timeSel(value: string, label: string, set: (v: string) => void, step = 10): TemplateResult {
+  const [h = "00", m = "00"] = (value ?? "").split(":");
+  const hours = [...Array(24).keys()].map((x) => String(x).padStart(2, "0"));
+  const mins = [...new Set([...Array(60 / step).keys()].map((x) => String(x * step).padStart(2, "0")).concat(m))].sort();
+  return html`<span class="tsel" role="group" aria-label=${label}>
+    <select aria-label="${label}: godzina" @change=${(ev: Event) => set(`${(ev.target as HTMLSelectElement).value}:${m}`)}>
+      ${hours.map((x) => html`<option value=${x} ?selected=${x === h}>${x}</option>`)}</select>:<select aria-label="${label}: minuty"
+      @change=${(ev: Event) => set(`${h}:${(ev.target as HTMLSelectElement).value}`)}>
+      ${mins.map((x) => html`<option value=${x} ?selected=${x === m}>${x}</option>`)}</select>
+  </span>`;
+}

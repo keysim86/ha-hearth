@@ -15,6 +15,13 @@ export interface Helpers {
   komfortOn?: string;
   wieczorOn?: string;
   auto?: string;
+  /** Konfiguracja pokoju w pomocnikach (zmiana z panelu): czujnik temperatury, okna i drzwi, obecność i osoby. */
+  czujnik?: string;
+  okna?: string;
+  osoby?: string;
+  obecnosc?: string;
+  /** Ktoś z wybranych osób w domu (z opóźnieniem jak w automatyce). */
+  ktos?: string;
 }
 
 export interface Dehumidifier {
@@ -32,6 +39,10 @@ export interface Room {
   windows: string[];
   battery?: string;
   valve?: string;
+  /** Blokada przycisków głowicy (switch / lock na urządzeniu termostatu). */
+  childLock?: string;
+  /** Skąd głowica bierze temperaturę (select: własny pomiar / zdalny czujnik). */
+  sensorSelect?: string;
   fans: string[];
   dehumidifiers: Dehumidifier[];
   helpers: Helpers;
@@ -40,7 +51,13 @@ export interface Room {
   toggles: string[];
 }
 
-const OPENINGS = ["window", "door", "opening", "garage_door"];
+export const OPENINGS = ["window", "door", "opening", "garage_door"];
+
+/** Lista encji z pomocnika input_text („a, b,c” → [a, b, c]); brak wartości = pusta lista. */
+export function entityList(value: string | undefined): string[] {
+  if (!value || value === "unknown" || value === "unavailable") return [];
+  return value.split(",").map((s) => s.trim()).filter(Boolean);
+}
 // „wentylator” albo samodzielne słowo „fan” (nie „ventilation_boost” kotła ani „fan_mode”).
 const FAN_NAME = /wentylator|(^|[._\s])fan($|[._\s])(?!mode)/i;
 
@@ -66,6 +83,11 @@ function helpersFor(hass: Hass, prefix: string | undefined, areaId: string): Hel
     komfortOn: has(`binary_sensor.${p}_komfort`),
     wieczorOn: has(`binary_sensor.${p}_wieczor`),
     auto: has(`input_boolean.${p}_automatyka`),
+    czujnik: has(`input_text.${p}_czujnik`),
+    okna: has(`input_text.${p}_okna`),
+    osoby: has(`input_text.${p}_osoby`),
+    obecnosc: has(`input_boolean.${p}_obecnosc`),
+    ktos: has(`binary_sensor.${p}_ktos_w_domu`),
   };
 }
 
@@ -97,23 +119,38 @@ export function discoverRooms(hass: Hass, opts: Options): Room[] {
     const climate = ids.find((i) => i.startsWith("climate."));
     if (!climate) continue;
     const climateDev = dev(climate);
+    const helpers = helpersFor(hass, opts.helper_prefix, area.area_id);
     const temps = ids.filter((i) => sensor(i) && primary(i) && dc(i) === "temperature");
     const hums = ids.filter((i) => sensor(i) && primary(i) && dc(i) === "humidity");
     // Termometr pokoju: osobne urządzenie z wilgotnością > inne poza głowicą > czujnik samej głowicy.
-    const temp =
-      temps.find((t) => dev(t) !== climateDev && hums.some((h) => dev(h) === dev(t))) ??
-      temps.find((t) => dev(t) !== climateDev) ??
-      temps.find((t) => dev(t) === climateDev);
-    const humidity = (temp && hums.find((h) => dev(h) === dev(temp))) ?? hums[0];
-    // Okna i drzwi: tylko z małych urządzeń (kontaktron), nie drzwi zmywarki czy pralki.
-    const windows = ids.filter((i) => {
-      const d = dev(i);
-      return i.startsWith("binary_sensor.") && primary(i) && OPENINGS.includes(dc(i) ?? "") && (!d || (primaryPerDevice.get(d) ?? 0) <= 3);
-    });
+    // Czujnik wybrany w pomocniku pokoju ma pierwszeństwo (pusty = pomiar głowicy), także spoza obszaru.
+    const chosenTemp = helpers.czujnik ? entityList(hass.states[helpers.czujnik]?.state)[0] : undefined;
+    const temp = helpers.czujnik
+      ? chosenTemp && hass.states[chosenTemp] ? chosenTemp : undefined
+      : temps.find((t) => dev(t) !== climateDev && hums.some((h) => dev(h) === dev(t))) ??
+        temps.find((t) => dev(t) !== climateDev) ??
+        temps.find((t) => dev(t) === climateDev);
+    const sameDevice = (id: string, cls: string) =>
+      Object.values(hass.entities).find((e) => e.device_id && e.device_id === dev(id) && e.entity_id.startsWith("sensor.") && dc(e.entity_id) === cls)?.entity_id;
+    const humidity = (temp && (hums.find((h) => dev(h) === dev(temp)) ?? sameDevice(temp, "humidity"))) ?? (helpers.czujnik ? undefined : hums[0]);
+    // Okna i drzwi: wybrane w pomocniku pokoju (te wyłączają grzanie), a bez niego — kontaktrony z obszaru
+    // (tylko małe urządzenia, nie drzwi zmywarki czy pralki).
+    const windows = helpers.okna
+      ? entityList(hass.states[helpers.okna]?.state).filter((i) => hass.states[i])
+      : ids.filter((i) => {
+          const d = dev(i);
+          return i.startsWith("binary_sensor.") && primary(i) && OPENINGS.includes(dc(i) ?? "") && (!d || (primaryPerDevice.get(d) ?? 0) <= 3);
+        });
     const onClimate = (i: string) => climateDev !== undefined && dev(i) === climateDev && sensor(i);
     const battery = ids.find((i) => onClimate(i) && dc(i) === "battery");
     // Otwarcie zaworu w %; napięcia silnika zaworu (mV) i podobne odpadają po jednostce.
     const valve = ids.find((i) => onClimate(i) && /heat_percentage|valve|position/.test(i) && hass.states[i]?.attributes.unit_of_measurement === "%");
+    const onDevice = (re: RegExp, ...domains: string[]) =>
+      climateDev === undefined
+        ? undefined
+        : Object.values(hass.entities).find(
+            (e) => e.device_id === climateDev && domains.includes(e.entity_id.split(".")[0]) && re.test(e.entity_id) && hass.states[e.entity_id],
+          )?.entity_id;
     const fans = ids.filter(
       (i) =>
         fanOpt.has(i) ||
@@ -141,9 +178,11 @@ export function discoverRooms(hass: Hass, opts: Options): Room[] {
       windows,
       battery,
       valve,
+      childLock: onDevice(/child_lock/, "switch", "lock"),
+      sensorSelect: onDevice(/temperature_sensor_select/, "select"),
       fans,
       dehumidifiers,
-      helpers: helpersFor(hass, opts.helper_prefix, area.area_id),
+      helpers,
       settings,
       toggles,
     });
@@ -184,6 +223,12 @@ export function profileAt(hass: Hass, r: Room, m: number): Profile {
   const [od, doo] = nightWindow(hass, r);
   const noc = od > doo ? m >= od || m < doo : m >= od && m < doo;
   return noc ? "e" : "k";
+}
+
+/** Obecność wpływa na temperaturę: przełącznik pokoju włączony i wybrana co najmniej jedna osoba. */
+export function presenceUsed(hass: Hass, r: Room): boolean {
+  if (!r.helpers.obecnosc) return true;
+  return st(hass, r.helpers.obecnosc) === "on" && entityList(st(hass, r.helpers.osoby)).length > 0;
 }
 
 export function windowOpen(hass: Hass, r: Room): boolean {

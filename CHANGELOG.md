@@ -7,6 +7,25 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-16
+
+### Dodano
+- **Klimat: konfiguracja pokoju w panelu** — w ustawieniach pokoju blok *Czujniki*: termometr pokoju do wyboru
+  z listy (pogrupowanej według obszarów, z bieżącą temperaturą; „Pomiar głowicy” = bez czujnika) i informacja,
+  skąd głowica naprawdę bierze temperaturę (czujnik / własny pomiar / czujnik przestał nadawać); okna i drzwi
+  wyłączające grzanie ze stanem, do usunięcia (×) i dodania z listy. Zapis do pomocników
+  `input_text.<prefiks>_<obszar>_czujnik` i `_okna`
+- **Klimat: obecność pokoju** — blok *Obecność*: przełącznik „Uwzględniaj obecność”
+  (`input_boolean.<prefiks>_<obszar>_obecnosc`), osoby do zaznaczenia (`input_text.<prefiks>_<obszar>_osoby`)
+  z informacją, kto jest w domu, i opis, co teraz z tego wynika
+- **Klimat: blokada rodzicielska głowicy** — przełącznik w bloku *Głowica* (encja `switch` / `lock` z „child_lock”
+  na urządzeniu termostatu)
+- **Klimat: godziny nocy i wieczoru do zmiany** w bloku *Plan dnia* (format 24 h, co 5 minut)
+
+### Zmieniono
+- Termometr i okna pokoju z pomocników (gdy są) zamiast wykrywania z obszaru — także czujniki spoza obszaru
+- Opisy profili i „dlaczego taki cel” bez obecności, gdy obecność w pokoju jest wyłączona
+
 ## [0.7.1] - 2026-10-16
 
 ### Zmieniono

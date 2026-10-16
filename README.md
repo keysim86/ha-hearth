@@ -20,7 +20,7 @@
 | Zakładka | Zawartość |
 |-------|-----------|
 | 🏠 **Dom** | Domownicy (zdjęcie, gdzie są i od kiedy, odległość, bateria telefonu, kroki; kliknięcie = mapa) · bramy i garaże z przyciskiem i czasem otwarcia · skrzynka pocztowa · odpady z kalendarza (tylko frakcje z terminem, przełączniki frakcji) · pogoda: prognoza ECMWF 14 dni, radar opadów RainViewer, Windy |
-| 🌡️ **Klimat** | Na zewnątrz (temperatura, ciśnienie z trendem, słońce i światło, CAQI, PM2,5/PM10 wg GIOŚ) · pasek domu · pokoje: temperatura i cel, wykres 24 h, oś dnia, wentylatory i osuszacze · po kliknięciu ustawienia pokoju (profile −/+, automatyka, osuszacz, wentylator, pomocniki obszaru: progi −/+ i przełączniki) |
+| 🌡️ **Klimat** | Na zewnątrz (temperatura, ciśnienie z trendem, słońce i światło, CAQI, PM2,5/PM10 wg GIOŚ) · pasek domu · pokoje: temperatura i cel, wykres 24 h, oś dnia, wentylatory i osuszacze · po kliknięciu ustawienia pokoju (profile −/+, godziny nocy i wieczoru, automatyka, termometr i okna/drzwi do wyboru, obecność i osoby, blokada rodzicielska głowicy, osuszacz, wentylator, pomocniki obszaru: progi −/+ i przełączniki) |
 | ⚡ **Energia** | Moc całkowita z wykresem 24 h · fazy L1–L3 z kontrolą napięcia · zużycie dziś i w miesiącu ze źródeł panelu Energia, z podziałem na strefy i kosztem · 30 dni i 12 miesięcy w strefach, z etykietami i podpowiedzią · ranking odbiorników (moc teraz, kWh dziś) |
 | 🔥 **Kocioł** | Stan (płomień, zapłon, pompa, ciepła woda), moc palnika, wentylator, ciśnienie, krzywa · zasilanie, powrót, zewnątrz, ciepła woda z wykresem 24 h i podpowiedzią · termostaty ogrzewania i ciepłej wody (tryby, presety, −/+, Quick Veto przez ebusd) · harmonogramy ogrzewania, ciepłej wody i cyrkulacji ze sterownika (ebusd) z edycją · gaz: dziś, miesiąc, 30 dni, 12 miesięcy, lata · suwaki ustawień |
 | 🔌 **Przełączniki** | Światła, gniazdka i wentylatory według pokoi (obszary HA), czas włączenia, moc, wyszukiwarka |
@@ -74,9 +74,9 @@ wprost albo przez urządzenie:
 
 | Element | Reguła |
 |---|---|
-| Termometr | czujnik temperatury z osobnego urządzenia, najlepiej tego z wilgotnością; bez niego — czujnik głowicy |
+| Termometr | czujnik temperatury z osobnego urządzenia, najlepiej tego z wilgotnością; bez niego — czujnik głowicy (albo wybrany w pomocniku pokoju, patrz *Profile ogrzewania*) |
 | Wilgotność | czujnik wilgotności z tego samego urządzenia co termometr |
-| Okna i drzwi | `binary_sensor` klasy *window / door / opening* z małego urządzenia (kontaktron), więc drzwi zmywarki się nie liczą |
+| Okna i drzwi | `binary_sensor` klasy *window / door / opening* z małego urządzenia (kontaktron), więc drzwi zmywarki się nie liczą (albo lista z pomocnika pokoju) |
 | Zawór, bateria | czujniki urządzenia głowicy (zawór tylko w %) |
 | Osuszacz | `humidifier` klasy *dehumidifier*; moc i energia z tego samego urządzenia (np. gniazdka) |
 | Wentylator | encje `fan.*`, przełączniki z „wentylator” / „fan” w nazwie albo wskazane w opcjach |
@@ -131,6 +131,19 @@ Gdy ogrzewanie pokoi prowadzą pomocniki, panel pokazuje profile, plan dnia i �
 | `input_datetime.<prefiks>_<obszar>_wieczor_od` / `_wieczor_do` | godziny wieczoru (np. łazienka) |
 | `binary_sensor.<prefiks>_<obszar>_komfort` / `_wieczor` | który profil działa teraz |
 | `input_boolean.<prefiks>_<obszar>_automatyka` | przełącznik automatyki |
+| `input_text.<prefiks>_<obszar>_czujnik` | czujnik temperatury pokoju (encja; pusto = pomiar głowicy) — zastępuje wykrywanie z obszaru |
+| `input_text.<prefiks>_<obszar>_okna` | czujniki okien i drzwi wyłączające grzanie, po przecinku — zastępuje wykrywanie z obszaru |
+| `input_boolean.<prefiks>_<obszar>_obecnosc` | czy obecność wpływa na temperaturę |
+| `input_text.<prefiks>_<obszar>_osoby` | osoby (`person.*`) sprawdzane przy obecności, po przecinku |
+| `binary_sensor.<prefiks>_<obszar>_ktos_w_domu` | ktoś z wybranych osób w domu (do opisu stanu) |
+
+Każdy z nich jest opcjonalny. Gdy są, w ustawieniach pokoju da się je zmienić w miejscu: termometr z listy
+(pogrupowanej według obszarów), okna i drzwi do dodania i usunięcia, przełącznik obecności i osoby do zaznaczenia,
+godziny nocy i wieczoru. Panel tylko zapisuje pomocniki — logikę (okno → wyłączenie, obecność, temperatura
+z czujnika) robią Twoje automatyzacje, które je czytają.
+
+Blokada przycisków głowicy (`switch` / `lock` z „child_lock” w identyfikatorze na urządzeniu termostatu) i źródło
+temperatury głowicy (`select` z „temperature_sensor_select”, np. SONOFF TRVZB) są wykrywane same.
 
 Bez pomocników panel steruje samym termostatem (−/+ zmienia nastawę głowicy).
 
