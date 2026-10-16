@@ -7,6 +7,10 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Zmieniono
+- **Klimat: pokoje alfabetycznie** — bez ręcznie wybranych obszarów (opcja *Pokoje (obszary)*) kafelki pokoi
+  idą według nazwy obszaru, a nie kolejności dodania obszarów w HA; ręczny wybór nadal ustala kolejność
+
 ## [0.7.0] - 2026-10-15
 
 ### Dodano

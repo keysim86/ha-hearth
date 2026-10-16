@@ -167,7 +167,7 @@
               "exclude_entities": "Pomiń encje"
             },
             "data_description": {
-              "areas": "Obszary pokazywane jako pokoje, w tej kolejności. Puste = każdy obszar z termostatem.",
+              "areas": "Obszary pokazywane jako pokoje, w tej kolejności. Puste = każdy obszar z termostatem, alfabetycznie.",
               "helper_prefix": "Np. „ogrzewanie” dla input_number.ogrzewanie_OBSZAR_komfort/_eko/_wieczor i podobnych. Puste = sterowanie samym termostatem.",
               "fans": "Przełączniki i wentylatory pokazywane jako wentylator pokoju (encje fan.* i nazwy z „wentylator/fan” wykrywane same).",
               "exclude_entities": "Np. czujnik drzwi zmywarki rozpoznany jako drzwi pokoju."

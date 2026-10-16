@@ -88,10 +88,11 @@ export function discoverRooms(hass: Hass, opts: Options): Room[] {
   const primary = (id: string) => !hass.entities[id]?.entity_category;
   const sensor = (id: string) => id.startsWith("sensor.");
 
-  // Wybrane obszary w wybranej kolejności; bez wyboru — wszystkie z termostatem.
+  // Wybrane obszary w wybranej kolejności; bez wyboru — wszystkie z termostatem, alfabetycznie.
   const chosen = (opts.areas ?? []).map((a) => hass.areas[a]).filter(Boolean);
+  const all = Object.values(hass.areas).sort((a, b) => a.name.localeCompare(b.name, "pl"));
   const rooms: Room[] = [];
-  for (const area of chosen.length ? chosen : Object.values(hass.areas)) {
+  for (const area of chosen.length ? chosen : all) {
     const ids = byArea.get(area.area_id) ?? [];
     const climate = ids.find((i) => i.startsWith("climate."));
     if (!climate) continue;

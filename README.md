@@ -98,7 +98,7 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 | **Kocioł** | termostaty ogrzewania i CWU, stan albo płomień + zapotrzebowanie na CWU, zapłon, pompa, moc, wentylator, zasilanie (+ cel), powrót, ciśnienie, krzywa, zewnątrz (+ średnia), ciepła woda (+ cel), gaz, suwaki ustawień · ebusd: temat strefy do Quick Veto, tryb specjalny, koniec Veto | gaz z panelu Energia; bez tematu ebusd zwykła nastawa |
 | **Zakładka Liczniki** | encje liczników (grupowane według urządzeń) | woda i gaz z panelu Energia |
 | **AGD** | pominięte urządzenia (Home Connect, hOn, EcoWater, Tuya Local), pralki, suszarki i inne z gniazdka (moc, energia, flaga cyklu, energia na starcie) | wszystkie wykryte, bez sprzętu z gniazdka |
-| **Pokoje** | obszary i ich kolejność, prefiks pomocników ogrzewania, wentylatory, pominięte encje | każdy obszar z termostatem |
+| **Pokoje** | obszary i ich kolejność, prefiks pomocników ogrzewania, wentylatory, pominięte encje | każdy obszar z termostatem, alfabetycznie |
 
 ### Zdrowie — osoby
 

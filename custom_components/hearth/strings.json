@@ -167,7 +167,7 @@
               "exclude_entities": "Exclude entities"
             },
             "data_description": {
-              "areas": "Areas shown as rooms, in this order. Empty = every area with a thermostat.",
+              "areas": "Areas shown as rooms, in this order. Empty = every area with a thermostat, alphabetically.",
               "helper_prefix": "E.g. “heating” for input_number.heating_AREA_komfort/_eko/_wieczor and alike. Empty = control the thermostat only.",
               "fans": "Switches and fans shown as the room fan (fan.* and names with “fan” are found automatically).",
               "exclude_entities": "E.g. a dishwasher door sensor detected as a room door."
