@@ -1,4 +1,4 @@
-// Zakładka Dom: osoby, bramy i garaże, skrzynka pocztowa, odpady, prognoza pogody.
+// Zakładka Dom: osoby, bramy i garaże, skrzynka pocztowa, odpady, PAYBACK, prognoza pogody.
 
 import { html, nothing, type TemplateResult } from "lit";
 import { stem, wasteEvents } from "../data/waste";
@@ -8,6 +8,8 @@ import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } f
 import { areaOf } from "../model";
 import { entityName, since, sinceLabel, st, type Ctx } from "./common";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
+
+const ticketIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h16a1 1 0 0 1 1 1v3a2.5 2.5 0 0 0 0 5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a2.5 2.5 0 0 0 0-5V6a1 1 0 0 1 1-1Zm10 2v2h2V7Zm0 4v2h2v-2Zm0 4v2h2v-2Z"></path></svg>`;
 
 const COLORS = ["#38bdf8", "#f472b6", "#a78bfa", "#fbbf24", "#34d399", "#fb7185", "#60a5fa", "#f59e0b"];
 const DAY_NAMES = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"];
@@ -120,6 +122,44 @@ function mailbox(ctx: Ctx): TemplateResult | typeof nothing {
     <span class="gtxt"><b>${full ? "Jest poczta!" : "Skrzynka pusta"}</b>
       <small>${full ? sinceLabel(ctx, m.last_changed) : `ostatnio ${since(m.last_changed)} temu`}${bat !== null ? ` · bateria ${round(bat)}%` : ""}</small></span>
   </div>`;
+}
+
+// ---- PAYBACK: automat aktywujący kupony (stack payback, encje z autodiscovery MQTT) ----
+
+const PAYBACK_STATE: Record<string, [string, boolean]> = {
+  ok: ["", false],
+  w_toku: ["aktywuję kupony…", false],
+  nie_wszystkie: ["nie wszystkie kupony udało się aktywować", true],
+  sesja_wygasla: ["sesja wygasła — wgraj nowe ciasteczka", true],
+  blokada: ["strona zablokowała automat", true],
+  brak_ciasteczek: ["brak ciasteczek — wgraj je w kontenerze", true],
+  blad: ["błąd ostatniego przebiegu", true],
+};
+
+/** Kafelek na konto: sensor.payback_<konto>_stan (+ _punkty, _aktywne, _do_aktywacji, button …_aktywuj_kupony). */
+function payback(ctx: Ctx): TemplateResult[] {
+  const h = ctx.hass;
+  const konta = Object.keys(h.states)
+    .filter((e) => /^sensor\.payback_[a-z0-9_]+_stan$/.test(e) && !h.entities[e]?.hidden)
+    .map((e) => e.slice("sensor.payback_".length, -"_stan".length))
+    .sort();
+  return konta.map((k) => {
+    const id = (s: string) => `sensor.payback_${k}_${s}`;
+    const stan = st(ctx, id("stan")) ?? "unknown";
+    const [opis, uwaga] = PAYBACK_STATE[stan] ?? (stan === "unavailable" ? ["automat nie odpowiada", true] : ["", false]);
+    const pkt = num(st(ctx, id("punkty"))), akt = num(st(ctx, id("aktywne"))), doAkt = num(st(ctx, id("do_aktywacji")));
+    const kiedy = st(ctx, id("ostatnie_uruchomienie"));
+    const btn = `button.payback_${k}_aktywuj_kupony`;
+    const imie = konta.length > 1 ? ` · ${k.charAt(0).toUpperCase()}${k.slice(1)}` : "";
+    return html`<div class="box2 payback ${uwaga ? "warn" : ""} ${stan === "w_toku" ? "busy" : ""}">
+      <button type="button" class="gico" aria-label="PAYBACK: historia punktów" @click=${() => ctx.actions.moreInfo(id("punkty"))}>${ticketIcon}</button>
+      <span class="gtxt"><b>PAYBACK${imie} · ${round(pkt)} °P</b>
+        <small>${akt !== null ? `${round(akt)} aktywnych kuponów` : "kupony: brak danych"}${doAkt ? ` · ${round(doAkt)} do aktywacji` : ""}${kiedy && Date.parse(kiedy) ? ` · sprawdzone ${since(kiedy)} temu` : ""}</small>
+        ${opis ? html`<small class="pbstan">${opis}</small>` : nothing}</span>
+      ${h.states[btn] ? html`<button class="btn" type="button" ?disabled=${stan === "w_toku"}
+        @click=${() => ctx.actions.call("button", "press", { entity_id: btn })}>Aktywuj</button>` : nothing}
+    </div>`;
+  });
 }
 
 // Kolory pojemników jak w polskiej segregacji (bio brązowy, szkło zielony, papier niebieski, metale i tworzywa żółty).
@@ -250,9 +290,9 @@ function weather(ctx: Ctx): TemplateResult | typeof nothing {
 }
 
 export function homeView(ctx: Ctx): TemplateResult {
-  const mail = mailbox(ctx), bins = waste(ctx);
+  const mail = mailbox(ctx), bins = waste(ctx), pb = payback(ctx);
   return html`${persons(ctx)} ${gates(ctx)}
-    ${mail !== nothing || bins !== nothing ? html`<section class="sec"><div class="cards two top">${mail}${bins}</div></section>` : nothing}
+    ${mail !== nothing || bins !== nothing || pb.length ? html`<section class="sec"><div class="cards two top">${mail}${bins}${pb}</div></section>` : nothing}
     ${weather(ctx)}`;
 }
 

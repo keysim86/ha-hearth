@@ -19,7 +19,7 @@
 
 | Zakładka | Zawartość |
 |-------|-----------|
-| 🏠 **Dom** | Domownicy (zdjęcie, gdzie są i od kiedy, odległość, bateria telefonu, kroki; kliknięcie = mapa) · bramy i garaże z przyciskiem i czasem otwarcia · skrzynka pocztowa · odpady z kalendarza (tylko frakcje z terminem, przełączniki frakcji) · pogoda: prognoza ECMWF 14 dni, radar opadów RainViewer, Windy |
+| 🏠 **Dom** | Domownicy (zdjęcie, gdzie są i od kiedy, odległość, bateria telefonu, kroki; kliknięcie = mapa) · bramy i garaże z przyciskiem i czasem otwarcia · skrzynka pocztowa · odpady z kalendarza (tylko frakcje z terminem, przełączniki frakcji) · PAYBACK (punkty, aktywne kupony, stan automatu, przycisk „Aktywuj”) · pogoda: prognoza ECMWF 14 dni, radar opadów RainViewer, Windy |
 | 🌡️ **Klimat** | Na zewnątrz (temperatura, ciśnienie z trendem, słońce i światło, CAQI, PM2,5/PM10 wg GIOŚ) · pasek domu · pokoje: temperatura i cel, wykres 24 h, oś dnia, wentylatory i osuszacze · po kliknięciu ustawienia pokoju (profile −/+, godziny nocy i wieczoru, automatyka, termometr i okna/drzwi do wyboru, obecność i osoby, blokada rodzicielska głowicy, osuszacz, wentylator, pomocniki obszaru: progi −/+ i przełączniki) |
 | ⚡ **Energia** | Moc całkowita z wykresem 24 h · fazy L1–L3 z kontrolą napięcia · zużycie dziś i w miesiącu ze źródeł panelu Energia, z podziałem na strefy i kosztem · 30 dni i 12 miesięcy w strefach, z etykietami i podpowiedzią · ranking odbiorników (moc teraz, kWh dziś) |
 | 🔥 **Kocioł** | Stan (płomień, zapłon, pompa, ciepła woda), moc palnika, wentylator, ciśnienie, krzywa · zasilanie, powrót, zewnątrz, ciepła woda z wykresem 24 h i podpowiedzią · termostaty ogrzewania i ciepłej wody (tryby, presety, −/+, Quick Veto przez ebusd) · harmonogramy ogrzewania, ciepłej wody i cyrkulacji ze sterownika (ebusd) z edycją · gaz: dziś, miesiąc, 30 dni, 12 miesięcy, lata · suwaki ustawień |
@@ -93,7 +93,7 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 | **Wygląd** | styl kart, kolor wiodący (gotowy, kolor motywu HA albo `#rrggbb`), zakładki, nazwa i ikona w menu, tylko dla administratorów | wszystkie zakładki, kafelki, kolor Żar |
 | **Na zewnątrz** | temperatura, wilgotność, ciśnienie, światło, PM2,5, PM10, indeks powietrza i jego poziom | podpowiedź przy dodaniu integracji |
 | **Pasek domu** | obecność domowników, strefa taryfy | — |
-| **Zakładka Dom** | osoby, bramy, skrzynka pocztowa (+ bateria), kalendarz odpadów albo czujniki, przełączniki frakcji, pogoda (encja) | osoby z telefonem, rolety klasy brama/garaż/drzwi, kalendarz Waste Collection Schedule, pomocniki z „odpad/waste”, Open-Meteo |
+| **Zakładka Dom** | osoby, bramy, skrzynka pocztowa (+ bateria), kalendarz odpadów albo czujniki, przełączniki frakcji, pogoda (encja) | osoby z telefonem, rolety klasy brama/garaż/drzwi, kalendarz Waste Collection Schedule, pomocniki z „odpad/waste”, encje `sensor.payback_<konto>_*` (automat PAYBACK przez MQTT), Open-Meteo |
 | **Zakładka Energia** | moc całkowita, moc i napięcie faz, odbiorniki | zużycie, koszty i odbiorniki z panelu Energia |
 | **Kocioł** | termostaty ogrzewania i CWU, stan albo płomień + zapotrzebowanie na CWU, zapłon, pompa, moc, wentylator, zasilanie (+ cel), powrót, ciśnienie, krzywa, zewnątrz (+ średnia), ciepła woda (+ cel), gaz, suwaki ustawień · ebusd: temat strefy do Quick Veto, tryb specjalny, koniec Veto | gaz z panelu Energia; bez tematu ebusd zwykła nastawa |
 | **Zakładka Liczniki** | encje liczników (grupowane według urządzeń) | woda i gaz z panelu Energia |

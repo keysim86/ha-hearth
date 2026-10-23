@@ -7,6 +7,16 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-24
+
+### Dodano
+- **Dom: kafelek PAYBACK** obok skrzynki pocztowej i odpadów — dla każdego konta z encjami
+  `sensor.payback_<konto>_stan` (automat aktywujący kupony payback.pl, encje z autodiscovery MQTT): punkty °P,
+  liczba aktywnych kuponów i kuponów do aktywacji, kiedy automat ostatnio sprawdzał konto, przycisk „Aktywuj”
+  (`button.payback_<konto>_aktywuj_kupony`). Stan wymagający uwagi (wygasła sesja, blokada strony, brak ciasteczek,
+  błąd, nie wszystkie kupony) wyróżniony ramką i opisem; w trakcie aktywacji ikona pulsuje, a przycisk jest
+  nieaktywny. Kliknięcie ikony otwiera historię punktów. Bez encji PAYBACK kafelka nie ma
+
 ## [0.8.0] - 2026-10-16
 
 ### Dodano

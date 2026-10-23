@@ -376,6 +376,13 @@ dialog.pdlg { width: min(720px, calc(100% - 24px)); }
 .box2.mail.full { border-color: var(--air); }
 .box2.mail.full .gico { background: var(--air-soft); color: var(--air); }
 .box2.waste { grid-template-columns: 1fr; gap: 4px; }
+.box2.payback .gico { border: 0; padding: 0; font: inherit; cursor: pointer; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
+.box2.payback .gico:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.box2.payback .pbstan { color: var(--muted); }
+.box2.payback.warn { border-color: var(--warn); }
+.box2.payback.warn .gico { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, var(--surface-2)); }
+.box2.payback.warn .pbstan { color: var(--warn); font-weight: 600; }
+@media (prefers-reduced-motion: no-preference) { .box2.payback.busy .gico { animation: pulse 1.2s ease-in-out infinite; } }
 .box2.waste h3 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .wrow { display: grid; grid-template-columns: 26px 1fr auto 74px; gap: 8px; align-items: center; font-size: 14px; padding: 4px 0; border-top: 1px solid var(--line); }
 .wrow:first-of-type { border-top: 0; }
