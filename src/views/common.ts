@@ -24,6 +24,8 @@ export interface Actions {
   setUi(key: string, value: string): void;
   /** Okno z mapą lokalizacji osoby (albo innego lokalizatora, np. auta). */
   openPerson(entity: string): void;
+  /** Okno z listą kuponów PAYBACK konta (sensor.payback_<konto>_kupony). */
+  openPayback(konto: string): void;
   /** Okno „więcej informacji” HA (np. kamera na żywo, historia encji). */
   moreInfo(entity: string): void;
   /** Dowolna usługa HA (bramy, termostaty kotła). */

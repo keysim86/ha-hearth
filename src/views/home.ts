@@ -9,7 +9,6 @@ import { areaOf } from "../model";
 import { entityName, since, sinceLabel, st, type Ctx } from "./common";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
-const ticketIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h16a1 1 0 0 1 1 1v3a2.5 2.5 0 0 0 0 5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a2.5 2.5 0 0 0 0-5V6a1 1 0 0 1 1-1Zm10 2v2h2V7Zm0 4v2h2v-2Zm0 4v2h2v-2Z"></path></svg>`;
 
 const COLORS = ["#38bdf8", "#f472b6", "#a78bfa", "#fbbf24", "#34d399", "#fb7185", "#60a5fa", "#f59e0b"];
 const DAY_NAMES = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"];
@@ -136,7 +135,8 @@ const PAYBACK_STATE: Record<string, [string, boolean]> = {
   blad: ["błąd ostatniego przebiegu", true],
 };
 
-/** Kafelek na konto: sensor.payback_<konto>_stan (+ _punkty, _aktywne, _do_aktywacji, button …_aktywuj_kupony). */
+/** Karta na konto (wygląd karty PAYBACK): sensor.payback_<konto>_stan, _punkty, _aktywne, _do_aktywacji,
+ *  _ostatnie_uruchomienie, button …_aktywuj_kupony; kliknięcie = okno z listą kuponów (_kupony). */
 function payback(ctx: Ctx): TemplateResult[] {
   const h = ctx.hass;
   const konta = Object.keys(h.states)
@@ -150,16 +150,64 @@ function payback(ctx: Ctx): TemplateResult[] {
     const pkt = num(st(ctx, id("punkty"))), akt = num(st(ctx, id("aktywne"))), doAkt = num(st(ctx, id("do_aktywacji")));
     const kiedy = st(ctx, id("ostatnie_uruchomienie"));
     const btn = `button.payback_${k}_aktywuj_kupony`;
-    const imie = konta.length > 1 ? ` · ${k.charAt(0).toUpperCase()}${k.slice(1)}` : "";
-    return html`<div class="box2 payback ${uwaga ? "warn" : ""} ${stan === "w_toku" ? "busy" : ""}">
-      <button type="button" class="gico" aria-label="PAYBACK: historia punktów" @click=${() => ctx.actions.moreInfo(id("punkty"))}>${ticketIcon}</button>
-      <span class="gtxt"><b>PAYBACK${imie} · ${round(pkt)} °P</b>
-        <small>${akt !== null ? `${round(akt)} aktywnych kuponów` : "kupony: brak danych"}${doAkt ? ` · ${round(doAkt)} do aktywacji` : ""}${kiedy && Date.parse(kiedy) ? ` · sprawdzone ${since(kiedy)} temu` : ""}</small>
-        ${opis ? html`<small class="pbstan">${opis}</small>` : nothing}</span>
-      ${h.states[btn] ? html`<button class="btn" type="button" ?disabled=${stan === "w_toku"}
-        @click=${() => ctx.actions.call("button", "press", { entity_id: btn })}>Aktywuj</button>` : nothing}
+    const lista = Boolean(h.states[id("kupony")]);
+    const otworz = () => (lista ? ctx.actions.openPayback(k) : ctx.actions.moreInfo(id("punkty")));
+    const stop = (e: Event, f: () => void) => { e.stopPropagation(); f(); };
+    return html`<div class="pbcard ${uwaga ? "warn" : ""} ${stan === "w_toku" ? "busy" : ""}" role="button" tabindex="0"
+        aria-label="PAYBACK: ${lista ? "lista kuponów" : "historia punktów"}" @click=${otworz}
+        @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), otworz())}>
+      <div class="pbtop"><span class="pbmark">PAYBACK</span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
+      <div class="pbpts"><b>${round(pkt)}</b><span>°P</span></div>
+      <div class="pbinfo">${akt !== null ? `${round(akt)} aktywnych kuponów` : "kupony: brak danych"}${doAkt ? ` · ${round(doAkt)} do aktywacji` : ""}${kiedy && Date.parse(kiedy) ? ` · sprawdzone ${since(kiedy)} temu` : ""}</div>
+      ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
+      <div class="pbacts">
+        ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
+        ${h.states[btn] ? html`<button class="pbbtn" type="button" ?disabled=${stan === "w_toku"}
+          @click=${(e: Event) => stop(e, () => ctx.actions.call("button", "press", { entity_id: btn }))}>Aktywuj</button>` : nothing}
+      </div>
     </div>`;
   });
+}
+
+interface Kupon { id: string; partner: string; korzysc: string; warunek: string; opis: string; do: string; online: boolean; link: string | null; logo: string }
+
+const PB_FILTRY: Array<[string, string]> = [["all", "Wszystkie"], ["online", "Online"], ["sklep", "W sklepie"]];
+
+/** Treść okna kuponów: filtr online/w sklepie, wyszukiwanie po sklepie, kupony od kończących się najwcześniej. */
+export function paybackCoupons(ctx: Ctx, konto: string): TemplateResult {
+  const s = ctx.hass.states[`sensor.payback_${konto}_kupony`];
+  const wszystkie = ((s?.attributes.kupony ?? []) as Kupon[]).filter((k) => k && k.id);
+  const filtr = PB_FILTRY.some(([f]) => f === ctx.ui["payback.filtr"]) ? ctx.ui["payback.filtr"] : "all";
+  const szukaj = (ctx.ui["payback.szukaj"] ?? "").trim().toLowerCase();
+  const ile = { all: wszystkie.length, online: wszystkie.filter((k) => k.online).length, sklep: wszystkie.filter((k) => !k.online).length } as Record<string, number>;
+  const widoczne = wszystkie.filter((k) => (filtr === "all" || (filtr === "online") === k.online) && (!szukaj || `${k.partner} ${k.warunek}`.toLowerCase().includes(szukaj)));
+  const dzis = new Date();
+  dzis.setHours(0, 0, 0, 0);
+  const zakt = s?.attributes.zaktualizowano as string | undefined;
+  return html`<div class="pbbar">
+      <div class="seg2" role="tablist" aria-label="Rodzaj kuponów">${PB_FILTRY.map(([f, label]) => html`<button type="button" role="tab"
+        aria-selected=${f === filtr ? "true" : "false"} class=${f === filtr ? "on" : ""} @click=${() => ctx.actions.setUi("payback.filtr", f)}>${label} (${ile[f]})</button>`)}</div>
+      <input class="pbsearch" type="search" placeholder="Szukaj sklepu…" aria-label="Szukaj sklepu" .value=${ctx.ui["payback.szukaj"] ?? ""}
+        @input=${(e: Event) => ctx.actions.setUi("payback.szukaj", (e.target as HTMLInputElement).value)} />
+    </div>
+    <small class="pbmeta">${zakt && Date.parse(zakt) ? `Stan z ${sinceLabel(ctx, zakt).replace(/^od /, "")}. ` : ""}„Do sklepu” otwiera ten sam link co przycisk „Użyj online” na payback.pl — z naliczaniem punktów.</small>
+    ${widoczne.length
+      ? html`<div class="pblist">${widoczne.map((k) => {
+          const d = Date.parse(k.do);
+          const dni = Number.isNaN(d) ? null : Math.floor((d - dzis.getTime()) / 864e5);
+          const kiedy = dni === null ? "" : dni <= 0 ? "kończy się dziś" : dni === 1 ? "kończy się jutro" : `ważny do ${new Date(d).getDate()}.${String(new Date(d).getMonth() + 1).padStart(2, "0")}`;
+          return html`<div class="pbk">
+            <span class="pblogo">${k.logo ? html`<img src=${k.logo} alt="" loading="lazy" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} />` : nothing}<i>${(k.partner || "?").slice(0, 1)}</i></span>
+            <span class="pbktxt"><b>${k.partner}</b>${k.korzysc ? html`<span class="pbben">${k.korzysc}</span>` : nothing}
+              ${k.warunek ? html`<small>${k.warunek}</small>` : nothing}<small class="pbdo ${dni !== null && dni <= 1 ? "soon" : ""}">${kiedy}${k.online ? " · online" : " · w sklepie"}</small></span>
+            ${k.link
+              ? html`<a class="btn hot" href=${k.link} target="_blank" rel="noopener noreferrer">Do sklepu ↗</a>`
+              : k.online
+                ? html`<a class="btn" href="https://www.payback.pl/aktywne-kupony" target="_blank" rel="noopener noreferrer">PAYBACK ↗</a>`
+                : html`<span class="pbsklep">pokaż kartę<br />przy kasie</span>`}
+          </div>`;
+        })}</div>`
+      : html`<div class="empty">${wszystkie.length ? "Brak kuponów dla tego filtra." : "Lista kuponów pojawi się po najbliższym przebiegu automatu."}</div>`}`;
 }
 
 // Kolory pojemników jak w polskiej segregacji (bio brązowy, szkło zielony, papier niebieski, metale i tworzywa żółty).
