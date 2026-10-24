@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-24
+
 ### Dodano
 - **PAYBACK: lista kuponów** — okno z aktywnymi kuponami konta (atrybut `kupony` encji `sensor.payback_<konto>_kupony`):
   logo, sklep, korzyść („7x więcej °P”), warunek, ważność (kończące się dziś/jutro wyróżnione), online / w sklepie;
@@ -17,7 +19,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 ### Zmieniono
 - **Dom: kafelek PAYBACK wygląda jak karta PAYBACK** — granatowo-niebieska karta z napisem PAYBACK i dużą liczbą
   punktów, przyciski „Kupony” (okno z listą) i „Aktywuj”; kliknięcie karty otwiera listę kuponów (bez encji listy —
-  historię punktów); stan wymagający uwagi jako żółta plakietka i obwódka
+  historię punktów); stan wymagający uwagi jako żółta plakietka i obwódka — także nowe stany automatu
+  `captcha` (logowanie zatrzymała captcha) i `logowanie_nieudane`
 
 ## [0.9.0] - 2026-10-24
 

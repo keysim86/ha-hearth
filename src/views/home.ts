@@ -132,6 +132,8 @@ const PAYBACK_STATE: Record<string, [string, boolean]> = {
   sesja_wygasla: ["sesja wygasła — wgraj nowe ciasteczka", true],
   blokada: ["strona zablokowała automat", true],
   brak_ciasteczek: ["brak ciasteczek — wgraj je w kontenerze", true],
+  captcha: ["logowanie zatrzymała captcha — wgraj ciasteczka", true],
+  logowanie_nieudane: ["automat nie zalogował się hasłem", true],
   blad: ["błąd ostatniego przebiegu", true],
 };
 
