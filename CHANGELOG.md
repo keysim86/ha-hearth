@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-25
+
 ### Dodano
 - **AGD: konserwacja zmywarki** — na karcie zmywarki (hOn) sekcja „Konserwacja”: filtr, ramiona spryskujące
   oraz pielęgnacja i odkamienianie z liczbą cykli od ostatniego razu, limitem, datą i paskiem (zielony, od 80%
@@ -249,7 +251,11 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/keysim86/ha-hearth/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/keysim86/ha-hearth/compare/v0.9.0...v0.10.0
+[0.9.0]: https://github.com/keysim86/ha-hearth/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/keysim86/ha-hearth/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/keysim86/ha-hearth/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/keysim86/ha-hearth/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/keysim86/ha-hearth/compare/v0.4.0...v0.5.0
