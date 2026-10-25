@@ -7,6 +7,14 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Karty PAYBACK i Lidl Plus: kod do zeskanowania przy kasie** — przycisk „Karta” na obu kartach otwiera okno
+  z kodem karty na białym tle (także w ciemnym motywie) i numerem pod spodem: PAYBACK jako EAN-13, Lidl Plus jako
+  kod QR. Kod liczony jest w panelu (własny koder EAN-13 i QR w `src/barcode.ts`, QR w wersjach 1–6 z korekcją M),
+  więc numer karty nie trafia do żadnego zewnętrznego generatora. Dane z encji `sensor.<automat>_<konto>_karta`
+  (stan = treść kodu, atrybuty `format`: `ean13` / `qr` i `numer`), publikowanej przez automaty; bez tej encji
+  przycisku nie ma
+
 ## [0.12.0] - 2026-10-25
 
 ### Dodano

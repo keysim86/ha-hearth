@@ -6,7 +6,8 @@ import { forecast, wmo } from "../data/weather";
 import { f1, num, round } from "../format";
 import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } from "../svg";
 import { areaOf } from "../model";
-import { entityName, since, sinceLabel, st, type Ctx } from "./common";
+import { ean13, qr } from "../barcode";
+import { entityName, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
 
@@ -123,6 +124,50 @@ function mailbox(ctx: Ctx): TemplateResult | typeof nothing {
   </div>`;
 }
 
+// ---- karty lojalnościowe: kod do zeskanowania przy kasie (sensor.<automat>_<konto>_karta) ----
+
+/** Stan encji karty = treść kodu, atrybuty `format` (ean13 / qr) i `numer` (do wyświetlenia pod kodem). */
+function cardCode(ctx: Ctx, kind: CouponKind, konto: string): { kod: string; format: string; numer: string } | null {
+  const s = ctx.hass.states[`sensor.${kind}_${konto}_karta`];
+  if (!s || ["unknown", "unavailable", ""].includes(s.state)) return null;
+  return { kod: s.state, format: String(s.attributes.format ?? ""), numer: String(s.attributes.numer ?? s.state) };
+}
+
+function cardButton(ctx: Ctx, kind: CouponKind, konto: string): TemplateResult | typeof nothing {
+  if (!cardCode(ctx, kind, konto)) return nothing;
+  return html`<button class="pbbtn" type="button"
+    @click=${(e: Event) => { e.stopPropagation(); ctx.actions.openCoupons(kind, konto, "karta"); }}>Karta</button>`;
+}
+
+function qrSvg(text: string): TemplateResult | null {
+  const m = qr(text);
+  if (!m) return null;
+  const q = 4, n = m.length + 2 * q;
+  const d = m.flatMap((row, y) => row.map((v, x) => (v ? `M${x + q} ${y + q}h1v1h-1z` : ""))).join("");
+  return html`<svg class="qr" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" role="img" aria-label="Kod QR karty">
+    <rect width=${n} height=${n} fill="#fff"></rect><path d=${d} fill="#000"></path></svg>`;
+}
+
+function eanSvg(code: string): TemplateResult | null {
+  const bits = ean13(code);
+  if (!bits) return null;
+  // Margines ciszy wg standardu: 11 modułów z lewej, 7 z prawej; kreski straży (początek, środek, koniec) dłuższe.
+  const ql = 11, w = ql + bits.length + 7, guard = new Set([0, 1, 2, 45, 46, 47, 48, 49, 92, 93, 94]);
+  const d = [...bits].map((b, i) => (b === "1" ? `M${ql + i} 2h1v${guard.has(i) ? 48 : 43}h-1z` : "")).join("");
+  return html`<svg class="ean" viewBox="0 0 ${w} 52" shape-rendering="crispEdges" role="img" aria-label="Kod kreskowy EAN-13 karty">
+    <rect width=${w} height="52" fill="#fff"></rect><path d=${d} fill="#000"></path></svg>`;
+}
+
+/** Treść okna karty: kod na białym tle (także w ciemnym motywie, bo czytnik przy kasie potrzebuje kontrastu) i numer. */
+export function loyaltyCard(ctx: Ctx, kind: CouponKind, konto: string): TemplateResult {
+  const c = cardCode(ctx, kind, konto);
+  const rysunek = !c ? null : c.format === "qr" ? qrSvg(c.kod) : c.format === "ean13" ? eanSvg(c.kod) : null;
+  return html`${rysunek
+      ? html`<div class="lkod">${rysunek}<b class="lnum">${c!.numer.replace(/(\d{4})(?=\d)/g, "$1 ")}</b></div>`
+      : html`<div class="empty">${c ? `Nie umiem narysować kodu w formacie „${c.format || "brak"}”.` : "Automat nie podał jeszcze numeru karty."}</div>`}
+    <small class="pbmeta">Przy kasie podkręć jasność ekranu i trzymaj telefon kilkanaście centymetrów od czytnika.</small>`;
+}
+
 // ---- PAYBACK: automat aktywujący kupony (stack payback, encje z autodiscovery MQTT) ----
 
 const PAYBACK_STATE: Record<string, [string, boolean]> = {
@@ -163,6 +208,7 @@ function payback(ctx: Ctx): TemplateResult[] {
       <div class="pbinfo">${akt !== null ? `${round(akt)} aktywnych kuponów` : "kupony: brak danych"}${doAkt ? ` · ${round(doAkt)} do aktywacji` : ""}${kiedy && Date.parse(kiedy) ? ` · sprawdzone ${since(kiedy)} temu` : ""}</div>
       ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
       <div class="pbacts">
+        ${cardButton(ctx, "payback", k)}
         ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
         ${h.states[btn] ? html`<button class="pbbtn" type="button" ?disabled=${stan === "w_toku"}
           @click=${(e: Event) => stop(e, () => ctx.actions.call("button", "press", { entity_id: btn }))}>Aktywuj</button>` : nothing}
@@ -271,6 +317,7 @@ function lidl(ctx: Ctx): TemplateResult[] {
       <div class="pbinfo">${info.length ? info.join(" · ") : "kupony: brak danych"}</div>
       ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
       <div class="pbacts">
+        ${cardButton(ctx, "lidl", k)}
         ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
         ${h.states[btn] ? html`<button class="pbbtn" type="button" ?disabled=${zajety}
           @click=${(e: Event) => stop(e, () => ctx.actions.call("button", "press", { entity_id: btn }))}>Aktywuj</button>` : nothing}

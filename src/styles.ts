@@ -430,6 +430,12 @@ a.pbbtn { text-decoration: none; }
 .lpchip { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px; white-space: nowrap; color: var(--muted); background: var(--surface-2); }
 .lpchip.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); }
 .lpchip.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--surface)); }
+/* okno karty: kod zawsze na białym tle */
+.lkod { background: #fff; color: #111; border-radius: 14px; padding: 18px 16px 14px; display: grid; justify-items: center; gap: 10px; }
+.lkod svg { display: block; height: auto; }
+.lkod svg.qr { width: min(100%, 300px); }
+.lkod svg.ean { width: min(100%, 440px); }
+.lnum { font-family: var(--f-num); font-size: 20px; letter-spacing: .08em; }
 .box2.waste h3 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .wrow { display: grid; grid-template-columns: 26px 1fr auto 74px; gap: 8px; align-items: center; font-size: 14px; padding: 4px 0; border-top: 1px solid var(--line); }
 .wrow:first-of-type { border-top: 0; }

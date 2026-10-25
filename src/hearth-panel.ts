@@ -12,7 +12,7 @@ import { climateTarget, discoverRooms, hasProfiles, profileValue, PROFILE_HELPER
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
 import type { Hass, Options, PanelInfo, Route, Style, Tab } from "./types";
-import type { Actions, CouponKind, Ctx } from "./views/common";
+import type { Actions, CouponKind, CouponView, Ctx } from "./views/common";
 import { devices } from "./views/common";
 import { detail } from "./views/detail";
 import { dial } from "./views/dials";
@@ -22,7 +22,7 @@ import { outdoor } from "./views/outdoor";
 import { tile } from "./views/tiles";
 import { boilerView } from "./views/boiler";
 import { energyView } from "./views/energy";
-import { homeView, lidlCoupons, paybackCoupons, personInfo, tileMap, toggleFor, wasteToggles } from "./views/home";
+import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, personInfo, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
 import { camerasView } from "./views/cameras";
@@ -141,8 +141,8 @@ export class HearthPanel extends LitElement {
   @state() private toastText = "";
   @state() private ui: Record<string, string> = readUi();
   @state() private person: string | null = null;
-  /** Automat i konto, których lista kuponów jest otwarta w oknie. */
-  @state() private coupons: { kind: CouponKind; konto: string } | null = null;
+  /** Automat i konto, których lista kuponów albo karta jest otwarta w oknie. */
+  @state() private coupons: { kind: CouponKind; konto: string; view: CouponView } | null = null;
   @state() private sched: SchedEdit | null = null;
   private ebusd = new EbusdTimers();
 
@@ -366,8 +366,8 @@ export class HearthPanel extends LitElement {
     openPerson: (entity: string) => {
       this.person = entity;
     },
-    openCoupons: (kind: CouponKind, konto: string) => {
-      this.coupons = { kind, konto };
+    openCoupons: (kind: CouponKind, konto: string, view: CouponView = "kupony") => {
+      this.coupons = { kind, konto, view };
     },
     moreInfo: (entity: string) => {
       this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: entity }, bubbles: true, composed: true }));
@@ -512,9 +512,9 @@ export class HearthPanel extends LitElement {
         @click=${(e: Event) => e.target === this.couponsDialog && this.couponsDialog?.close()}>
       ${c
         ? html`<div class="set-in">
-            <div class="dhead"><h2 id="pb-tytul">${c.kind === "lidl" ? "Kupony Lidl Plus" : "Kupony PAYBACK"}</h2>
+            <div class="dhead"><h2 id="pb-tytul">${c.view === "karta" ? "Karta" : "Kupony"} ${c.kind === "lidl" ? "Lidl Plus" : "PAYBACK"}</h2>
               <button class="btn" type="button" @click=${() => this.couponsDialog?.close()}>Zamknij</button></div>
-            ${c.kind === "lidl" ? lidlCoupons(ctx, c.konto) : paybackCoupons(ctx, c.konto)}
+            ${c.view === "karta" ? loyaltyCard(ctx, c.kind, c.konto) : c.kind === "lidl" ? lidlCoupons(ctx, c.konto) : paybackCoupons(ctx, c.konto)}
           </div>`
         : nothing}
     </dialog>`;
