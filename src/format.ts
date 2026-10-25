@@ -8,6 +8,9 @@ export const num = (v: unknown): number | null => {
 export const f1 = (v: number | null): string =>
   v === null ? "—" : v.toLocaleString("pl-PL", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
+/** Kwota w złotych z groszami („692,61 zł”). */
+export const zl = (v: number | null | undefined): string =>
+  v === null || v === undefined ? "—" : `${v.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`;
 export const round = (v: number | null): string => (v === null ? "—" : Math.round(v).toLocaleString("pl-PL"));
 
 /** Minuta doby z napisu „HH:MM[:SS]”. */

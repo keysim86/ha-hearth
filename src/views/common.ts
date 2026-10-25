@@ -19,16 +19,16 @@ import {
 import { dryIcon, fanIcon, flame, icon, timeline, type Segment } from "../svg";
 import type { Hass, Options } from "../types";
 
-/** Automat kuponów z encjami z autodiscovery MQTT: stack payback albo lidl-plus. */
-export type CouponKind = "payback" | "lidl";
-export type CouponView = "kupony" | "karta";
+/** Automat konta lojalnościowego z encjami z autodiscovery MQTT: stack payback, lidl-plus albo biedronka. */
+export type CouponKind = "payback" | "lidl" | "biedronka";
+export type CouponView = "kupony" | "karta" | "paragony";
 
 export interface Actions {
   toggleRoom(areaId: string): void;
   setUi(key: string, value: string): void;
   /** Okno z mapą lokalizacji osoby (albo innego lokalizatora, np. auta). */
   openPerson(entity: string): void;
-  /** Okno konta automatu: lista kuponów (sensor.<automat>_<konto>_kupony) albo kod karty (…_karta). */
+  /** Okno konta automatu: lista kuponów (sensor.<automat>_<konto>_kupony), kod karty (…_karta) albo e-paragony (…_paragony). */
   openCoupons(kind: CouponKind, konto: string, view?: CouponView): void;
   /** Okno „więcej informacji” HA (np. kamera na żywo, historia encji). */
   moreInfo(entity: string): void;

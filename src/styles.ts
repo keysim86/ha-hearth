@@ -436,6 +436,42 @@ a.pbbtn { text-decoration: none; }
 .lkod svg.qr { width: min(100%, 300px); }
 .lkod svg.ean { width: min(100%, 440px); }
 .lnum { font-family: var(--f-num); font-size: 20px; letter-spacing: .08em; }
+.lnum.big { font-size: 26px; padding: 18px 0; }
+/* logotypy kart (encje image automatów) */
+.lpbrand { display: inline-flex; align-items: center; }
+.lplogo { display: block; height: 24px; width: auto; border-radius: 4px; }
+.lplogo.pbl { height: 28px; border-radius: 6px; }
+.lpbrand .lplogo:not([hidden]) + .pbmark { display: none; }
+.bdmark .lplogo { height: 30px; border-radius: 0; }
+/* Moja Biedronka: czerwona karta z kropkami jak na biedronce */
+.bdcard { background: radial-gradient(120% 140% at 100% 0%, #ff4b4b 0%, transparent 55%), linear-gradient(135deg, #a8000b 0%, #d9000f 55%, #ef1c24 100%); }
+.bdcard::before, .bdcard::after { background: rgba(0, 0, 0, .16); }
+.bdcard::before { width: 120px; height: 120px; right: -30px; bottom: -40px; }
+.bdcard::after { width: 58px; height: 58px; right: 108px; top: -18px; }
+/* e-paragony */
+.rcplist { gap: 6px; }
+.rcpmon { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline;
+  background: var(--surface); padding: 8px 2px 4px; font-size: 13px; color: var(--muted); }
+.rcpmon b { color: var(--fg); font-size: 14px; text-transform: capitalize; }
+.rcp { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.rcp > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 9px 12px; }
+.rcp > summary::-webkit-details-marker { display: none; }
+.rcp > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 12px; }
+.rcp[open] > summary { border-bottom: 1px solid var(--line); }
+.rcpd { font-size: 13.5px; white-space: nowrap; color: var(--muted); }
+.rcpd b { color: var(--fg); }
+.rcps { font-size: 12.5px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rcpt { font-family: var(--f-num); font-size: 15px; white-space: nowrap; }
+.rcpr { color: var(--ok); font-weight: 700; font-size: 12px; white-space: nowrap; }
+.rcpi { display: grid; padding: 4px 12px 8px; }
+.rcpp { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline; padding: 4px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.rcpp:first-child { border-top: 0; }
+.rcpp > span { display: grid; min-width: 0; }
+.rcpp > small { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.rcpp > b { font-family: var(--f-num); white-space: nowrap; }
+.rcp > .pbmeta { display: block; padding: 0 12px 10px; }
+.rcphit { font-size: 13.5px; background: var(--accent-soft, var(--surface-2)); border-radius: 10px; padding: 8px 12px; }
+@media (max-width: 480px) { .rcp > summary { grid-template-columns: 1fr auto auto; } .rcp > summary .rcps { grid-column: 1 / -1; grid-row: 2; } }
 .box2.waste h3 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .wrow { display: grid; grid-template-columns: 26px 1fr auto 74px; gap: 8px; align-items: center; font-size: 14px; padding: 4px 0; border-top: 1px solid var(--line); }
 .wrow:first-of-type { border-top: 0; }

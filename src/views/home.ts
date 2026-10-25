@@ -1,12 +1,12 @@
-// Zakładka Dom: osoby, bramy i garaże, skrzynka pocztowa, odpady, PAYBACK, Lidl Plus, prognoza pogody.
+// Zakładka Dom: osoby, bramy i garaże, skrzynka pocztowa, odpady, PAYBACK, Lidl Plus, Moja Biedronka, prognoza pogody.
 
 import { html, nothing, type TemplateResult } from "lit";
 import { stem, wasteEvents } from "../data/waste";
 import { forecast, wmo } from "../data/weather";
-import { f1, num, round } from "../format";
+import { f1, num, round, zl } from "../format";
 import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } from "../svg";
 import { areaOf } from "../model";
-import { ean13, qr } from "../barcode";
+import { code128, ean13, qr } from "../barcode";
 import { entityName, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
@@ -126,7 +126,7 @@ function mailbox(ctx: Ctx): TemplateResult | typeof nothing {
 
 // ---- karty lojalnościowe: kod do zeskanowania przy kasie (sensor.<automat>_<konto>_karta) ----
 
-/** Stan encji karty = treść kodu, atrybuty `format` (ean13 / qr) i `numer` (do wyświetlenia pod kodem). */
+/** Stan encji karty = treść kodu, atrybuty `format` (ean13 / qr / code128 / gs1-128 / tekst = sam numer) i `numer`. */
 function cardCode(ctx: Ctx, kind: CouponKind, konto: string): { kod: string; format: string; numer: string } | null {
   const s = ctx.hass.states[`sensor.${kind}_${konto}_karta`];
   if (!s || ["unknown", "unavailable", ""].includes(s.state)) return null;
@@ -158,14 +158,158 @@ function eanSvg(code: string): TemplateResult | null {
     <rect width=${w} height="52" fill="#fff"></rect><path d=${d} fill="#000"></path></svg>`;
 }
 
+function c128Svg(code: string, gs1: boolean): TemplateResult | null {
+  const bits = code128(code, gs1);
+  if (!bits) return null;
+  const q = 10, w = q + bits.length + q; // margines ciszy Code 128: min. 10 modułów z każdej strony
+  const d = [...bits].map((b, i) => (b === "1" ? `M${q + i} 2h1v46h-1z` : "")).join("");
+  return html`<svg class="ean" viewBox="0 0 ${w} 50" shape-rendering="crispEdges" role="img" aria-label="Kod kreskowy ${gs1 ? "GS1-128" : "Code 128"} karty">
+    <rect width=${w} height="50" fill="#fff"></rect><path d=${d} fill="#000"></path></svg>`;
+}
+
 /** Treść okna karty: kod na białym tle (także w ciemnym motywie, bo czytnik przy kasie potrzebuje kontrastu) i numer. */
 export function loyaltyCard(ctx: Ctx, kind: CouponKind, konto: string): TemplateResult {
   const c = cardCode(ctx, kind, konto);
-  const rysunek = !c ? null : c.format === "qr" ? qrSvg(c.kod) : c.format === "ean13" ? eanSvg(c.kod) : null;
+  const rysunek = !c ? null : c.format === "qr" ? qrSvg(c.kod) : c.format === "ean13" ? eanSvg(c.kod)
+    : c.format === "code128" || c.format === "gs1-128" ? c128Svg(c.kod, c.format === "gs1-128") : null;
+  const numer = c && c.numer && c.numer !== "null" ? c.numer.replace(/(\d{4})(?=\d)/g, "$1 ") : "";
   return html`${rysunek
-      ? html`<div class="lkod">${rysunek}<b class="lnum">${c!.numer.replace(/(\d{4})(?=\d)/g, "$1 ")}</b></div>`
-      : html`<div class="empty">${c ? `Nie umiem narysować kodu w formacie „${c.format || "brak"}”.` : "Automat nie podał jeszcze numeru karty."}</div>`}
-    <small class="pbmeta">Przy kasie podkręć jasność ekranu i trzymaj telefon kilkanaście centymetrów od czytnika.</small>`;
+      ? html`<div class="lkod">${rysunek}<b class="lnum">${numer}</b></div>`
+      : numer
+        ? html`<div class="lkod"><b class="lnum big">${numer}</b></div>
+          <small class="pbmeta">${c!.format === "tekst" ? "Automat nie zna jeszcze formatu kodu z aplikacji — przy kasie podaj numer karty." : `Kodu w formacie „${c!.format}” panel jeszcze nie rysuje — przy kasie podaj numer karty.`}</small>`
+        : html`<div class="empty">Automat nie podał jeszcze numeru karty.</div>`}
+    ${rysunek ? html`<small class="pbmeta">Przy kasie podkręć jasność ekranu i trzymaj telefon kilkanaście centymetrów od czytnika.</small>` : nothing}`;
+}
+
+/** Oficjalne logo z encji image.<automat>_<konto>_logo (automat pobiera je z serwera marki, HA je serwuje). */
+function logoImg(ctx: Ctx, kind: CouponKind, konto: string, cls = ""): TemplateResult | null {
+  const src = ctx.hass.states[`image.${kind}_${konto}_logo`]?.attributes.entity_picture as string | undefined;
+  return src ? html`<img class="lplogo ${cls}" src=${src} alt="" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} />` : null;
+}
+
+const MIESIACE = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"];
+const MIESIACE_W = ["styczniu", "lutym", "marcu", "kwietniu", "maju", "czerwcu", "lipcu", "sierpniu", "wrześniu", "październiku", "listopadzie", "grudniu"];
+
+/** „523,40 zł w październiku” z sensor.<automat>_<konto>_wydatki_w_miesiacu (atrybut `miesiac` = RRRR-MM); pusto bez zakupów. */
+function monthSpend(ctx: Ctx, kind: CouponKind, konto: string): string {
+  const s = ctx.hass.states[`sensor.${kind}_${konto}_wydatki_w_miesiacu`];
+  const v = num(s?.state), m = Number(String(s?.attributes.miesiac ?? "").slice(5, 7));
+  return !v ? "" : `${zl(v)} w ${MIESIACE_W[m - 1] ?? "tym miesiącu"}`; // 0 = bez zakupów w tym miesiącu
+}
+
+function receiptsButton(ctx: Ctx, kind: CouponKind, konto: string): TemplateResult | typeof nothing {
+  if (!ctx.hass.states[`sensor.${kind}_${konto}_paragony`]) return nothing;
+  return html`<button class="pbbtn" type="button"
+    @click=${(e: Event) => { e.stopPropagation(); ctx.actions.openCoupons(kind, konto, "paragony"); }}>Paragony</button>`;
+}
+
+interface Pozycja { nazwa: string; ilosc?: number | null; jednostka?: string | null; cena?: number | null; wartosc?: number | null; rabat?: number; rabaty?: string[] }
+interface Paragon { id: string; data: string; sklep?: string; adres?: string; suma?: number | null; rabat?: number; rabat_lidl_plus?: number; pozycje?: Pozycja[] }
+
+const liczba = (v: number) => v.toLocaleString("pl-PL", { maximumFractionDigits: 3 });
+
+function receiptRow(ctx: Ctx, r: Paragon, filtr: ((p: Pozycja) => boolean) | null): TemplateResult {
+  const t = Date.parse(r.data), d = new Date(t);
+  const pozycje = (r.pozycje ?? []).filter((p) => !filtr || filtr(p));
+  return html`<details class="rcp" ?open=${Boolean(filtr)}>
+    <summary><span class="rcpd"><b>${DAY_NAMES[d.getDay()]} ${dm(t)}</b> ${ctx.clock.hm(t)}</span>
+      <span class="rcps">${r.adres || r.sklep || ""}</span>
+      <b class="rcpt">${zl(r.suma)}</b>${r.rabat ? html`<span class="rcpr">−${zl(r.rabat)}</span>` : nothing}</summary>
+    ${pozycje.length
+      ? html`<div class="rcpi">${pozycje.map((p) => html`<div class="rcpp">
+          <span>${p.nazwa}${p.rabat ? html`<small class="rcpr">${(p.rabaty ?? ["rabat"]).join(", ")} ${zl(p.rabat)}</small>` : nothing}</span>
+          <small>${p.ilosc !== null && p.ilosc !== undefined && !(p.ilosc === 1 && !p.jednostka) ? `${liczba(p.ilosc)}${p.jednostka ? ` ${p.jednostka}` : ""} × ${zl(p.cena)}` : ""}</small>
+          <b>${zl(p.wartosc)}</b></div>`)}</div>`
+      : html`<small class="pbmeta">Ten paragon nie ma listy produktów w aplikacji.</small>`}
+    ${r.rabat && !filtr ? html`<small class="pbmeta">Rabaty razem ${zl(r.rabat)}${r.rabat_lidl_plus ? ` (Lidl Plus ${zl(r.rabat_lidl_plus)})` : ""}</small>` : nothing}
+  </details>`;
+}
+
+/** Okno e-paragonów (sensor.<automat>_<konto>_paragony, atrybut `paragony`): miesiące z sumą i rabatami, paragony do
+ *  rozwinięcia z pozycjami; wyszukiwanie po produkcie pokazuje tylko pasujące pozycje i ich sumę. */
+export function receiptsView(ctx: Ctx, kind: CouponKind, konto: string): TemplateResult {
+  const s = ctx.hass.states[`sensor.${kind}_${konto}_paragony`];
+  const wszystkie = ((s?.attributes.paragony ?? []) as Paragon[]).filter((r) => r && r.id && Date.parse(r.data))
+    .sort((a, b) => Date.parse(b.data) - Date.parse(a.data));
+  const klucz = `${kind}.paragony.szukaj`;
+  const szukaj = (ctx.ui[klucz] ?? "").trim().toLowerCase();
+  const pasuje = (p: Pozycja) => (p.nazwa ?? "").toLowerCase().includes(szukaj);
+  const widoczne = szukaj ? wszystkie.filter((r) => (r.pozycje ?? []).some(pasuje)) : wszystkie;
+  const trafienia = szukaj ? widoczne.flatMap((r) => (r.pozycje ?? []).filter(pasuje)) : [];
+  const grupy = new Map<string, Paragon[]>();
+  for (const r of widoczne) {
+    const d = new Date(Date.parse(r.data)), m = `${d.getFullYear()}-${d.getMonth()}`;
+    grupy.set(m, [...(grupy.get(m) ?? []), r]);
+  }
+  const zakt = s?.attributes.zaktualizowano as string | undefined, ile = num(s?.attributes.wszystkich);
+  const suma = (l: Array<{ suma?: number | null; wartosc?: number | null; rabat?: number }>, f: "suma" | "wartosc") =>
+    l.reduce((a, x) => a + (x[f] ?? 0) + (f === "wartosc" ? x.rabat ?? 0 : 0), 0);
+  return html`<div class="pbbar">
+      <input class="pbsearch" type="search" placeholder="Szukaj produktu…" aria-label="Szukaj produktu" .value=${ctx.ui[klucz] ?? ""}
+        @input=${(e: Event) => ctx.actions.setUi(klucz, (e.target as HTMLInputElement).value)} />
+    </div>
+    <small class="pbmeta">${zakt && Date.parse(zakt) ? `Stan z ${sinceLabel(ctx, zakt).replace(/^od /, "")}. ` : ""}${ile !== null && ile > wszystkie.length ? `Ostatnie ${wszystkie.length} z ${ile} paragonów.` : ""}</small>
+    ${szukaj && widoczne.length ? html`<div class="rcphit">„${ctx.ui[klucz]?.trim()}”: ${trafienia.length} ${odmiana(trafienia.length, "pozycja", "pozycje", "pozycji")} w ${widoczne.length} ${odmiana(widoczne.length, "paragonie", "paragonach", "paragonach")}, razem <b>${zl(suma(trafienia, "wartosc"))}</b></div>` : nothing}
+    ${widoczne.length
+      ? html`<div class="pblist rcplist">${[...grupy.values()].map((lista) => {
+          const d = new Date(Date.parse(lista[0].data)), rabat = lista.reduce((a, r) => a + (r.rabat ?? 0), 0);
+          return html`<div class="rcpmon"><b>${MIESIACE[d.getMonth()]} ${d.getFullYear()}</b>
+              <span>${zl(suma(lista, "suma"))} · ${lista.length} ${odmiana(lista.length, "paragon", "paragony", "paragonów")}${rabat > 0 ? ` · rabaty ${zl(rabat)}` : ""}</span></div>
+            ${lista.map((r) => receiptRow(ctx, r, szukaj ? pasuje : null))}`;
+        })}</div>`
+      : html`<div class="empty">${wszystkie.length ? "Nie ma tego produktu na ostatnich paragonach." : "E-paragony pojawią się po najbliższym przebiegu automatu."}</div>`}`;
+}
+
+// ---- Moja Biedronka: automat e-paragonów (stack biedronka, encje z autodiscovery MQTT) ----
+
+const BIEDRONKA_STATE: Record<string, [string, boolean]> = {
+  ok: ["", false],
+  w_toku: ["pobieram paragony…", false],
+  logowanie: ["logowanie w toku…", false],
+  wymaga_logowania: ["trzeba zalogować się w panelu automatu", true],
+  blad: ["błąd ostatniego przebiegu", true],
+};
+
+/** Karta na konto w barwach Moja Biedronka: wydatki w miesiącu (…_wydatki_w_miesiacu), ostatni paragon (…_paragony),
+ *  stan automatu (…_stan, atrybut `panel`), przyciski Karta i Paragony. */
+function biedronka(ctx: Ctx): TemplateResult[] {
+  const h = ctx.hass;
+  const konta = Object.keys(h.states)
+    .filter((e) => /^sensor\.biedronka_[a-z0-9_]+_stan$/.test(e) && !h.entities[e]?.hidden)
+    .map((e) => e.slice("sensor.biedronka_".length, -"_stan".length))
+    .sort();
+  return konta.map((k) => {
+    const id = (s: string) => `sensor.biedronka_${k}_${s}`;
+    const stan = st(ctx, id("stan")) ?? "unknown";
+    const [opis, uwaga] = BIEDRONKA_STATE[stan] ?? (stan === "unavailable" ? ["automat nie odpowiada", true] : ["", false]);
+    const wyd = h.states[id("wydatki_w_miesiacu")], kwota = num(wyd?.state);
+    const m = Number(String(wyd?.attributes.miesiac ?? "").slice(5, 7));
+    const ostatni = ((h.states[id("paragony")]?.attributes.paragony ?? []) as Paragon[])
+      .filter((r) => r && Date.parse(r.data)).sort((a, b) => Date.parse(b.data) - Date.parse(a.data))[0];
+    const kiedy = st(ctx, id("ostatnie_uruchomienie"));
+    const panel = h.states[id("stan")]?.attributes.panel as string | undefined;
+    const lista = Boolean(h.states[id("paragony")]);
+    const otworz = () => (lista ? ctx.actions.openCoupons("biedronka", k, "paragony") : ctx.actions.moreInfo(id("stan")));
+    const info = [
+      ostatni ? `ostatni paragon ${dm(Date.parse(ostatni.data))} · ${zl(ostatni.suma)}` : "",
+      kiedy && Date.parse(kiedy) ? `sprawdzone ${since(kiedy)} temu` : "",
+    ].filter(Boolean);
+    return html`<div class="pbcard bdcard ${uwaga ? "warn" : ""} ${stan === "w_toku" || stan === "logowanie" ? "busy" : ""}" role="button" tabindex="0"
+        aria-label="Moja Biedronka: e-paragony" @click=${otworz}
+        @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), otworz())}>
+      <div class="pbtop"><span class="lpmark bdmark">${logoImg(ctx, "biedronka", k)}Moja Biedronka</span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
+      <div class="pbpts"><b>${kwota === null ? "—" : kwota.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b><span>zł w ${MIESIACE_W[m - 1] ?? "tym miesiącu"}</span></div>
+      <div class="pbinfo">${info.length ? info.join(" · ") : "paragony: brak danych"}</div>
+      ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
+      <div class="pbacts">
+        ${cardButton(ctx, "biedronka", k)}
+        ${receiptsButton(ctx, "biedronka", k)}
+        ${uwaga && panel ? html`<a class="pbbtn" href=${panel} target="_blank" rel="noopener noreferrer"
+          @click=${(e: Event) => e.stopPropagation()}>${stan === "wymaga_logowania" ? "Zaloguj" : "Panel"} ↗</a>` : nothing}
+      </div>
+    </div>`;
+  });
 }
 
 // ---- PAYBACK: automat aktywujący kupony (stack payback, encje z autodiscovery MQTT) ----
@@ -203,7 +347,7 @@ function payback(ctx: Ctx): TemplateResult[] {
     return html`<div class="pbcard ${uwaga ? "warn" : ""} ${stan === "w_toku" ? "busy" : ""}" role="button" tabindex="0"
         aria-label="PAYBACK: ${lista ? "lista kuponów" : "historia punktów"}" @click=${otworz}
         @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), otworz())}>
-      <div class="pbtop"><span class="pbmark">PAYBACK</span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
+      <div class="pbtop"><span class="lpbrand">${logoImg(ctx, "payback", k, "pbl")}<span class="pbmark">PAYBACK</span></span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
       <div class="pbpts"><b>${round(pkt)}</b><span>°P</span></div>
       <div class="pbinfo">${akt !== null ? `${round(akt)} aktywnych kuponów` : "kupony: brak danych"}${doAkt ? ` · ${round(doAkt)} do aktywacji` : ""}${kiedy && Date.parse(kiedy) ? ` · sprawdzone ${since(kiedy)} temu` : ""}</div>
       ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
@@ -308,17 +452,19 @@ function lidl(ctx: Ctx): TemplateResult[] {
       czeka ? `${round(czeka)} ${odmiana(czeka, "czeka", "czekają", "czeka")} na start` : "",
       doAkt ? `${round(doAkt)} do aktywacji` : "",
       kiedy && Date.parse(kiedy) ? `sprawdzone ${since(kiedy)} temu` : "",
+      monthSpend(ctx, "lidl", k),
     ].filter(Boolean);
     return html`<div class="pbcard lpcard ${uwaga ? "warn" : ""} ${zajety ? "busy" : ""}" role="button" tabindex="0"
         aria-label="Lidl Plus: ${lista ? "lista kuponów" : "historia kuponów"}" @click=${otworz}
         @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), otworz())}>
-      <div class="pbtop"><span class="lpmark"><i aria-hidden="true"></i>Lidl Plus</span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
+      <div class="pbtop"><span class="lpmark">${logoImg(ctx, "lidl", k) ?? html`<i aria-hidden="true"></i>`}Lidl Plus</span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
       <div class="pbpts"><b>${round(akt)}</b><span>${akt === null ? "kupony" : odmiana(akt, "aktywny kupon", "aktywne kupony", "aktywnych kuponów")}</span></div>
       <div class="pbinfo">${info.length ? info.join(" · ") : "kupony: brak danych"}</div>
       ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
       <div class="pbacts">
         ${cardButton(ctx, "lidl", k)}
         ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
+        ${receiptsButton(ctx, "lidl", k)}
         ${h.states[btn] ? html`<button class="pbbtn" type="button" ?disabled=${zajety}
           @click=${(e: Event) => stop(e, () => ctx.actions.call("button", "press", { entity_id: btn }))}>Aktywuj</button>` : nothing}
         ${uwaga && panel ? html`<a class="pbbtn" href=${panel} target="_blank" rel="noopener noreferrer"
@@ -522,7 +668,7 @@ function weather(ctx: Ctx): TemplateResult | typeof nothing {
 }
 
 export function homeView(ctx: Ctx): TemplateResult {
-  const mail = mailbox(ctx), bins = waste(ctx), cards = [...payback(ctx), ...lidl(ctx)];
+  const mail = mailbox(ctx), bins = waste(ctx), cards = [...payback(ctx), ...lidl(ctx), ...biedronka(ctx)];
   // Karty lojalnościowe we własnym wierszu, obok siebie (w jednej siatce ze skrzynką Lidl spadał pod spód).
   const top = mail !== nothing || bins !== nothing ? html`<div class="cards two top">${mail}${bins}</div>` : nothing;
   return html`${persons(ctx)} ${gates(ctx)}

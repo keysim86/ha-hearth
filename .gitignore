@@ -5,3 +5,4 @@ __pycache__/
 dev/snapshot*.json
 dev/options.json
 dev/health*.json
+dev/loga/

@@ -7,6 +7,28 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Dom: karta Moja Biedronka** — trzecia karta lojalnościowa obok PAYBACK i Lidl Plus, czerwona w barwach Moja
+  Biedronka: wydatki w bieżącym miesiącu (`sensor.biedronka_<konto>_wydatki_w_miesiacu`), ostatni paragon (data
+  i kwota), kiedy automat ostatnio sprawdzał konto; przyciski „Karta” i „Paragony”; stan wymagający uwagi
+  (trzeba się zalogować — captcha i kod SMS w panelu automatu, błąd) jako żółta plakietka z „Zaloguj ↗”.
+  Dla każdego konta z encjami `sensor.biedronka_<konto>_stan` (automat homelab/biedronka przez MQTT)
+- **E-paragony (Lidl Plus i Moja Biedronka)** — przycisk „Paragony” otwiera okno z paragonami
+  (`sensor.<automat>_<konto>_paragony`, atrybut `paragony`): pogrupowane po miesiącach z sumą, liczbą paragonów
+  i rabatami; paragon rozwija się do listy pozycji (ilość × cena, także na wagę, wartość, rabaty jak „Lidl Plus
+  kupon −0,90 zł”), pod spodem rabaty razem (w Lidlu z kwotą z Lidl Plus); wyszukiwanie po produkcie pokazuje
+  tylko pasujące pozycje i ich sumę („mleko: 11 pozycji w 8 paragonach, razem 87,47 zł”)
+- **Logotypy na kartach** — oficjalne logo z encji `image.<automat>_<konto>_logo` (automat pobiera je z serwera
+  marki, HA je serwuje — przeglądarka nie odpytuje obcych serwerów, w repozytorium nie ma plików z logo): przed
+  nazwą Lidl Plus i Moja Biedronka, a na karcie PAYBACK logo zastępuje napis; bez encji zostaje dawny znak
+- **Kody Code 128 i GS1-128** w oknie karty (`format`: `code128` / `gs1-128`, GS1 z FNC1 po znaku startu); własny
+  koder sprawdzony dekoderem na 88 kodach
+- **Karta bez kodu do narysowania** (format `tekst` albo nieobsługiwany) pokazuje duży numer karty do podania przy kasie
+
+### Zmieniono
+- **Karta Lidl Plus** ma przycisk „Paragony” i w opisie wydatki w bieżącym miesiącu („523,40 zł w październiku”;
+  bez zakupów w miesiącu — bez tej części)
+
 ## [0.13.0] - 2026-10-25
 
 ### Dodano
