@@ -1,4 +1,4 @@
-// Zakładka Dom: osoby, bramy i garaże, skrzynka pocztowa, odpady, PAYBACK, prognoza pogody.
+// Zakładka Dom: osoby, bramy i garaże, skrzynka pocztowa, odpady, PAYBACK, Lidl Plus, prognoza pogody.
 
 import { html, nothing, type TemplateResult } from "lit";
 import { stem, wasteEvents } from "../data/waste";
@@ -153,7 +153,7 @@ function payback(ctx: Ctx): TemplateResult[] {
     const kiedy = st(ctx, id("ostatnie_uruchomienie"));
     const btn = `button.payback_${k}_aktywuj_kupony`;
     const lista = Boolean(h.states[id("kupony")]);
-    const otworz = () => (lista ? ctx.actions.openPayback(k) : ctx.actions.moreInfo(id("punkty")));
+    const otworz = () => (lista ? ctx.actions.openCoupons("payback", k) : ctx.actions.moreInfo(id("punkty")));
     const stop = (e: Event, f: () => void) => { e.stopPropagation(); f(); };
     return html`<div class="pbcard ${uwaga ? "warn" : ""} ${stan === "w_toku" ? "busy" : ""}" role="button" tabindex="0"
         aria-label="PAYBACK: ${lista ? "lista kuponów" : "historia punktów"}" @click=${otworz}
@@ -171,6 +171,15 @@ function payback(ctx: Ctx): TemplateResult[] {
   });
 }
 
+/** Dni kalendarzowe od dziś do dnia chwili `t` (0 = dziś). Od północy do północy i z zaokrągleniem, bo doba zmiany
+ *  czasu ma 23 albo 25 h — dzielenie samej różnicy przez 24 h robiło z dzisiejszego 23:59 „jutro”. */
+function dniOdDzis(t: number): number {
+  const a = new Date(t), b = new Date();
+  a.setHours(0, 0, 0, 0);
+  b.setHours(0, 0, 0, 0);
+  return Math.round((a.getTime() - b.getTime()) / 864e5);
+}
+
 interface Kupon { id: string; partner: string; korzysc: string; warunek: string; opis: string; do: string; online: boolean; link: string | null; logo: string }
 
 const PB_FILTRY: Array<[string, string]> = [["all", "Wszystkie"], ["online", "Online"], ["sklep", "W sklepie"]];
@@ -183,8 +192,6 @@ export function paybackCoupons(ctx: Ctx, konto: string): TemplateResult {
   const szukaj = (ctx.ui["payback.szukaj"] ?? "").trim().toLowerCase();
   const ile = { all: wszystkie.length, online: wszystkie.filter((k) => k.online).length, sklep: wszystkie.filter((k) => !k.online).length } as Record<string, number>;
   const widoczne = wszystkie.filter((k) => (filtr === "all" || (filtr === "online") === k.online) && (!szukaj || `${k.partner} ${k.warunek}`.toLowerCase().includes(szukaj)));
-  const dzis = new Date();
-  dzis.setHours(0, 0, 0, 0);
   const zakt = s?.attributes.zaktualizowano as string | undefined;
   return html`<div class="pbbar">
       <div class="seg2" role="tablist" aria-label="Rodzaj kuponów">${PB_FILTRY.map(([f, label]) => html`<button type="button" role="tab"
@@ -196,7 +203,7 @@ export function paybackCoupons(ctx: Ctx, konto: string): TemplateResult {
     ${widoczne.length
       ? html`<div class="pblist">${widoczne.map((k) => {
           const d = Date.parse(k.do);
-          const dni = Number.isNaN(d) ? null : Math.floor((d - dzis.getTime()) / 864e5);
+          const dni = Number.isNaN(d) ? null : dniOdDzis(d);
           const kiedy = dni === null ? "" : dni <= 0 ? "kończy się dziś" : dni === 1 ? "kończy się jutro" : `ważny do ${new Date(d).getDate()}.${String(new Date(d).getMonth() + 1).padStart(2, "0")}`;
           return html`<div class="pbk">
             <span class="pblogo">${k.logo ? html`<img src=${k.logo} alt="" loading="lazy" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} />` : nothing}<i>${(k.partner || "?").slice(0, 1)}</i></span>
@@ -207,6 +214,134 @@ export function paybackCoupons(ctx: Ctx, konto: string): TemplateResult {
               : k.online
                 ? html`<a class="btn" href="https://www.payback.pl/aktywne-kupony" target="_blank" rel="noopener noreferrer">PAYBACK ↗</a>`
                 : html`<span class="pbsklep">pokaż kartę<br />przy kasie</span>`}
+          </div>`;
+        })}</div>`
+      : html`<div class="empty">${wszystkie.length ? "Brak kuponów dla tego filtra." : "Lista kuponów pojawi się po najbliższym przebiegu automatu."}</div>`}`;
+}
+
+// ---- Lidl Plus: automat aktywujący kupony (stack lidl-plus, encje z autodiscovery MQTT) ----
+
+const LIDL_STATE: Record<string, [string, boolean]> = {
+  ok: ["", false],
+  w_toku: ["aktywuję kupony…", false],
+  logowanie: ["logowanie w toku…", false],
+  wymaga_logowania: ["trzeba zalogować się w panelu automatu", true],
+  nie_wszystkie: ["nie wszystkie kupony udało się aktywować", true],
+  blad: ["błąd ostatniego przebiegu", true],
+};
+
+/** Odmiana po liczbie: 1 kupon, 2–4 (22–24…) kupony, 5–21 kuponów. */
+function odmiana(n: number, jeden: string, kilka: string, wiele: string): string {
+  const d = n % 10, s = n % 100;
+  return n === 1 ? jeden : d >= 2 && d <= 4 && (s < 12 || s > 14) ? kilka : wiele;
+}
+
+const dm = (t: number) => `${new Date(t).getDate()}.${String(new Date(t).getMonth() + 1).padStart(2, "0")}`;
+
+/** Karta na konto w barwach Lidla: sensor.lidl_<konto>_stan (atrybut `panel` = strona logowania automatu), _aktywne,
+ *  _czekajace, _do_aktywacji, _ostatnie_uruchomienie, button …_aktywuj_kupony; kliknięcie = okno z listą (_kupony). */
+function lidl(ctx: Ctx): TemplateResult[] {
+  const h = ctx.hass;
+  const konta = Object.keys(h.states)
+    .filter((e) => /^sensor\.lidl_[a-z0-9_]+_stan$/.test(e) && !h.entities[e]?.hidden)
+    .map((e) => e.slice("sensor.lidl_".length, -"_stan".length))
+    .sort();
+  return konta.map((k) => {
+    const id = (s: string) => `sensor.lidl_${k}_${s}`;
+    const stan = st(ctx, id("stan")) ?? "unknown";
+    const [opis, uwaga] = LIDL_STATE[stan] ?? (stan === "unavailable" ? ["automat nie odpowiada", true] : ["", false]);
+    const akt = num(st(ctx, id("aktywne"))), doAkt = num(st(ctx, id("do_aktywacji"))), czeka = num(st(ctx, id("czekajace")));
+    const kiedy = st(ctx, id("ostatnie_uruchomienie"));
+    const panel = h.states[id("stan")]?.attributes.panel as string | undefined;
+    const btn = `button.lidl_${k}_aktywuj_kupony`;
+    const lista = Boolean(h.states[id("kupony")]);
+    const zajety = stan === "w_toku" || stan === "logowanie";
+    const otworz = () => (lista ? ctx.actions.openCoupons("lidl", k) : ctx.actions.moreInfo(id("aktywne")));
+    const stop = (e: Event, f: () => void) => { e.stopPropagation(); f(); };
+    const info = [
+      czeka ? `${round(czeka)} ${odmiana(czeka, "czeka", "czekają", "czeka")} na start` : "",
+      doAkt ? `${round(doAkt)} do aktywacji` : "",
+      kiedy && Date.parse(kiedy) ? `sprawdzone ${since(kiedy)} temu` : "",
+    ].filter(Boolean);
+    return html`<div class="pbcard lpcard ${uwaga ? "warn" : ""} ${zajety ? "busy" : ""}" role="button" tabindex="0"
+        aria-label="Lidl Plus: ${lista ? "lista kuponów" : "historia kuponów"}" @click=${otworz}
+        @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), otworz())}>
+      <div class="pbtop"><span class="lpmark"><i aria-hidden="true"></i>Lidl Plus</span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
+      <div class="pbpts"><b>${round(akt)}</b><span>${akt === null ? "kupony" : odmiana(akt, "aktywny kupon", "aktywne kupony", "aktywnych kuponów")}</span></div>
+      <div class="pbinfo">${info.length ? info.join(" · ") : "kupony: brak danych"}</div>
+      ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
+      <div class="pbacts">
+        ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
+        ${h.states[btn] ? html`<button class="pbbtn" type="button" ?disabled=${zajety}
+          @click=${(e: Event) => stop(e, () => ctx.actions.call("button", "press", { entity_id: btn }))}>Aktywuj</button>` : nothing}
+        ${uwaga && panel ? html`<a class="pbbtn" href=${panel} target="_blank" rel="noopener noreferrer"
+          @click=${(e: Event) => e.stopPropagation()}>${stan === "wymaga_logowania" ? "Zaloguj" : "Panel"} ↗</a>` : nothing}
+      </div>
+    </div>`;
+  });
+}
+
+interface LidlKupon { id: string; tytul: string; rabat: string; opis: string; obraz: string | null; od: string | null; do: string | null; aktywny: boolean; sekcja: string; link: string | null }
+
+/** Sekcje aplikacji (nazwy od automatu) w kolejności filtra; nieznane dochodzą na końcu. */
+const LP_SEKCJE: Array<[string, string]> = [["wszystkie sklepy", "W sklepach"], ["inne sklepy", "Inne sklepy"], ["sklep internetowy", "Online"]];
+
+// Lidl przeplata teksty znakiem U+200E: sam w opisie znaczy „brak opisu”, w rabacie oddziela cenę od warunku.
+const lpCzesci = (t: string | null | undefined) => (t ?? "").split("‎").map((s) => s.trim()).filter((s) => s && !/^[–—-]$/.test(s));
+
+/** Treść okna kuponów Lidl Plus: filtr po sekcji, wyszukiwanie po produkcie, najpierw ważne (od kończących się
+ *  najwcześniej), potem czekające na start; identyczne kupony (np. ten sam rabat w wielu sklepach) jako jeden wiersz. */
+export function lidlCoupons(ctx: Ctx, konto: string): TemplateResult {
+  const s = ctx.hass.states[`sensor.lidl_${konto}_kupony`];
+  const wszystkie = ((s?.attributes.kupony ?? []) as LidlKupon[]).filter((k) => k && k.id);
+  const nazwy = [...new Set(wszystkie.map((k) => k.sekcja).filter(Boolean))];
+  const filtry: Array<[string, string]> = [["all", "Wszystkie"],
+    ...LP_SEKCJE.filter(([n]) => nazwy.includes(n)),
+    ...nazwy.filter((n) => !LP_SEKCJE.some(([x]) => x === n)).map((n): [string, string] => [n, n.charAt(0).toUpperCase() + n.slice(1)])];
+  const filtr = filtry.some(([f]) => f === ctx.ui["lidl.filtr"]) ? ctx.ui["lidl.filtr"] : "all";
+  const szukaj = (ctx.ui["lidl.szukaj"] ?? "").trim().toLowerCase();
+  const ile = (f: string) => (f === "all" ? wszystkie.length : wszystkie.filter((k) => k.sekcja === f).length);
+  const teraz = Date.now();
+  const start = (k: LidlKupon) => Date.parse(k.od ?? "") || 0;
+  const koniec = (k: LidlKupon) => Date.parse(k.do ?? "") || Number.MAX_SAFE_INTEGER;
+  const grupy = new Map<string, { k: LidlKupon; n: number }>();
+  for (const k of wszystkie) {
+    if (filtr !== "all" && k.sekcja !== filtr) continue;
+    if (szukaj && !`${k.tytul} ${k.rabat} ${k.opis}`.toLowerCase().includes(szukaj)) continue;
+    const klucz = [k.sekcja, k.tytul, k.rabat, k.opis, k.od, k.do, k.aktywny, k.link].join("|");
+    const g = grupy.get(klucz);
+    if (g) g.n++;
+    else grupy.set(klucz, { k, n: 1 });
+  }
+  const czeka = (k: LidlKupon) => start(k) > teraz;
+  const widoczne = [...grupy.values()].sort(({ k: a }, { k: b }) =>
+    Number(czeka(a)) - Number(czeka(b)) || (czeka(a) ? start(a) - start(b) : 0) || koniec(a) - koniec(b));
+  const zakt = s?.attributes.zaktualizowano as string | undefined;
+  return html`<div class="pbbar">
+      <div class="seg2" role="tablist" aria-label="Sekcja kuponów">${filtry.map(([f, label]) => html`<button type="button" role="tab"
+        aria-selected=${f === filtr ? "true" : "false"} class=${f === filtr ? "on" : ""} @click=${() => ctx.actions.setUi("lidl.filtr", f)}>${label} (${ile(f)})</button>`)}</div>
+      <input class="pbsearch" type="search" placeholder="Szukaj produktu…" aria-label="Szukaj produktu" .value=${ctx.ui["lidl.szukaj"] ?? ""}
+        @input=${(e: Event) => ctx.actions.setUi("lidl.szukaj", (e.target as HTMLInputElement).value)} />
+    </div>
+    <small class="pbmeta">${zakt && Date.parse(zakt) ? `Stan z ${sinceLabel(ctx, zakt).replace(/^od /, "")}. ` : ""}W sklepie aktywne kupony naliczają się po zeskanowaniu aplikacji Lidl Plus przy kasie.</small>
+    ${widoczne.length
+      ? html`<div class="pblist">${widoczne.map(({ k, n }) => {
+          const [cena, ...reszta] = lpCzesci(k.rabat);
+          const opis = [...reszta, ...lpCzesci(k.opis)].join(" · ");
+          const od = start(k), d = Date.parse(k.do ?? "");
+          const ileDni = Number.isNaN(d) ? null : dniOdDzis(d);
+          const kiedy = czeka(k)
+            ? `${dniOdDzis(od) <= 0 ? "od dziś" : dniOdDzis(od) === 1 ? "od jutra" : `od ${dm(od)}`}${ileDni === null ? "" : ` do ${dm(d)}`}`
+            : ileDni === null ? "" : ileDni <= 0 ? "kończy się dziś" : ileDni === 1 ? "kończy się jutro" : `ważny do ${dm(d)}`;
+          const status = k.aktywny ? "aktywny" : czeka(k) ? "czeka na start" : "nieaktywny";
+          return html`<div class="pbk lpk">
+            <span class="pblogo">${k.obraz ? html`<img src=${k.obraz} alt="" loading="lazy" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} />` : nothing}<i>${((k.tytul || "").replace(/^[^\p{L}\p{N}]+/u, "") || "?").slice(0, 1)}</i></span>
+            <span class="pbktxt"><b>${k.tytul}${n > 1 ? html` <span class="lpile">· ${n} ${odmiana(n, "kupon", "kupony", "kuponów")}</span>` : nothing}</b>
+              ${cena ? html`<span class="pbben">${cena}</span>` : nothing}
+              ${opis ? html`<small>${opis}</small>` : nothing}<small class="pbdo ${!czeka(k) && ileDni !== null && ileDni <= 1 ? "soon" : ""}">${kiedy}${k.link ? ` · online${k.aktywny ? "" : ` · ${status}`}` : ""}</small></span>
+            ${k.link
+              ? html`<a class="btn hot" href=${k.link} target="_blank" rel="noopener noreferrer">Do sklepu ↗</a>`
+              : html`<span class="lpchip ${k.aktywny ? "ok" : czeka(k) ? "" : "warn"}">${status}</span>`}
           </div>`;
         })}</div>`
       : html`<div class="empty">${wszystkie.length ? "Brak kuponów dla tego filtra." : "Lista kuponów pojawi się po najbliższym przebiegu automatu."}</div>`}`;
@@ -340,9 +475,11 @@ function weather(ctx: Ctx): TemplateResult | typeof nothing {
 }
 
 export function homeView(ctx: Ctx): TemplateResult {
-  const mail = mailbox(ctx), bins = waste(ctx), pb = payback(ctx);
+  const mail = mailbox(ctx), bins = waste(ctx), cards = [...payback(ctx), ...lidl(ctx)];
+  // Karty lojalnościowe we własnym wierszu, obok siebie (w jednej siatce ze skrzynką Lidl spadał pod spód).
+  const top = mail !== nothing || bins !== nothing ? html`<div class="cards two top">${mail}${bins}</div>` : nothing;
   return html`${persons(ctx)} ${gates(ctx)}
-    ${mail !== nothing || bins !== nothing || pb.length ? html`<section class="sec"><div class="cards two top">${mail}${bins}${pb}</div></section>` : nothing}
+    ${top !== nothing || cards.length ? html`<section class="sec">${top}${cards.length ? html`<div class="cards loyal">${cards}</div>` : nothing}</section>` : nothing}
     ${weather(ctx)}`;
 }
 

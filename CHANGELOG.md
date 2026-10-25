@@ -7,6 +7,32 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Dom: karta Lidl Plus** — obok karty PAYBACK, dla każdego konta z encjami `sensor.lidl_<konto>_stan` (automat
+  aktywujący kupony Lidl Plus, encje z autodiscovery MQTT): niebieska karta w barwach Lidla z liczbą aktywnych
+  kuponów, liczbą kuponów czekających na start i do aktywacji oraz tym, kiedy automat ostatnio sprawdzał konto;
+  przyciski „Kupony” (okno z listą) i „Aktywuj” (`button.lidl_<konto>_aktywuj_kupony`, nieaktywny w trakcie
+  aktywacji i logowania). Stan wymagający uwagi (trzeba się zalogować, błąd, nie wszystkie kupony) jako żółta
+  plakietka i obwódka, z przyciskiem „Zaloguj ↗” / „Panel ↗” do strony automatu (atrybut `panel`). Bez encji Lidla
+  karty nie ma
+- **Lidl Plus: lista kuponów** — okno z kuponami konta (atrybut `kupony` encji `sensor.lidl_<konto>_kupony`): zdjęcie
+  produktu, nazwa, rabat, warunek („przy zakupie 3 szt.”, „Rabat na maks. 2 opak.”), ważność (kończące się dziś
+  i jutro wyróżnione, przyszłe jako „od jutra do 28.10”) i stan (aktywny / czeka na start / nieaktywny); filtr
+  Wszystkie / W sklepach / Inne sklepy / Online z licznikami i wyszukiwanie po produkcie; kupony sklepu
+  internetowego z przyciskiem „Do sklepu ↗”. Najpierw kupony już ważne (od kończących się najwcześniej), potem
+  czekające na start; identyczne kupony (ten sam rabat w wielu sklepach) jako jeden wiersz z liczbą. Niewidoczny
+  znak U+200E, którym Lidl przeplata teksty, jest usuwany (sam w opisie znaczył „brak opisu”)
+
+### Zmieniono
+- **Dom: karty lojalnościowe w osobnym wierszu** — PAYBACK i Lidl Plus stoją obok siebie pod skrzynką pocztową
+  i odpadami (wcześniej były w jednej siatce ze skrzynką i druga karta spadała pod spód); na telefonie jedna pod
+  drugą. Okno kuponów jest wspólne dla obu automatów
+
+### Naprawiono
+- **PAYBACK: „kończy się jutro” w dniu zmiany czasu** — liczba dni do końca kuponu liczona była dzieleniem różnicy
+  przez 24 h, więc w dobie 25-godzinnej (koniec czasu letniego) kupon ważny do dzisiejszego wieczora pokazywał się
+  jako „kończy się jutro”; teraz liczone są dni kalendarzowe
+
 ## [0.11.0] - 2026-10-25
 
 ### Dodano

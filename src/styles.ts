@@ -330,6 +330,8 @@ dialog.set::backdrop { background: rgba(10, 14, 18, .45); }
 .avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .wico2 svg { width: 20px; height: 20px; display: block; }
 .cards.two.top { align-items: start; }
+/* Karty lojalnościowe (PAYBACK, Lidl Plus): w rzędzie obok siebie, z proporcjami karty; na telefonie jedna pod drugą. */
+.cards.loyal { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
 button.person { font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%; }
 button.person:hover { border-color: var(--faint); }
 button.person:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -416,6 +418,18 @@ dialog.pdlg { width: min(720px, calc(100% - 24px)); }
 .pbsklep { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.25; }
 .pbk .btn { white-space: nowrap; text-decoration: none; }
 @media (max-width: 480px) { .pbk { grid-template-columns: 44px 1fr; } .pblogo { width: 44px; height: 44px; } .pbk > :last-child { grid-column: 1 / -1; justify-self: end; } }
+/* Lidl Plus: ta sama karta w barwach Lidla (niebieska, żółte koło z czerwoną obwódką) + okno kuponów */
+.lpcard { background: radial-gradient(120% 140% at 100% 0%, #2f7fd6 0%, transparent 55%), linear-gradient(135deg, #003b82 0%, #0050aa 55%, #0a64c2 100%); }
+.lpmark { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; letter-spacing: .01em; }
+.lpmark i { width: 22px; height: 22px; border-radius: 50%; background: #fff000; box-shadow: inset 0 0 0 2.5px #e60a14; }
+a.pbbtn { text-decoration: none; }
+.lpk .pbben { color: #c8102e; }
+:host([dark]) .lpk .pbben { color: #ff7a7a; }
+.lpk .pblogo i { color: #0050aa; }
+.lpile { font-weight: 600; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.lpchip { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px; white-space: nowrap; color: var(--muted); background: var(--surface-2); }
+.lpchip.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); }
+.lpchip.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--surface)); }
 .box2.waste h3 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .wrow { display: grid; grid-template-columns: 26px 1fr auto 74px; gap: 8px; align-items: center; font-size: 14px; padding: 4px 0; border-top: 1px solid var(--line); }
 .wrow:first-of-type { border-top: 0; }

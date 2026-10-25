@@ -19,13 +19,16 @@ import {
 import { dryIcon, fanIcon, flame, icon, timeline, type Segment } from "../svg";
 import type { Hass, Options } from "../types";
 
+/** Automat kuponów z encjami z autodiscovery MQTT: stack payback albo lidl-plus. */
+export type CouponKind = "payback" | "lidl";
+
 export interface Actions {
   toggleRoom(areaId: string): void;
   setUi(key: string, value: string): void;
   /** Okno z mapą lokalizacji osoby (albo innego lokalizatora, np. auta). */
   openPerson(entity: string): void;
-  /** Okno z listą kuponów PAYBACK konta (sensor.payback_<konto>_kupony). */
-  openPayback(konto: string): void;
+  /** Okno z listą kuponów konta automatu (sensor.payback_<konto>_kupony / sensor.lidl_<konto>_kupony). */
+  openCoupons(kind: CouponKind, konto: string): void;
   /** Okno „więcej informacji” HA (np. kamera na żywo, historia encji). */
   moreInfo(entity: string): void;
   /** Dowolna usługa HA (bramy, termostaty kotła). */

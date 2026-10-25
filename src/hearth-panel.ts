@@ -12,7 +12,7 @@ import { climateTarget, discoverRooms, hasProfiles, profileValue, PROFILE_HELPER
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
 import type { Hass, Options, PanelInfo, Route, Style, Tab } from "./types";
-import type { Actions, Ctx } from "./views/common";
+import type { Actions, CouponKind, Ctx } from "./views/common";
 import { devices } from "./views/common";
 import { detail } from "./views/detail";
 import { dial } from "./views/dials";
@@ -22,7 +22,7 @@ import { outdoor } from "./views/outdoor";
 import { tile } from "./views/tiles";
 import { boilerView } from "./views/boiler";
 import { energyView } from "./views/energy";
-import { homeView, paybackCoupons, personInfo, tileMap, toggleFor, wasteToggles } from "./views/home";
+import { homeView, lidlCoupons, paybackCoupons, personInfo, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
 import { camerasView } from "./views/cameras";
@@ -141,14 +141,14 @@ export class HearthPanel extends LitElement {
   @state() private toastText = "";
   @state() private ui: Record<string, string> = readUi();
   @state() private person: string | null = null;
-  /** Konto PAYBACK, którego lista kuponów jest otwarta w oknie. */
-  @state() private payback: string | null = null;
+  /** Automat i konto, których lista kuponów jest otwarta w oknie. */
+  @state() private coupons: { kind: CouponKind; konto: string } | null = null;
   @state() private sched: SchedEdit | null = null;
   private ebusd = new EbusdTimers();
 
   @query("dialog.set") private dialog?: HTMLDialogElement;
   @query("dialog.pdlg") private personDialog?: HTMLDialogElement;
-  @query("dialog.pbdlg") private paybackDialog?: HTMLDialogElement;
+  @query("dialog.pbdlg") private couponsDialog?: HTMLDialogElement;
   private mapCard?: HTMLElement & { hass?: Hass };
   private mapFor: string | null = null;
 
@@ -246,7 +246,7 @@ export class HearthPanel extends LitElement {
 
   protected updated(changed: PropertyValues<this>) {
     if ((changed as Map<string, unknown>).has("person") && this.person && !this.personDialog?.open) this.personDialog?.showModal();
-    if ((changed as Map<string, unknown>).has("payback") && this.payback && !this.paybackDialog?.open) this.paybackDialog?.showModal();
+    if ((changed as Map<string, unknown>).has("coupons") && this.coupons && !this.couponsDialog?.open) this.couponsDialog?.showModal();
     const dark = Boolean(this.hass?.themes?.darkMode);
     const accent = this.applyAccent(dark);
     if (dark !== this.lastDark || accent !== this.lastAccent) {
@@ -366,8 +366,8 @@ export class HearthPanel extends LitElement {
     openPerson: (entity: string) => {
       this.person = entity;
     },
-    openPayback: (konto: string) => {
-      this.payback = konto;
+    openCoupons: (kind: CouponKind, konto: string) => {
+      this.coupons = { kind, konto };
     },
     moreInfo: (entity: string) => {
       this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: entity }, bubbles: true, composed: true }));
@@ -506,15 +506,15 @@ export class HearthPanel extends LitElement {
     window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
   }
 
-  private paybackDialogTpl(ctx: Ctx) {
-    const k = this.payback;
-    return html`<dialog class="set pdlg pbdlg" aria-labelledby="pb-tytul" @close=${() => (this.payback = null)}
-        @click=${(e: Event) => e.target === this.paybackDialog && this.paybackDialog?.close()}>
-      ${k
+  private couponsDialogTpl(ctx: Ctx) {
+    const c = this.coupons;
+    return html`<dialog class="set pdlg pbdlg" aria-labelledby="pb-tytul" @close=${() => (this.coupons = null)}
+        @click=${(e: Event) => e.target === this.couponsDialog && this.couponsDialog?.close()}>
+      ${c
         ? html`<div class="set-in">
-            <div class="dhead"><h2 id="pb-tytul">Kupony PAYBACK</h2>
-              <button class="btn" type="button" @click=${() => this.paybackDialog?.close()}>Zamknij</button></div>
-            ${paybackCoupons(ctx, k)}
+            <div class="dhead"><h2 id="pb-tytul">${c.kind === "lidl" ? "Kupony Lidl Plus" : "Kupony PAYBACK"}</h2>
+              <button class="btn" type="button" @click=${() => this.couponsDialog?.close()}>Zamknij</button></div>
+            ${c.kind === "lidl" ? lidlCoupons(ctx, c.konto) : paybackCoupons(ctx, c.konto)}
           </div>`
         : nothing}
     </dialog>`;
@@ -711,7 +711,7 @@ export class HearthPanel extends LitElement {
       </div>
       ${this.settings(ctx)}
       ${this.personDialogTpl(ctx)}
-      ${this.paybackDialogTpl(ctx)}
+      ${this.couponsDialogTpl(ctx)}
       <div class="toast" role="status" ?hidden=${!this.toastText}>${this.toastText}</div>`;
   }
 
