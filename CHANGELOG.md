@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-25
+
 ### Dodano
 - **Karty PAYBACK i Lidl Plus: kod do zeskanowania przy kasie** — przycisk „Karta” na obu kartach otwiera okno
   z kodem karty na białym tle (także w ciemnym motywie) i numerem pod spodem: PAYBACK jako EAN-13, Lidl Plus jako
@@ -287,7 +289,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/keysim86/ha-hearth/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/keysim86/ha-hearth/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/keysim86/ha-hearth/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/keysim86/ha-hearth/compare/v0.9.0...v0.10.0
