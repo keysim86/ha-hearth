@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-25
+
 ### Dodano
 - **Dom: karta Lidl Plus** — obok karty PAYBACK, dla każdego konta z encjami `sensor.lidl_<konto>_stan` (automat
   aktywujący kupony Lidl Plus, encje z autodiscovery MQTT): niebieska karta w barwach Lidla z liczbą aktywnych
@@ -277,7 +279,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/keysim86/ha-hearth/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/keysim86/ha-hearth/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/keysim86/ha-hearth/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/keysim86/ha-hearth/compare/v0.8.0...v0.9.0
