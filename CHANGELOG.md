@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-25
+
 ### Dodano
 - **Dom: karta Moja Biedronka** — trzecia karta lojalnościowa obok PAYBACK i Lidl Plus, czerwona w barwach Moja
   Biedronka: wydatki w bieżącym miesiącu (`sensor.biedronka_<konto>_wydatki_w_miesiacu`), ostatni paragon (data
@@ -311,7 +313,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/keysim86/ha-hearth/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/keysim86/ha-hearth/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/keysim86/ha-hearth/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/keysim86/ha-hearth/compare/v0.10.0...v0.11.0
