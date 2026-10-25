@@ -137,6 +137,59 @@ function fridge(ctx: Ctx, a: Appliance): TemplateResult {
 
 // ---- zmywarka (hOn) ----
 
+// Konserwacja: pomocniki nazwane od encji zmywarki (<zmywarka> = sensor.<zmywarka>_cycles bez końcówki) —
+// sensor.<zmywarka>_cykli_od_{filtra,ramion,pielegnacji} (stan = cykle od ostatniej, atrybuty limit i ostatnio),
+// input_button.<zmywarka>_{filtr,ramiona,pielegnacja}_wykonane i input_number.<zmywarka>_tabletki (zapas, 0 = bez liczenia).
+// Bez tych encji sekcji nie ma.
+const CARE: Array<{ suffix: string; key: string; label: string; done: string; todo: string }> = [
+  { suffix: "filtra", key: "filtr", label: "Filtr", done: "filtr wyczyszczony", todo: "wyczyść filtr" },
+  { suffix: "ramion", key: "ramiona", label: "Ramiona spryskujące", done: "ramiona wyczyszczone", todo: "wyczyść ramiona" },
+  { suffix: "pielegnacji", key: "pielegnacja", label: "Pielęgnacja i odkamienianie", done: "pielęgnacja wykonana", todo: "pielęgnacja" },
+];
+const cykli = (n: number) => (n === 1 ? "cykl" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "cykle" : "cykli");
+
+interface CareItem { id: string; button?: string; label: string; done: string; todo: string; n: number | null; limit: number | null }
+
+function careItems(ctx: Ctx, base: string): CareItem[] {
+  const h = ctx.hass;
+  return CARE.map((c) => {
+    const id = `sensor.${base}_cykli_od_${c.suffix}`, button = `input_button.${base}_${c.key}_wykonane`;
+    const s = h.states[id];
+    return { ...c, id, button: h.states[button] ? button : undefined, n: usable(h, id) ? num(s.state) : null, limit: num(s?.attributes.limit) };
+  }).filter((c) => h.states[c.id]);
+}
+
+const overdue = (c: CareItem) => c.n !== null && c.limit !== null && c.limit > 0 && c.n >= c.limit;
+
+function care(ctx: Ctx, base: string, items: CareItem[]): TemplateResult | typeof nothing {
+  const h = ctx.hass;
+  const tabs = `input_number.${base}_tabletki`;
+  if (!items.length && !h.states[tabs]) return nothing;
+  const t = num(st(ctx, tabs));
+  return html`<span class="hlabel">Konserwacja</span>
+    ${items.map((c) => {
+      const ok = c.n !== null && c.limit !== null && c.limit > 0;
+      const frac = ok ? c.n! / c.limit! : 0;
+      const color = !ok ? "var(--muted)" : frac >= 1 ? "var(--crit)" : frac >= 0.8 ? "var(--warn)" : "var(--ok)";
+      const left = ok ? c.limit! - c.n! : 0;
+      const text = !ok ? "—" : left > 0 ? `za ${left} ${cykli(left)}` : left === 0 ? "teraz" : `zaległe o ${-left} ${cykli(-left)}`;
+      return html`<div class="agdcare">
+        <div class="row"><span>${c.label}<small>${ok ? `${round(c.n!)} z ${round(c.limit!)} cykli · ` : ""}ostatnio ${dmy(h.states[c.id].attributes.ostatnio as string)}</small></span>
+          <b style="color:${color}">${text}</b>
+          ${c.button
+            ? html`<button class="btn" type="button" @click=${() => window.confirm(`Zapisać: ${c.done}?`) && ctx.actions.call("input_button", "press", { entity_id: c.button })}>Zrobione</button>`
+            : nothing}
+        </div>
+        <span class="pmbar"><i style="width:${(Math.min(1, frac) * 100).toFixed(0)}%;background:${color}"></i></span>
+      </div>`;
+    })}
+    ${h.states[tabs]
+      ? html`<div class="row agdcare"><span>Tabletki<small class=${t !== null && t > 0 && t <= 5 ? "alarm" : ""}>${t === 0 ? "nie liczę — wpisz zapas po zakupie" : t !== null && t <= 5 ? "kończą się" : "każdy cykl poza pielęgnacją zdejmuje jedną"}</small></span>
+          ${stepper(ctx, tabs, "Tabletki", " szt.")}
+          <button class="btn" type="button" @click=${() => ctx.actions.moreInfo(tabs)}>Wpisz</button></div>`
+      : nothing}`;
+}
+
 function dishwasher(ctx: Ctx, a: Appliance): TemplateResult {
   const h = ctx.hass;
   const end = (suffix: string, domain = "sensor") => a.ents.find((e) => e.startsWith(`${domain}.`) && e.endsWith(suffix));
@@ -159,8 +212,17 @@ function dishwasher(ctx: Ctx, a: Appliance): TemplateResult {
   const supply = (id: string | undefined, label: string) =>
     usable(h, id) ? html`<div class="row"><span>${label}</span><b class=${st(ctx, id) === "on" ? "alarm" : ""}>${st(ctx, id) === "on" ? "uzupełnij" : "OK"}</b></div>` : nothing;
   const water = num(st(ctx, end("_current_water_used"))), kwh = num(st(ctx, end("_current_electricity_used")));
+  // Licznik cykli na żywo (suma liczników programów); „Total programs” to statystyki chmury, odświeżane rzadziej.
+  const cycles = a.ents.find((e) => e.startsWith("sensor.") && e.endsWith("_cycles") && !e.endsWith("_care_cycles"));
+  const careCycles = end("_care_cycles");
+  const total = usable(h, cycles) ? cycles : end("_total_programs");
+  const base = cycles?.replace(/^sensor\./, "").replace(/_cycles$/, "");
+  const items = base ? careItems(ctx, base) : [];
+  const t = base ? num(st(ctx, `input_number.${base}_tabletki`)) : null;
+  const todo = [...items.filter(overdue).map((c) => c.todo), ...(t !== null && t > 0 && t <= 5 ? ["kończą się tabletki"] : [])];
   return html`<div class="ocell agd">
     ${head(ctx, a, chip, color)}
+    ${todo.length ? html`<div class="chips">${todo.map((x) => html`<span class="mchip alarmchip">⚠ ${x}</span>`)}</div>` : nothing}
     ${running
       ? html`<div class="orow"><span class="hval big">${Math.floor(remaining! / 60)}:${String(Math.round(remaining! % 60)).padStart(2, "0")}</span>
           <span class="hsub">do końca${Number.isFinite(endAt) ? ` · koniec o ${ctx.clock.hm(endAt)}` : ""}</span></div>
@@ -171,7 +233,8 @@ function dishwasher(ctx: Ctx, a: Appliance): TemplateResult {
     ${supply(salt, "Sól")}
     ${supply(rinse, "Nabłyszczacz")}
     ${usable(h, door) ? html`<div class="row"><span>Drzwi</span><b>${st(ctx, door) === "on" ? "otwarte" : "zamknięte"}</b></div>` : nothing}
-    ${usable(h, end("_total_programs")) ? html`<div class="row"><span>Programów łącznie</span><b>${round(num(st(ctx, end("_total_programs"))))}</b></div>` : nothing}
+    ${usable(h, total) ? html`<div class="row"><span>Cykli łącznie${usable(h, careCycles) ? html`<small>w tym ${round(num(st(ctx, careCycles)))} pielęgnacji</small>` : nothing}</span><b>${round(num(st(ctx, total)))}</b></div>` : nothing}
+    ${base ? care(ctx, base, items) : nothing}
   </div>`;
 }
 

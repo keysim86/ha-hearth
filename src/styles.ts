@@ -723,4 +723,9 @@ form.ocell .orow { margin-top: 6px; }
 .agd .alarmchip { border-color: color-mix(in srgb, var(--crit) 55%, var(--line)); color: var(--crit); }
 .agdtemps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .agdtemp { display: grid; gap: 6px; justify-items: start; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+.agdcare { display: grid; gap: 5px; }
+.agdcare.row, .agdcare .row { display: flex; }
+.agdcare.row > span, .agdcare .row > span { flex: 1; min-width: 0; }
+.agdcare .btn { padding: 5px 10px; font-size: 12.5px; }
+.agdcare small.alarm { color: var(--crit); }
 `;

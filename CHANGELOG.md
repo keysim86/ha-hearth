@@ -7,6 +7,19 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **AGD: konserwacja zmywarki** — na karcie zmywarki (hOn) sekcja „Konserwacja”: filtr, ramiona spryskujące
+  oraz pielęgnacja i odkamienianie z liczbą cykli od ostatniego razu, limitem, datą i paskiem (zielony, od 80%
+  pomarańczowy, po limicie czerwony z „zaległe o N cykli”), przycisk „Zrobione” z potwierdzeniem
+  (`input_button.press`); zapas tabletek z −/+ i „Wpisz” (okno encji), ostrzeżenie przy ≤ 5 sztukach; nad kartą
+  czerwone etykiety zaległych zadań. Sekcja pojawia się, gdy istnieją pomocniki nazwane od encji zmywarki:
+  `sensor.<zmywarka>_cykli_od_{filtra,ramion,pielegnacji}` (atrybuty `limit`, `ostatnio`),
+  `input_button.<zmywarka>_{filtr,ramiona,pielegnacja}_wykonane`, `input_number.<zmywarka>_tabletki`
+
+### Zmieniono
+- **AGD: zmywarka — „Cykli łącznie”** z licznika na żywo `sensor.<zmywarka>_cycles` (suma liczników programów),
+  z liczbą programów pielęgnacji pod spodem; bez niego jak dotąd „Total programs” ze statystyk chmury
+
 ## [0.10.0] - 2026-10-24
 
 ### Dodano
