@@ -7,6 +7,12 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Zmieniono
+- **Moja Biedronka: jedna karta dla kilku kont** — przy więcej niż jednym koncie (`sensor.biedronka_<konto>_stan`)
+  zamiast osobnych kart jest jedna z przełącznikiem w prawym górnym rogu (np. „Grzegorz | Klaudia”); domyślnie
+  pierwsze konto alfabetycznie, wybór zapamiętywany na urządzeniu. Wydatki, ostatni paragon, stan automatu i okna
+  „Karta” / „Paragony” dotyczą wybranego konta; kliknięcie przełącznika nie otwiera okna
+
 ## [0.14.0] - 2026-10-25
 
 ### Dodano

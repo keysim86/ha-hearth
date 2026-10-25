@@ -271,15 +271,19 @@ const BIEDRONKA_STATE: Record<string, [string, boolean]> = {
   blad: ["błąd ostatniego przebiegu", true],
 };
 
-/** Karta na konto w barwach Moja Biedronka: wydatki w miesiącu (…_wydatki_w_miesiacu), ostatni paragon (…_paragony),
- *  stan automatu (…_stan, atrybut `panel`), przyciski Karta i Paragony. */
+/** Jedna karta w barwach Moja Biedronka: wydatki w miesiącu (…_wydatki_w_miesiacu), ostatni paragon (…_paragony),
+ *  stan automatu (…_stan, atrybut `panel`), przyciski Karta i Paragony. Kilka kont = przełącznik w rogu karty
+ *  (domyślnie pierwsze alfabetycznie, wybór pamiętany na urządzeniu w `biedronka.konto`). */
 function biedronka(ctx: Ctx): TemplateResult[] {
   const h = ctx.hass;
   const konta = Object.keys(h.states)
     .filter((e) => /^sensor\.biedronka_[a-z0-9_]+_stan$/.test(e) && !h.entities[e]?.hidden)
     .map((e) => e.slice("sensor.biedronka_".length, -"_stan".length))
     .sort();
-  return konta.map((k) => {
+  if (!konta.length) return [];
+  const wybrane = konta.includes(ctx.ui["biedronka.konto"]) ? ctx.ui["biedronka.konto"] : konta[0];
+  const imie = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+  return [wybrane].map((k) => {
     const id = (s: string) => `sensor.biedronka_${k}_${s}`;
     const stan = st(ctx, id("stan")) ?? "unknown";
     const [opis, uwaga] = BIEDRONKA_STATE[stan] ?? (stan === "unavailable" ? ["automat nie odpowiada", true] : ["", false]);
@@ -296,9 +300,12 @@ function biedronka(ctx: Ctx): TemplateResult[] {
       kiedy && Date.parse(kiedy) ? `sprawdzone ${since(kiedy)} temu` : "",
     ].filter(Boolean);
     return html`<div class="pbcard bdcard ${uwaga ? "warn" : ""} ${stan === "w_toku" || stan === "logowanie" ? "busy" : ""}" role="button" tabindex="0"
-        aria-label="Moja Biedronka: e-paragony" @click=${otworz}
+        aria-label="Moja Biedronka (${imie(k)}): e-paragony" @click=${otworz}
         @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), otworz())}>
-      <div class="pbtop"><span class="lpmark bdmark">${logoImg(ctx, "biedronka", k)}Moja Biedronka</span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
+      <div class="pbtop"><span class="lpmark bdmark">${logoImg(ctx, "biedronka", k)}Moja Biedronka</span>
+        ${konta.length > 1 ? html`<span class="lpkonta" role="group" aria-label="Konto Moja Biedronka">${konta.map((x) => html`<button type="button"
+          class=${x === k ? "on" : ""} aria-pressed=${x === k ? "true" : "false"} @keydown=${(e: Event) => e.stopPropagation()}
+          @click=${(e: Event) => { e.stopPropagation(); ctx.actions.setUi("biedronka.konto", x); }}>${imie(x)}</button>`)}</span>` : nothing}</div>
       <div class="pbpts"><b>${kwota === null ? "—" : kwota.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b><span>zł w ${MIESIACE_W[m - 1] ?? "tym miesiącu"}</span></div>
       <div class="pbinfo">${info.length ? info.join(" · ") : "paragony: brak danych"}</div>
       ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}

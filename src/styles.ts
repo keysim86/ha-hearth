@@ -443,6 +443,11 @@ a.pbbtn { text-decoration: none; }
 .lplogo.pbl { height: 28px; border-radius: 6px; }
 .lpbrand .lplogo:not([hidden]) + .pbmark { display: none; }
 .bdmark .lplogo { height: 30px; border-radius: 0; }
+/* przełącznik kont na karcie (Moja Biedronka) */
+.lpkonta { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px; background: rgba(255, 255, 255, .16); }
+.lpkonta button { font: inherit; font-size: 12.5px; font-weight: 700; color: #fff; background: none; border: 0; border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.lpkonta button.on { background: #fff; color: #c8000e; }
+.lpkonta button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
 /* Moja Biedronka: czerwona karta z kropkami jak na biedronce */
 .bdcard { background: radial-gradient(120% 140% at 100% 0%, #ff4b4b 0%, transparent 55%), linear-gradient(135deg, #a8000b 0%, #d9000f 55%, #ef1c24 100%); }
 .bdcard::before, .bdcard::after { background: rgba(0, 0, 0, .16); }
