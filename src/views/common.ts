@@ -21,7 +21,7 @@ import type { Hass, Options } from "../types";
 
 /** Automat konta lojalnościowego z encjami z autodiscovery MQTT: stack payback, lidl-plus albo biedronka. */
 export type CouponKind = "payback" | "lidl" | "biedronka";
-export type CouponView = "kupony" | "karta" | "paragony";
+export type CouponView = "kupony" | "karta" | "paragony" | "historia";
 
 export interface Actions {
   toggleRoom(areaId: string): void;

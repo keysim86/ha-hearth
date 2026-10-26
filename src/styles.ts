@@ -394,6 +394,18 @@ dialog.pdlg { width: min(720px, calc(100% - 24px)); }
 .pbpts b { font-family: var(--f-num); font-size: 34px; line-height: 1; letter-spacing: -.01em; }
 .pbpts span { font-size: 16px; font-weight: 700; opacity: .9; }
 .pbinfo { font-size: 12.5px; opacity: .88; }
+.pbsplit { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; }
+.pbsplit b { font-family: var(--f-num); font-size: 14px; }
+.pbhsum { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
+.pbhsum b { color: var(--fg); font-family: var(--f-num); font-size: 16px; }
+.pbh { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.pbhtxt { display: grid; min-width: 0; }
+.pbhtxt b, .pbhtxt small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pbhtxt small { color: var(--muted); font-size: 12px; }
+.pbhp { font-family: var(--f-num); font-size: 15px; white-space: nowrap; }
+.pbhp.plus { color: var(--ok); }
+.pbhp.minus { color: var(--crit); }
+.pbh.lock .pbhp { color: var(--muted); }
 .pbstan { justify-self: start; font-size: 12.5px; font-weight: 700; background: #ffd34d; color: #3a2a00; border-radius: 8px; padding: 3px 8px; }
 .pbacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .pbbtn { font: inherit; font-size: 13px; font-weight: 700; border-radius: 10px; padding: 7px 12px; border: 1px solid rgba(255, 255, 255, .55); background: rgba(255, 255, 255, .12); color: #fff; cursor: pointer; }

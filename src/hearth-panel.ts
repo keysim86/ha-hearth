@@ -22,7 +22,7 @@ import { outdoor } from "./views/outdoor";
 import { tile } from "./views/tiles";
 import { boilerView } from "./views/boiler";
 import { energyView } from "./views/energy";
-import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
+import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
 import { camerasView } from "./views/cameras";
@@ -512,9 +512,10 @@ export class HearthPanel extends LitElement {
         @click=${(e: Event) => e.target === this.couponsDialog && this.couponsDialog?.close()}>
       ${c
         ? html`<div class="set-in">
-            <div class="dhead"><h2 id="pb-tytul">${c.view === "karta" ? "Karta" : c.view === "paragony" ? "E-paragony" : "Kupony"} ${{ lidl: "Lidl Plus", payback: "PAYBACK", biedronka: "Moja Biedronka" }[c.kind]}</h2>
+            <div class="dhead"><h2 id="pb-tytul">${c.view === "karta" ? "Karta" : c.view === "paragony" ? "E-paragony" : c.view === "historia" ? "Historia punktów" : "Kupony"} ${{ lidl: "Lidl Plus", payback: "PAYBACK", biedronka: "Moja Biedronka" }[c.kind]}</h2>
               <button class="btn" type="button" @click=${() => this.couponsDialog?.close()}>Zamknij</button></div>
             ${c.view === "karta" ? loyaltyCard(ctx, c.kind, c.konto) : c.view === "paragony" ? receiptsView(ctx, c.kind, c.konto)
+              : c.view === "historia" ? paybackHistory(ctx, c.konto)
               : c.kind === "lidl" ? lidlCoupons(ctx, c.konto) : paybackCoupons(ctx, c.konto)}
           </div>`
         : nothing}

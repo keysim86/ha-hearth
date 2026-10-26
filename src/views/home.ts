@@ -357,8 +357,9 @@ const PAYBACK_STATE: Record<string, [string, boolean]> = {
   blad: ["błąd ostatniego przebiegu", true],
 };
 
-/** Karta na konto (wygląd karty PAYBACK): sensor.payback_<konto>_stan, _punkty, _aktywne, _do_aktywacji,
- *  _ostatnie_uruchomienie, button …_aktywuj_kupony; kliknięcie = okno z listą kuponów (_kupony). */
+/** Karta na konto (wygląd karty PAYBACK): sensor.payback_<konto>_stan, _punkty, _punkty_dostepne, _punkty_oczekujace,
+ *  _aktywne, _do_aktywacji, _ostatnie_uruchomienie, button …_aktywuj_kupony; kliknięcie = okno z listą kuponów (_kupony),
+ *  przycisk Historia = okno operacji na punktach (_historia). */
 function payback(ctx: Ctx): TemplateResult[] {
   const h = ctx.hass;
   const konta = Object.keys(h.states)
@@ -371,6 +372,8 @@ function payback(ctx: Ctx): TemplateResult[] {
     const [opis, uwaga] = PAYBACK_STATE[stan] ?? (stan === "unavailable" ? ["automat nie odpowiada", true] : ["", false]);
     const pkt = num(st(ctx, id("punkty"))), akt = num(st(ctx, id("aktywne"))), doAkt = num(st(ctx, id("do_aktywacji")));
     const kiedy = st(ctx, id("ostatnie_uruchomienie"));
+    const dost = num(st(ctx, id("punkty_dostepne"))), ocz = num(st(ctx, id("punkty_oczekujace")));
+    const historia = Boolean(h.states[id("historia")]);
     const btn = `button.payback_${k}_aktywuj_kupony`;
     const lista = Boolean(h.states[id("kupony")]);
     const otworz = () => (lista ? ctx.actions.openCoupons("payback", k) : ctx.actions.moreInfo(id("punkty")));
@@ -380,15 +383,73 @@ function payback(ctx: Ctx): TemplateResult[] {
         @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), otworz())}>
       <div class="pbtop"><span class="lpbrand">${logoImg(ctx, "payback", k, "pbl")}<span class="pbmark">PAYBACK</span></span>${konta.length > 1 ? html`<span class="pbwho">${k.charAt(0).toUpperCase()}${k.slice(1)}</span>` : nothing}</div>
       <div class="pbpts"><b>${round(pkt)}</b><span>°P</span></div>
+      ${dost !== null && ocz !== null
+        ? html`<div class="pbsplit"><span><b>${round(dost)}</b> do wykorzystania</span><span><b>${round(ocz)}</b> ${odmiana(ocz, "oczekuje", "oczekują", "oczekuje")}</span></div>`
+        : nothing}
       <div class="pbinfo">${akt !== null ? `${round(akt)} aktywnych kuponów` : "kupony: brak danych"}${doAkt ? ` · ${round(doAkt)} do aktywacji` : ""}${kiedy && Date.parse(kiedy) ? ` · sprawdzone ${since(kiedy)} temu` : ""}</div>
       ${opis ? html`<div class="pbstan">${opis}</div>` : nothing}
       <div class="pbacts">
         ${cardButton(ctx, "payback", k)}
         ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
+        ${historia ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, () => ctx.actions.openCoupons("payback", k, "historia"))}>Historia</button>` : nothing}
         ${sideButtons(ctx, { entity: btn, opis: "Aktywuj kupony teraz", zajety: stan === "w_toku" })}
       </div>
     </div>`;
   });
+}
+
+interface OperacjaPB { data: string; partner: string; punkty: number | null; zablokowane: boolean; rodzaj?: string;
+  data_odblokowania?: string; data_naliczenia?: string }
+
+const PBH_FILTRY: Array<[string, string]> = [["all", "Wszystkie"], ["oczekujace", "Oczekujące"], ["naliczone", "Naliczone"]];
+const dmr = (s?: string) => { const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec((s ?? "").trim()); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : NaN; };
+const pktTxt = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${round(Math.abs(n))} °P`;
+
+/** Okno historii punktów PAYBACK (sensor.payback_<konto>_historia, atrybut `historia` ze strony /moje-punkty):
+ *  saldo z podziałem, filtr oczekujące/naliczone, wyszukiwanie partnera, operacje po miesiącach. Kwota w nawiasie na
+ *  stronie PAYBACK = zablokowana (oczekuje do daty odblokowania, np. do końca okresu zwrotu towaru). */
+export function paybackHistory(ctx: Ctx, konto: string): TemplateResult {
+  const id = (x: string) => `sensor.payback_${konto}_${x}`;
+  const s = ctx.hass.states[id("historia")];
+  const wszystkie = ((s?.attributes.historia ?? []) as OperacjaPB[]).filter((o) => o && Number.isFinite(dmr(o.data)) && o.punkty !== null);
+  const filtr = PBH_FILTRY.some(([f]) => f === ctx.ui["payback.historia.filtr"]) ? ctx.ui["payback.historia.filtr"] : "all";
+  const szukaj = (ctx.ui["payback.historia.szukaj"] ?? "").trim().toLowerCase();
+  const ile = { all: wszystkie.length, oczekujace: wszystkie.filter((o) => o.zablokowane).length, naliczone: wszystkie.filter((o) => !o.zablokowane).length } as Record<string, number>;
+  const widoczne = wszystkie.filter((o) => (filtr === "all" || (filtr === "oczekujace") === o.zablokowane)
+    && (!szukaj || `${o.partner} ${o.rodzaj ?? ""}`.toLowerCase().includes(szukaj)));
+  const grupy = new Map<string, OperacjaPB[]>();
+  for (const o of widoczne) {
+    const d = new Date(dmr(o.data)), m = `${d.getFullYear()}-${d.getMonth()}`;
+    grupy.set(m, [...(grupy.get(m) ?? []), o]);
+  }
+  const dost = num(st(ctx, id("punkty_dostepne"))), ocz = num(st(ctx, id("punkty_oczekujace")));
+  const zakt = s?.attributes.zaktualizowano as string | undefined;
+  return html`${dost !== null && ocz !== null
+      ? html`<div class="pbhsum"><span><b>${round(dost)} °P</b> do wykorzystania</span><span><b>${round(ocz)} °P</b> oczekuje na odblokowanie</span></div>`
+      : nothing}
+    <div class="pbbar">
+      <div class="seg2" role="tablist" aria-label="Rodzaj operacji">${PBH_FILTRY.map(([f, label]) => html`<button type="button" role="tab"
+        aria-selected=${f === filtr ? "true" : "false"} class=${f === filtr ? "on" : ""} @click=${() => ctx.actions.setUi("payback.historia.filtr", f)}>${label} (${ile[f]})</button>`)}</div>
+      <input class="pbsearch" type="search" placeholder="Szukaj sklepu…" aria-label="Szukaj sklepu" .value=${ctx.ui["payback.historia.szukaj"] ?? ""}
+        @input=${(e: Event) => ctx.actions.setUi("payback.historia.szukaj", (e.target as HTMLInputElement).value)} />
+    </div>
+    <small class="pbmeta">${zakt && Date.parse(zakt) ? `Stan z ${sinceLabel(ctx, zakt).replace(/^od /, "")}. ` : ""}Ostatnie operacje z payback.pl (do 60). Punkty oczekujące partner odblokowuje po okresie zwrotu.</small>
+    ${widoczne.length
+      ? html`<div class="pblist rcplist">${[...grupy.values()].map((lista) => {
+          const d = new Date(dmr(lista[0].data));
+          const plus = lista.reduce((a, o) => a + Math.max(0, o.punkty ?? 0), 0), minus = lista.reduce((a, o) => a + Math.min(0, o.punkty ?? 0), 0);
+          return html`<div class="rcpmon"><b>${MIESIACE[d.getMonth()]} ${d.getFullYear()}</b>
+              <span>${plus ? pktTxt(plus) : ""}${plus && minus ? " · " : ""}${minus ? pktTxt(minus) : ""}</span></div>
+            ${lista.map((o) => {
+              const t = dmr(o.data), odbl = dmr(o.data_odblokowania);
+              return html`<div class="pbh ${o.zablokowane ? "lock" : ""}">
+                <span class="rcpd"><b>${DAY_NAMES[new Date(t).getDay()]} ${dm(t)}</b></span>
+                <span class="pbhtxt"><b>${o.partner}</b><small>${o.rodzaj ?? ""}${o.zablokowane && Number.isFinite(odbl) ? ` · odblokowanie ${dm(odbl)}.${new Date(odbl).getFullYear()}` : ""}</small></span>
+                <b class="pbhp ${(o.punkty ?? 0) < 0 ? "minus" : "plus"}">${o.zablokowane ? "🔒 " : ""}${pktTxt(o.punkty ?? 0)}</b>
+              </div>`;
+            })}`;
+        })}</div>`
+      : html`<div class="empty">${wszystkie.length ? "Brak operacji dla tego filtra." : "Historia pojawi się po najbliższym przebiegu automatu."}</div>`}`;
 }
 
 /** Dni kalendarzowe od dziś do dnia chwili `t` (0 = dziś). Od północy do północy i z zaokrągleniem, bo doba zmiany

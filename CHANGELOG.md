@@ -7,6 +7,13 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Dom: PAYBACK — podział punktów i historia.** Pod saldem na karcie „X do wykorzystania · Y oczekuje”
+  (`sensor.payback_<konto>_punkty_dostepne` / `_punkty_oczekujace` — punkty oczekujące to zablokowane przez partnera,
+  np. do końca okresu zwrotu); przycisk **Historia** otwiera okno operacji z payback.pl (`sensor.payback_<konto>_historia`,
+  atrybut `historia`): miesiące z sumą naliczeń i odjęć, operacja z partnerem, rodzajem i kwotą, zablokowane z kłódką
+  i datą odblokowania, filtr Wszystkie / Oczekujące / Naliczone, wyszukiwanie sklepu
+
 ## [0.15.0] - 2026-10-26
 
 ### Dodano
