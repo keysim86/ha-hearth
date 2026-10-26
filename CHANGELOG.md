@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-26
+
 ### Dodano
 - **Dom: PAYBACK — podział punktów i historia.** Pod saldem na karcie „X do wykorzystania · Y oczekuje”
   (`sensor.payback_<konto>_punkty_dostepne` / `_punkty_oczekujace` — punkty oczekujące to zablokowane przez partnera,
@@ -340,7 +342,8 @@ Pierwsze wydanie: integracja `hearth` z własnym panelem w menu bocznym HA, 14 z
 - Testy (konfiguracja, opcje, osoby, rejestracja panelu); CI: typy i budowanie panelu, pytest, hassfest, HACS;
   wydania z opisem z CHANGELOG
 
-[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/keysim86/ha-hearth/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/keysim86/ha-hearth/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/keysim86/ha-hearth/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/keysim86/ha-hearth/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/keysim86/ha-hearth/compare/v0.12.0...v0.13.0
