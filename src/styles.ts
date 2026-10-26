@@ -400,7 +400,7 @@ dialog.pdlg { width: min(720px, calc(100% - 24px)); }
 .pbhsum b { color: var(--fg); font-family: var(--f-num); font-size: 16px; }
 .pbh { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .pbhtxt { display: grid; min-width: 0; }
-.pbhtxt b, .pbhtxt small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pbhtxt b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pbhtxt small { color: var(--muted); font-size: 12px; }
 .pbhp { font-family: var(--f-num); font-size: 15px; white-space: nowrap; }
 .pbhp.plus { color: var(--ok); }
