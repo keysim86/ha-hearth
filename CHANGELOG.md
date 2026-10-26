@@ -7,7 +7,19 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Kod PDF417** w oknie karty (`format: pdf417`) — Moja Biedronka pokazuje przy kasie PDF417 (`1,<numer karty>,,,0,0`).
+  Własny koder (kompakcja bajtowa, korekcja błędów poziomu 2, wiersz 4 moduły) z tablicą wzorców ze specyfikacji
+  przepisaną z pdf417gen (MIT); sprawdzony dekoderem na 52 kodach i na zrzucie z przeglądarki
+- **Moja Biedronka: przycisk pobrania paragonów i panel automatu** na karcie (jak przy Lidlu)
+
 ### Zmieniono
+- **Przyciski kart lojalnościowych w jednym wierszu** — „uruchom automat teraz” (Aktywuj kupony / Pobierz paragony)
+  i panel automatu są okrągłymi ikonami z podpisem po prawej stronie rzędu, więc Lidl z pięcioma przyciskami nie
+  zawija się do drugiej linii; panel automatu jest dostępny zawsze (wcześniej tylko przy stanie wymagającym uwagi),
+  a gdy trzeba się zalogować — w jego miejscu wyraźne „Zaloguj ↗”
+- **Lidl Plus: kupony wykluczające się** — kupon, którego Lidl nie aktywuje, bo aktywny jest inny z tej samej grupy
+  (np. dwa różne „na zakupy za min. 100 zł”), ma na liście status „wyklucza się” zamiast ostrzegawczego „nieaktywny”
 - **Moja Biedronka: jedna karta dla kilku kont** — przy więcej niż jednym koncie (`sensor.biedronka_<konto>_stan`)
   zamiast osobnych kart jest jedna z przełącznikiem w prawym górnym rogu (np. „Grzegorz | Klaudia”); domyślnie
   pierwsze konto alfabetycznie, wybór zapamiętywany na urządzeniu. Wydatki, ostatni paragon, stan automatu i okna

@@ -6,7 +6,7 @@ import { forecast, wmo } from "../data/weather";
 import { f1, num, round, zl } from "../format";
 import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } from "../svg";
 import { areaOf } from "../model";
-import { code128, ean13, qr } from "../barcode";
+import { code128, ean13, pdf417, qr } from "../barcode";
 import { entityName, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
@@ -126,7 +126,7 @@ function mailbox(ctx: Ctx): TemplateResult | typeof nothing {
 
 // ---- karty lojalnościowe: kod do zeskanowania przy kasie (sensor.<automat>_<konto>_karta) ----
 
-/** Stan encji karty = treść kodu, atrybuty `format` (ean13 / qr / code128 / gs1-128 / tekst = sam numer) i `numer`. */
+/** Stan encji karty = treść kodu, atrybuty `format` (ean13 / qr / pdf417 / code128 / gs1-128 / tekst = sam numer) i `numer`. */
 function cardCode(ctx: Ctx, kind: CouponKind, konto: string): { kod: string; format: string; numer: string } | null {
   const s = ctx.hass.states[`sensor.${kind}_${konto}_karta`];
   if (!s || ["unknown", "unavailable", ""].includes(s.state)) return null;
@@ -167,11 +167,20 @@ function c128Svg(code: string, gs1: boolean): TemplateResult | null {
     <rect width=${w} height="50" fill="#fff"></rect><path d=${d} fill="#000"></path></svg>`;
 }
 
+function pdfSvg(text: string): TemplateResult | null {
+  const rows = pdf417(text);
+  if (!rows) return null;
+  const q = 2, h = 4, w = rows[0].length + 2 * q, H = rows.length * h + 2 * q; // wiersz = 4 moduły (min. 3) — łatwiej z ekranu
+  const d = rows.flatMap((row, y) => [...row.matchAll(/1+/g)].map((m) => `M${q + m.index!} ${q + y * h}h${m[0].length}v${h}h-${m[0].length}z`)).join("");
+  return html`<svg class="pdf" viewBox="0 0 ${w} ${H}" shape-rendering="crispEdges" role="img" aria-label="Kod PDF417 karty">
+    <rect width=${w} height=${H} fill="#fff"></rect><path d=${d} fill="#000"></path></svg>`;
+}
+
 /** Treść okna karty: kod na białym tle (także w ciemnym motywie, bo czytnik przy kasie potrzebuje kontrastu) i numer. */
 export function loyaltyCard(ctx: Ctx, kind: CouponKind, konto: string): TemplateResult {
   const c = cardCode(ctx, kind, konto);
   const rysunek = !c ? null : c.format === "qr" ? qrSvg(c.kod) : c.format === "ean13" ? eanSvg(c.kod)
-    : c.format === "code128" || c.format === "gs1-128" ? c128Svg(c.kod, c.format === "gs1-128") : null;
+    : c.format === "code128" || c.format === "gs1-128" ? c128Svg(c.kod, c.format === "gs1-128") : c.format === "pdf417" ? pdfSvg(c.kod) : null;
   const numer = c && c.numer && c.numer !== "null" ? c.numer.replace(/(\d{4})(?=\d)/g, "$1 ") : "";
   return html`${rysunek
       ? html`<div class="lkod">${rysunek}<b class="lnum">${numer}</b></div>`
@@ -196,6 +205,22 @@ function monthSpend(ctx: Ctx, kind: CouponKind, konto: string): string {
   const s = ctx.hass.states[`sensor.${kind}_${konto}_wydatki_w_miesiacu`];
   const v = num(s?.state), m = Number(String(s?.attributes.miesiac ?? "").slice(5, 7));
   return !v ? "" : `${zl(v)} w ${MIESIACE_W[m - 1] ?? "tym miesiącu"}`; // 0 = bez zakupów w tym miesiącu
+}
+
+const RUN_ICON = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35Z"></path></svg>`;
+const OPEN_ICON = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7Zm5 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z"></path></svg>`;
+
+/** Okrągłe przyciski z prawej strony rzędu (żeby przyciski karty mieściły się w jednym wierszu): „uruchom automat teraz”
+ *  (button.press) i panel automatu; gdy trzeba się zalogować — zamiast ikony wyraźne „Zaloguj ↗”. */
+function sideButtons(ctx: Ctx, run: { entity: string; opis: string; zajety: boolean } | null, panel?: string, stan?: string): TemplateResult {
+  const stop = (e: Event) => e.stopPropagation();
+  return html`<span class="pbside">
+    ${run && ctx.hass.states[run.entity] ? html`<button class="pbbtn pbico" type="button" title=${run.opis} aria-label=${run.opis} ?disabled=${run.zajety}
+      @click=${(e: Event) => { stop(e); ctx.actions.call("button", "press", { entity_id: run.entity }); }}>${RUN_ICON}</button>` : nothing}
+    ${!panel ? nothing : stan === "wymaga_logowania"
+      ? html`<a class="pbbtn" href=${panel} target="_blank" rel="noopener noreferrer" @click=${stop}>Zaloguj ↗</a>`
+      : html`<a class="pbbtn pbico" href=${panel} target="_blank" rel="noopener noreferrer" title="Panel automatu" aria-label="Panel automatu" @click=${stop}>${OPEN_ICON}</a>`}
+  </span>`;
 }
 
 function receiptsButton(ctx: Ctx, kind: CouponKind, konto: string): TemplateResult | typeof nothing {
@@ -312,8 +337,7 @@ function biedronka(ctx: Ctx): TemplateResult[] {
       <div class="pbacts">
         ${cardButton(ctx, "biedronka", k)}
         ${receiptsButton(ctx, "biedronka", k)}
-        ${uwaga && panel ? html`<a class="pbbtn" href=${panel} target="_blank" rel="noopener noreferrer"
-          @click=${(e: Event) => e.stopPropagation()}>${stan === "wymaga_logowania" ? "Zaloguj" : "Panel"} ↗</a>` : nothing}
+        ${sideButtons(ctx, { entity: `button.biedronka_${k}_pobierz_paragony`, opis: "Pobierz paragony teraz", zajety: stan === "w_toku" || stan === "logowanie" }, panel, stan)}
       </div>
     </div>`;
   });
@@ -361,8 +385,7 @@ function payback(ctx: Ctx): TemplateResult[] {
       <div class="pbacts">
         ${cardButton(ctx, "payback", k)}
         ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
-        ${h.states[btn] ? html`<button class="pbbtn" type="button" ?disabled=${stan === "w_toku"}
-          @click=${(e: Event) => stop(e, () => ctx.actions.call("button", "press", { entity_id: btn }))}>Aktywuj</button>` : nothing}
+        ${sideButtons(ctx, { entity: btn, opis: "Aktywuj kupony teraz", zajety: stan === "w_toku" })}
       </div>
     </div>`;
   });
@@ -472,16 +495,13 @@ function lidl(ctx: Ctx): TemplateResult[] {
         ${cardButton(ctx, "lidl", k)}
         ${lista ? html`<button class="pbbtn" type="button" @click=${(e: Event) => stop(e, otworz)}>Kupony</button>` : nothing}
         ${receiptsButton(ctx, "lidl", k)}
-        ${h.states[btn] ? html`<button class="pbbtn" type="button" ?disabled=${zajety}
-          @click=${(e: Event) => stop(e, () => ctx.actions.call("button", "press", { entity_id: btn }))}>Aktywuj</button>` : nothing}
-        ${uwaga && panel ? html`<a class="pbbtn" href=${panel} target="_blank" rel="noopener noreferrer"
-          @click=${(e: Event) => e.stopPropagation()}>${stan === "wymaga_logowania" ? "Zaloguj" : "Panel"} ↗</a>` : nothing}
+        ${sideButtons(ctx, { entity: btn, opis: "Aktywuj kupony teraz", zajety }, panel, stan)}
       </div>
     </div>`;
   });
 }
 
-interface LidlKupon { id: string; tytul: string; rabat: string; opis: string; obraz: string | null; od: string | null; do: string | null; aktywny: boolean; sekcja: string; link: string | null }
+interface LidlKupon { id: string; tytul: string; rabat: string; opis: string; obraz: string | null; od: string | null; do: string | null; aktywny: boolean; sekcja: string; link: string | null; wykluczony?: boolean }
 
 /** Sekcje aplikacji (nazwy od automatu) w kolejności filtra; nieznane dochodzą na końcu. */
 const LP_SEKCJE: Array<[string, string]> = [["wszystkie sklepy", "W sklepach"], ["inne sklepy", "Inne sklepy"], ["sklep internetowy", "Online"]];
@@ -508,7 +528,7 @@ export function lidlCoupons(ctx: Ctx, konto: string): TemplateResult {
   for (const k of wszystkie) {
     if (filtr !== "all" && k.sekcja !== filtr) continue;
     if (szukaj && !`${k.tytul} ${k.rabat} ${k.opis}`.toLowerCase().includes(szukaj)) continue;
-    const klucz = [k.sekcja, k.tytul, k.rabat, k.opis, k.od, k.do, k.aktywny, k.link].join("|");
+    const klucz = [k.sekcja, k.tytul, k.rabat, k.opis, k.od, k.do, k.aktywny, k.wykluczony, k.link].join("|");
     const g = grupy.get(klucz);
     if (g) g.n++;
     else grupy.set(klucz, { k, n: 1 });
@@ -533,7 +553,8 @@ export function lidlCoupons(ctx: Ctx, konto: string): TemplateResult {
           const kiedy = czeka(k)
             ? `${dniOdDzis(od) <= 0 ? "od dziś" : dniOdDzis(od) === 1 ? "od jutra" : `od ${dm(od)}`}${ileDni === null ? "" : ` do ${dm(d)}`}`
             : ileDni === null ? "" : ileDni <= 0 ? "kończy się dziś" : ileDni === 1 ? "kończy się jutro" : `ważny do ${dm(d)}`;
-          const status = k.aktywny ? "aktywny" : czeka(k) ? "czeka na start" : "nieaktywny";
+          // „wyklucza się”: Lidl odrzucił aktywację, bo aktywny jest inny kupon z tej samej grupy (jeden z grupy naraz).
+          const status = k.aktywny ? "aktywny" : czeka(k) ? "czeka na start" : k.wykluczony ? "wyklucza się" : "nieaktywny";
           return html`<div class="pbk lpk">
             <span class="pblogo">${k.obraz ? html`<img src=${k.obraz} alt="" loading="lazy" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} />` : nothing}<i>${((k.tytul || "").replace(/^[^\p{L}\p{N}]+/u, "") || "?").slice(0, 1)}</i></span>
             <span class="pbktxt"><b>${k.tytul}${n > 1 ? html` <span class="lpile">· ${n} ${odmiana(n, "kupon", "kupony", "kuponów")}</span>` : nothing}</b>
@@ -541,7 +562,7 @@ export function lidlCoupons(ctx: Ctx, konto: string): TemplateResult {
               ${opis ? html`<small>${opis}</small>` : nothing}<small class="pbdo ${!czeka(k) && ileDni !== null && ileDni <= 1 ? "soon" : ""}">${kiedy}${k.link ? ` · online${k.aktywny ? "" : ` · ${status}`}` : ""}</small></span>
             ${k.link
               ? html`<a class="btn hot" href=${k.link} target="_blank" rel="noopener noreferrer">Do sklepu ↗</a>`
-              : html`<span class="lpchip ${k.aktywny ? "ok" : czeka(k) ? "" : "warn"}">${status}</span>`}
+              : html`<span class="lpchip ${k.aktywny ? "ok" : czeka(k) || k.wykluczony ? "" : "warn"}">${status}</span>`}
           </div>`;
         })}</div>`
       : html`<div class="empty">${wszystkie.length ? "Brak kuponów dla tego filtra." : "Lista kuponów pojawi się po najbliższym przebiegu automatu."}</div>`}`;

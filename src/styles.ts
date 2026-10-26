@@ -422,7 +422,11 @@ dialog.pdlg { width: min(720px, calc(100% - 24px)); }
 .lpcard { background: radial-gradient(120% 140% at 100% 0%, #2f7fd6 0%, transparent 55%), linear-gradient(135deg, #003b82 0%, #0050aa 55%, #0a64c2 100%); }
 .lpmark { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; letter-spacing: .01em; }
 .lpmark i { width: 22px; height: 22px; border-radius: 50%; background: #fff000; box-shadow: inset 0 0 0 2.5px #e60a14; }
-a.pbbtn { text-decoration: none; }
+a.pbbtn { text-decoration: none; display: inline-flex; align-items: center; }
+/* okrągłe przyciski „uruchom teraz” i panel z prawej strony rzędu przycisków karty */
+.pbside { display: inline-flex; gap: 6px; margin-left: auto; }
+.pbbtn.pbico { width: 33px; height: 33px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center; }
+.pbbtn.pbico svg { width: 17px; height: 17px; }
 .lpk .pbben { color: #c8102e; }
 :host([dark]) .lpk .pbben { color: #ff7a7a; }
 .lpk .pblogo i { color: #0050aa; }
@@ -435,6 +439,7 @@ a.pbbtn { text-decoration: none; }
 .lkod svg { display: block; height: auto; }
 .lkod svg.qr { width: min(100%, 300px); }
 .lkod svg.ean { width: min(100%, 440px); }
+.lkod svg.pdf { width: min(100%, 460px); }
 .lnum { font-family: var(--f-num); font-size: 20px; letter-spacing: .08em; }
 .lnum.big { font-size: 26px; padding: 18px 0; }
 /* logotypy kart (encje image automatów) */
