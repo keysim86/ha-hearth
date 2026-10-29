@@ -317,7 +317,16 @@ export class HearthPanel extends LitElement {
     target.contentWindow.postMessage({ type: "hearth-theme", dark: Boolean(this.hass?.themes?.darkMode), vars }, "*");
   }
 
+  /** Pasek zakładek szerszy niż ekran: klasy `more` / `less` = wygaszona krawędź tam, gdzie zostały schowane zakładki. */
+  private tabsEdge() {
+    const nav = this.renderRoot.querySelector<HTMLElement>("nav.tabs");
+    if (!nav) return;
+    nav.classList.toggle("less", nav.scrollLeft > 2);
+    nav.classList.toggle("more", nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2);
+  }
+
   private measure() {
+    this.tabsEdge();
     const grid = this.renderRoot.querySelector<HTMLElement>(".grid");
     if (!grid) return;
     const n = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length || 1;
@@ -672,7 +681,14 @@ export class HearthPanel extends LitElement {
     const tab = this.tab;
     const alertCount = this.tabs.includes("alerts") ? activeAlerts(ctx).length : 0;
     const shopCount = this.tabs.includes("shopping") ? toBuy(hass) : 0;
-    const nav = html`<nav class="tabs" aria-label="Zakładki">
+    const nav = html`<nav class="tabs" aria-label="Zakładki" @scroll=${() => this.tabsEdge()}
+      @wheel=${(e: WheelEvent) => {
+        // Kółko myszy przewija pasek w bok, gdy zakładki się nie mieszczą.
+        const el = e.currentTarget as HTMLElement;
+        if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+        el.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }}>
       ${this.tabs.map((t) => html`<a href="${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}" class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"}
         @click=${(e: MouseEvent) => {
           if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;

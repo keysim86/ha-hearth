@@ -24,6 +24,9 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 - **Karty PAYBACK, Lidl Plus i Moja Biedronka są na zakładce Zakupy** zamiast Dom. Migracja ustawień (wpis 1.2)
   dopisuje Zakupy zaraz po Dom w jawnie wybranych zakładkach; bez wyboru zakładka pokazuje się, gdy są listy Bring!
   albo automaty kart. **Wymaga restartu HA** (nowy adres API katalogu)
+- **Pasek zakładek ciaśniejszy** (mniejsze odstępy i liczniki), żeby 16 zakładek z licznikami (np. Zakupy i Alerty)
+  mieściło się w jednej linii; gdy się nie mieszczą, krawędź paska wygasza się po stronie schowanych zakładek, a kółko
+  myszy przewija pasek w bok
 
 ## [0.16.0] - 2026-10-26
 

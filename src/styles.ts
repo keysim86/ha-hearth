@@ -301,9 +301,13 @@ dialog.set::backdrop { background: rgba(10, 14, 18, .45); }
 .prof.airp { color: var(--air); }
 .toast[hidden] { display: none; }
 /* zakładki */
-.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); margin-top: -6px; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); margin-top: -6px; }
+/* Zakładki, które się nie mieszczą: wygaszona krawędź po tej stronie, gdzie coś jest schowane (klasy z tabsEdge). */
+.tabs.more { mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); }
+.tabs.less { mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent); }
+.tabs.more.less { mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
 .tabs::-webkit-scrollbar { display: none; }
-.tabs a { color: var(--muted); text-decoration: none; font-weight: 700; font-size: 14.5px; padding: 10px 14px; border-bottom: 3px solid transparent; white-space: nowrap; border-radius: 8px 8px 0 0; }
+.tabs a { color: var(--muted); text-decoration: none; font-weight: 700; font-size: 14.5px; padding: 10px 11px; flex: none; border-bottom: 3px solid transparent; white-space: nowrap; border-radius: 8px 8px 0 0; }
 .tabs a:hover { color: var(--fg); background: var(--surface-2); }
 .tabs a.on { color: var(--fg); border-bottom-color: var(--accent); }
 .tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -723,7 +727,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; padding
 .alert.info .asev { background: var(--frost-soft); color: var(--frost); }
 .atxt { display: grid; }
 .atxt small { color: var(--muted); font-size: 12.5px; }
-.tbadge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px; background: var(--crit); color: #fff; font-size: 11px; vertical-align: 1px; }
+.tbadge { display: inline-grid; place-items: center; min-width: 16px; height: 16px; padding: 0 4px; margin-left: 4px; border-radius: 8px; background: var(--crit); color: #fff; font-size: 10.5px; vertical-align: 1px; }
 .tbadge.info { background: #ee524f; }
 .agent { width: 100%; height: calc(100vh - 170px); min-height: 480px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
 
