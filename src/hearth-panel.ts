@@ -25,6 +25,7 @@ import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
+import { hasShopping, shoppingView, toBuy } from "./views/shopping";
 import { camerasView } from "./views/cameras";
 import { networkView, speedIds } from "./views/network";
 import { proxmoxView } from "./views/proxmox";
@@ -34,9 +35,10 @@ import { healthView } from "./views/health";
 import { appliancesView } from "./views/appliances";
 
 const STYLES: Style[] = ["tiles", "list", "dials"];
-const TABS: Tab[] = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"];
+const TABS: Tab[] = ["home", "shopping", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"];
 const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
   home: ["dom", "Dom"],
+  shopping: ["zakupy", "Zakupy"],
   climate: ["klimat", "Klimat"],
   switches: ["przelaczniki", "Przełączniki"],
   energy: ["energia", "Energia"],
@@ -175,7 +177,8 @@ export class HearthPanel extends LitElement {
     const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
     return chosen.length
       ? chosen
-      : TABS.filter((t) => (t !== "agent" || this.options.agent_url) && (t !== "health" || this.panel?.config?.health?.length));
+      : TABS.filter((t) => (t !== "agent" || this.options.agent_url) && (t !== "health" || this.panel?.config?.health?.length)
+          && (t !== "shopping" || (this.hass ? hasShopping(this.hass) : false)));
   }
 
   private get tab(): Tab {
@@ -264,7 +267,7 @@ export class HearthPanel extends LitElement {
         ...this.rooms().flatMap((r) => [r.temp, ...r.fans, ...r.dehumidifiers.flatMap((d) => [d.entity, d.power, d.energy])]),
         o.outdoor_temperature, o.outdoor_pressure, o.outdoor_illuminance, o.outdoor_pm25,
       ],
-      home: [],
+      home: [], shopping: [],
       energy: [o.power_total, ...(o.phase_power ?? [])],
       boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
       network: [...(this.hass ? speedIds({ hass: this.hass, opts: o } as Ctx) : []), ...(o.net_status ?? [])],
@@ -668,18 +671,21 @@ export class HearthPanel extends LitElement {
     }
     const tab = this.tab;
     const alertCount = this.tabs.includes("alerts") ? activeAlerts(ctx).length : 0;
+    const shopCount = this.tabs.includes("shopping") ? toBuy(hass) : 0;
     const nav = html`<nav class="tabs" aria-label="Zakładki">
       ${this.tabs.map((t) => html`<a href="${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}" class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"}
         @click=${(e: MouseEvent) => {
           if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
           e.preventDefault();
           this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}`);
-        }}>${TAB_INFO[t][1]}${t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}</a>`)}
+        }}>${TAB_INFO[t][1]}${t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}${
+          t === "shopping" && shopCount ? html`<span class="tbadge info">${shopCount}</span>` : nothing}</a>`)}
     </nav>`;
     const camTick = Math.floor(Date.now() / 5000);
     const views: Record<Tab, () => unknown> = {
       climate: () => this.climate(ctx),
       home: () => homeView(ctx),
+      shopping: () => shoppingView(ctx),
       switches: () => switchesView(ctx),
       energy: () => energyView(ctx),
       boiler: () => boilerView(ctx),

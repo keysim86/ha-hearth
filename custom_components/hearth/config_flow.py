@@ -166,6 +166,8 @@ class HearthConfigFlow(ConfigFlow, domain=DOMAIN):
     """Jeden wpis na instalację HA."""
 
     VERSION = 1
+    # 2: zakładka Zakupy (async_migrate_entry dopisuje ją do jawnie wybranych zakładek).
+    MINOR_VERSION = 2
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:

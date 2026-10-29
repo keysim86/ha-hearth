@@ -1,26 +1,35 @@
-// Karta „Zakupy” na zakładce Dom: lista z Bring! (encje todo.* integracji bring) w wyglądzie aplikacji Bring! —
-// kafelki z ikonami produktów pogrupowane działami, kliknięcie = kupione, „ostatnio kupione” wracają jednym kliknięciem,
-// pole „Dodaj” („Mleko, 2 l” = nazwa i opis) i katalog działów Bring!.
+// Zakładka „Zakupy”: na górze karty lojalnościowe (PAYBACK, Lidl Plus, Moja Biedronka), pod nimi lista z Bring! (encje todo.* integracji bring) w wyglądzie aplikacji Bring! — kafelki z ikonami
+// produktów pogrupowane działami, kliknięcie = kupione, „ostatnio kupione” wracają jednym kliknięciem, pole „Dodaj”
+// („Mleko, 2 l” = nazwa i opis) i katalog działów Bring! (pod listą, jak w aplikacji; można zwinąć).
 
 import { html, nothing, type TemplateResult } from "lit";
 import {
   bringCatalog, catalogItem, iconUrl, isPending, markPending, parseEntry, sameName, shopItems,
   type Catalog, type ShopItem,
 } from "../data/shopping";
+import type { Hass } from "../types";
 import { since, st, type Ctx } from "./common";
+import { loyaltyCards } from "./home";
 
 const OWN = "Własne produkty";
 const RECENT_LIMIT = 12;
 
 /** Listy Bring! w HA: encje todo.* z platformy „bring”, alfabetycznie. */
-function bringLists(ctx: Ctx): string[] {
-  return Object.values(ctx.hass.entities)
-    .filter((e) => e.platform === "bring" && e.entity_id.startsWith("todo.") && !e.hidden && ctx.hass.states[e.entity_id])
+export function bringLists(hass: Hass): string[] {
+  return Object.values(hass.entities ?? {})
+    .filter((e) => e.platform === "bring" && e.entity_id.startsWith("todo.") && !e.hidden && hass.states[e.entity_id])
     .map((e) => e.entity_id)
-    .sort((a, b) => listName(ctx, a).localeCompare(listName(ctx, b), "pl"));
+    .sort((a, b) => listName(hass, a).localeCompare(listName(hass, b), "pl"));
 }
 
-const listName = (ctx: Ctx, id: string) => String(ctx.hass.states[id]?.attributes.friendly_name ?? id.slice(5));
+/** Czy pokazać zakładkę bez jawnego wyboru zakładek: są listy Bring! albo automat kart lojalnościowych. */
+export const hasShopping = (hass: Hass) =>
+  bringLists(hass).length > 0 || Object.keys(hass.states).some((e) => /^sensor\.(payback|lidl|biedronka)_[a-z0-9_]+_stan$/.test(e));
+
+/** Ile pozycji do kupienia na wszystkich listach (stan encji todo) — liczba na zakładce. */
+export const toBuy = (hass: Hass) => bringLists(hass).reduce((n, id) => n + (Number(hass.states[id]?.state) || 0), 0);
+
+const listName = (hass: Hass, id: string) => String(hass.states[id]?.attributes.friendly_name ?? id.slice(5));
 
 /** Encja z tego samego urządzenia listy (np. aktywności, język listy). */
 function sibling(ctx: Ctx, list: string, key: string): string | undefined {
@@ -99,9 +108,16 @@ function catalogBrowser(ctx: Ctx, list: string, cat: Catalog, items: ShopItem[])
   </div>`;
 }
 
-export function shopping(ctx: Ctx): TemplateResult | typeof nothing {
-  const lists = bringLists(ctx);
-  if (!lists.length) return nothing;
+export function shoppingView(ctx: Ctx): TemplateResult {
+  const cards = loyaltyCards(ctx);
+  const loyal = cards.length ? html`<section class="sec"><div class="cards loyal">${cards}</div></section>` : nothing;
+  return html`${loyal}${shoppingList(ctx, cards.length > 0)}`;
+}
+
+function shoppingList(ctx: Ctx, other: boolean): TemplateResult | typeof nothing {
+  const lists = bringLists(ctx.hass);
+  if (!lists.length)
+    return other ? nothing : html`<div class="empty">Brak list zakupów — dodaj w Home Assistant integrację Bring!, a jej listy pojawią się tutaj.</div>`;
   const list = lists.includes(ctx.ui["zakupy.lista"]) ? ctx.ui["zakupy.lista"] : lists[0];
   const items = shopItems(ctx.hass, list, ctx.refresh);
   const cat = bringCatalog(ctx.hass, locale(ctx, list), ctx.refresh);
@@ -111,15 +127,15 @@ export function shopping(ctx: Ctx): TemplateResult | typeof nothing {
   const akt = sibling(ctx, list, "activities");
   const kto = akt ? ctx.hass.states[akt]?.attributes.last_activity_by : undefined;
   const kiedy = akt ? st(ctx, akt) : undefined;
-  const katalog = ctx.ui["zakupy.katalog"] === "1" && cat;
+  const katalog = ctx.ui["zakupy.katalog"] !== "0" && cat;
   const podpowiedzi = [...new Set([...done.map((i) => i.summary), ...(cat?.items.map((i) => i.name) ?? [])])];
   return html`<section class="sec">
     <div class="shop">
       <div class="shophead">
-        <span class="shopmark"><i>${bagIcon}</i>Zakupy</span>
+        <span class="shopmark"><i>${bagIcon}</i>Lista zakupów</span>
         ${lists.length > 1 ? html`<span class="shopsw" role="group" aria-label="Lista Bring!">${lists.map((x) => html`<button type="button"
           class=${x === list ? "on" : ""} aria-pressed=${x === list ? "true" : "false"}
-          @click=${() => ctx.actions.setUi("zakupy.lista", x)}>${listName(ctx, x)}</button>`)}</span>` : nothing}
+          @click=${() => ctx.actions.setUi("zakupy.lista", x)}>${listName(ctx.hass, x)}</button>`)}</span>` : nothing}
         <span class="shopmeta">${items === null ? "wczytuję…" : todo.length ? `${todo.length} do kupienia` : "lista pusta"}${
           kto && kiedy && Date.parse(kiedy) ? ` · ostatnia zmiana: ${kto}, ${since(kiedy)} temu` : ""}</span>
       </div>
@@ -134,7 +150,7 @@ export function shopping(ctx: Ctx): TemplateResult | typeof nothing {
         <datalist id="zakupy-podpowiedzi">${podpowiedzi.map((p) => html`<option value=${p}></option>`)}</datalist>
         <button class="btn hot" type="submit">Dodaj</button>
         ${cat ? html`<button class="btn ${katalog ? "hot" : ""}" type="button" aria-expanded=${katalog ? "true" : "false"}
-          @click=${() => ctx.actions.setUi("zakupy.katalog", katalog ? "" : "1")}>Katalog</button>` : nothing}
+          @click=${() => ctx.actions.setUi("zakupy.katalog", katalog ? "0" : "1")}>Katalog</button>` : nothing}
       </form>
       ${todo.length
         ? bySection(cat, todo).map(([s, its]) => html`<div class="shopsec">
@@ -148,7 +164,7 @@ export function shopping(ctx: Ctx): TemplateResult | typeof nothing {
           ${done.length > RECENT_LIMIT ? html`<button class="btn shopmore" type="button"
             @click=${() => ctx.actions.setUi("zakupy.wszystkie", all ? "" : "1")}>${all ? "Pokaż mniej" : `Pokaż wszystkie (${done.length})`}</button>` : nothing}
         </div>` : nothing}
-      ${katalog ? catalogBrowser(ctx, list, cat, items ?? []) : nothing}
+      ${katalog ? html`<div class="shopsec"><h4>Katalog Bring!</h4>${catalogBrowser(ctx, list, cat, items ?? [])}</div>` : nothing}
     </div>
   </section>`;
 }

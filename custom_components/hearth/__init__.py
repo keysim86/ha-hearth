@@ -15,6 +15,7 @@ from .bring import BringCatalogView
 from .const import (
     CONF_ADMIN_ONLY,
     CONF_ICON,
+    CONF_TABS,
     CONF_TITLE,
     DATA_STATIC_REGISTERED,
     DEFAULTS,
@@ -50,6 +51,21 @@ def health_profiles(entry: ConfigEntry) -> list[dict]:
         for sub_id, sub in entry.subentries.items()
         if sub.subentry_type == SUBENTRY_HEALTH
     ]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """1.1 → 1.2: nowa zakładka Zakupy (karty lojalnościowe przeniesione z Dom + lista Bring!).
+
+    Jawnie wybrane zakładki dostają ją zaraz po Dom — inaczej karty PAYBACK / Lidl / Biedronka zniknęłyby z panelu.
+    """
+    if entry.version == 1 and entry.minor_version < 2:
+        options = dict(entry.options)
+        tabs = options.get(CONF_TABS)
+        if isinstance(tabs, list) and tabs and "shopping" not in tabs:
+            at = tabs.index("home") + 1 if "home" in tabs else len(tabs)
+            options[CONF_TABS] = [*tabs[:at], "shopping", *tabs[at:]]
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -724,6 +724,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; padding
 .atxt { display: grid; }
 .atxt small { color: var(--muted); font-size: 12.5px; }
 .tbadge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px; background: var(--crit); color: #fff; font-size: 11px; vertical-align: 1px; }
+.tbadge.info { background: #ee524f; }
 .agent { width: 100%; height: calc(100vh - 170px); min-height: 480px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
 
 /* liczniki */

@@ -48,3 +48,24 @@ async def test_options_change_reloads_with_new_config(hass: HomeAssistant, panel
     # Ścieżka plików i widok katalogu rejestrowane tylko raz na uruchomienie HA.
     hass.http.async_register_static_paths.assert_awaited_once()
     hass.http.register_view.assert_called_once()
+
+
+async def test_migration_adds_shopping_tab_after_home(hass: HomeAssistant, panel_mocks) -> None:
+    tabs = ["home", "climate", "alerts"]
+    entry = MockConfigEntry(domain=DOMAIN, version=1, minor_version=1, options={**DEFAULTS, "tabs": tabs})
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.options["tabs"] == ["home", "shopping", "climate", "alerts"]
+
+
+async def test_migration_without_home_appends_shopping_at_end(hass: HomeAssistant, panel_mocks) -> None:
+    no_home = MockConfigEntry(domain=DOMAIN, version=1, minor_version=1, options={**DEFAULTS, "tabs": ["climate"]})
+    no_home.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(no_home.entry_id)
+    await hass.async_block_till_done()
+    assert no_home.options["tabs"] == ["climate", "shopping"]
+    assert no_home.minor_version == 2

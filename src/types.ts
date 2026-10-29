@@ -48,7 +48,7 @@ export interface Hass {
 }
 
 export type Style = "tiles" | "list" | "dials";
-export type Tab = "home" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "health" | "appliances" | "agent" | "alerts";
+export type Tab = "home" | "shopping" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "health" | "appliances" | "agent" | "alerts";
 
 export interface Options {
   style: Style;

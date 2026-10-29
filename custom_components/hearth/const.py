@@ -19,7 +19,7 @@ CONF_ACCENT = "accent_color"
 # Kolory wiodące (klucze jak w panelu); w opcjach można też wpisać własny „#rrggbb”.
 ACCENTS = ["ember", "frost", "air", "ok", "bath", "rose", "slate", "theme"]
 STYLES = ["tiles", "list", "dials"]
-TABS = ["home", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"]
+TABS = ["home", "shopping", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"]
 
 # Na zewnątrz
 CONF_OUT_TEMP = "outdoor_temperature"

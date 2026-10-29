@@ -8,7 +8,6 @@ import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } f
 import { areaOf } from "../model";
 import { code128, ean13, pdf417, qr } from "../barcode";
 import { entityName, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
-import { shopping } from "./shopping";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
 
@@ -758,14 +757,15 @@ function weather(ctx: Ctx): TemplateResult | typeof nothing {
 }
 
 export function homeView(ctx: Ctx): TemplateResult {
-  const mail = mailbox(ctx), bins = waste(ctx), cards = [...payback(ctx), ...lidl(ctx), ...biedronka(ctx)];
-  // Karty lojalnościowe we własnym wierszu, obok siebie (w jednej siatce ze skrzynką Lidl spadał pod spód).
+  const mail = mailbox(ctx), bins = waste(ctx);
   const top = mail !== nothing || bins !== nothing ? html`<div class="cards two top">${mail}${bins}</div>` : nothing;
   return html`${persons(ctx)} ${gates(ctx)}
-    ${top !== nothing || cards.length ? html`<section class="sec">${top}${cards.length ? html`<div class="cards loyal">${cards}</div>` : nothing}</section>` : nothing}
-    ${shopping(ctx)}
+    ${top !== nothing ? html`<section class="sec">${top}</section>` : nothing}
     ${weather(ctx)}`;
 }
+
+/** Karty lojalnościowe (PAYBACK, Lidl Plus, Moja Biedronka) — na zakładce Zakupy, nad listą. */
+export const loyaltyCards = (ctx: Ctx): TemplateResult[] => [...payback(ctx), ...lidl(ctx), ...biedronka(ctx)];
 
 // ---- okno osoby: dane + mapa ----
 
