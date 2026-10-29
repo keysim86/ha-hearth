@@ -7,6 +7,17 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Dom: karta Zakupy z listy Bring!** (encje `todo.*` integracji Bring!) w wyglądzie aplikacji Bring!: kafelki
+  z ikonami produktów pogrupowane działami (koralowe — do kupienia, kliknięcie = kupione), **Ostatnio kupione**
+  (morskie, kliknięcie = z powrotem na listę; 12 pierwszych, „Pokaż wszystkie”), pole **Dodaj** z podpowiedziami
+  („Mleko, 2 l” = nazwa i opis; produkt z ostatnio kupionych wraca na listę zamiast dublować), **Katalog** działów
+  Bring! (kliknięcie = dodaj / usuń z listy), przełącznik list (np. Dom / Remont), liczba pozycji i ostatnia zmiana
+  (kto i kiedy). Zmiany na żywo z subskrypcji `todo/item/subscribe` — to samo widać od razu w aplikacji Bring!
+- **Katalog Bring! przez Hearth:** `GET /api/hearth/bring_catalog/<język>` (np. `pl-PL`, tylko dla zalogowanych)
+  pobiera katalog z web.getbring.com po stronie HA (serwer Bring! nie przepuszcza zapytań z przeglądarki — CORS)
+  i trzyma go dobę; gdy Bring! nie odpowiada, oddaje starszy katalog, a bez niego karta działa bez ikon i działów
+
 ## [0.16.0] - 2026-10-26
 
 ### Dodano

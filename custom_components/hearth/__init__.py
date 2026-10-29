@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 
+from .bring import BringCatalogView
 from .const import (
     CONF_ADMIN_ONLY,
     CONF_ICON,
@@ -59,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(STATIC_URL, str(FRONTEND_DIR), cache_headers=False)]
         )
+        # Katalog Bring! dla karty Zakupy — też raz na życie HA.
+        hass.http.register_view(BringCatalogView())
         hass.data[DATA_STATIC_REGISTERED] = True
 
     options = panel_options(entry)

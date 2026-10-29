@@ -6,3 +6,4 @@ dev/snapshot*.json
 dev/options.json
 dev/health*.json
 dev/loga/
+dev/bring-catalog*.json

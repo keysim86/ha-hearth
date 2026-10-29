@@ -42,6 +42,7 @@
   };
   document.body.classList.toggle("dark", dark);
   window.__calls = [];
+  const todo = snap.todo_items ?? {}, todoSubs = {};
   const hass = {
     states, entities: snap.entities, devices: snap.devices, areas: snap.areas,
     themes: { darkMode: dark }, config: { time_zone: "Europe/Warsaw", ...(snap.config ?? {}) }, user: { is_admin: true },
@@ -51,6 +52,7 @@
         for (const id of [].concat(msg.target?.entity_id ?? [])) response[id] = { events: snap.calendar_events?.[id] ?? [] };
         return { response };
       }
+      if (msg.type === "todo/item/list") return { items: todo[msg.entity_id] ?? [] };
       if (msg.type === "energy/get_prefs") return snap.energy_prefs ?? { energy_sources: [], device_consumption: [] };
       if (msg.type === "recorder/statistics_during_period" && msg.types?.includes("mean")) {
         // Zdrowie: wiersze [czas, średnia, min, max, stan] przesunięte o pełne doby.
@@ -74,8 +76,23 @@
       for (const id of msg.entity_ids) if (snap.history[id]) out[id] = snap.history[id].map(([t, s]) => ({ s, lu: t + shift / 1000 }));
       return out;
     },
+    // Katalog Bring! (dev/bring-catalog.json poza repo) — w HA podaje go Hearth (/api/hearth/bring_catalog/<język>).
+    async callApi(method, path) {
+      if (path.startsWith("hearth/bring_catalog/")) return (await fetch("./bring-catalog.json")).json();
+      throw new Error("atrapa: " + path);
+    },
     async callService(domain, service, data) {
       window.__calls.push([domain, service, data]);
+      // Atrapa list zakupów (todo z migawki): zmiana pozycji od razu trafia do subskrybentów.
+      if (domain === "todo" && todo[data.entity_id]) {
+        const list = todo[data.entity_id];
+        if (service === "add_item") list.unshift({ uid: "nowy-" + Date.now(), summary: data.item, description: data.description ?? "", status: "needs_action" });
+        if (service === "update_item") {
+          const it = list.find((i) => i.uid === data.item || i.summary === data.item);
+          if (it) { if (data.status) it.status = data.status; if (data.description !== undefined) it.description = data.description; }
+        }
+        setTimeout(() => (todoSubs[data.entity_id] ?? []).forEach((cb) => cb({ items: list.map((i) => ({ ...i })) })), 300);
+      }
       // Atrapa przełączników: input_boolean.toggle zmienia stan od razu.
       if (domain === "input_boolean" && service === "toggle") {
         const id = data.entity_id, s = el.hass.states[id];
@@ -86,6 +103,11 @@
   // Atrapa subskrypcji MQTT (zachowane tematy ebusd z migawki).
   hass.connection = {
     async subscribeMessage(cb, msg) {
+      if (msg.type === "todo/item/subscribe") {
+        (todoSubs[msg.entity_id] ??= []).push(cb);
+        setTimeout(() => cb({ items: (todo[msg.entity_id] ?? []).map((i) => ({ ...i })) }), 50);
+        return () => {};
+      }
       const prefix = String(msg.topic).replace(/\+$/, "");
       for (const [topic, payload] of Object.entries(snap.mqtt ?? {})) if (topic.startsWith(prefix)) setTimeout(() => cb({ topic, payload }), 50);
       return () => {};

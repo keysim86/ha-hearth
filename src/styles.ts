@@ -466,6 +466,40 @@ a.pbbtn { text-decoration: none; display: inline-flex; align-items: center; }
 .lpkonta button.on { background: #fff; color: #c8000e; }
 .lpkonta button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
 /* Moja Biedronka: czerwona karta z kropkami jak na biedronce */
+/* Zakupy (lista Bring!): kafelki w barwach aplikacji — do kupienia koralowe, ostatnio kupione morskie, katalog szary. */
+.shop { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 14px 16px; display: grid; gap: 12px; min-width: 0; }
+.shophead { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.shopmark { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; font-size: 18px; }
+.shopmark i { width: 30px; height: 30px; border-radius: 9px; background: #ee524f; color: #fff; display: grid; place-items: center; }
+.shopmark svg { width: 19px; height: 19px; }
+.shopsw { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+.shopsw button { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.shopsw button.on { background: #ee524f; color: #fff; }
+.shopsw button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.shopmeta { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.shopadd { display: flex; gap: 8px; flex-wrap: wrap; }
+.shopadd input { flex: 1 1 140px; min-width: 0; font: inherit; color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+.shopadd input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.shopadd .btn { padding: 8px 14px; }
+.shopsec { display: grid; gap: 7px; }
+.shopsec h4 { margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.stiles { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.stiles.small { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+.stile { aspect-ratio: 1; min-width: 0; border: 0; border-radius: 10px; background: #ee524f; color: #fff; cursor: pointer; font: inherit; text-align: center;
+  display: grid; grid-template-rows: minmax(0, 1fr) auto auto; justify-items: center; align-items: center; gap: 1px; padding: 8px 5px 7px; }
+.stile img { width: 52%; max-height: 100%; object-fit: contain; }
+.stile .sl { font-size: 30px; font-weight: 800; line-height: 1; }
+.stile b { font-size: 12.5px; line-height: 1.15; font-weight: 700; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stile small { font-size: 11px; line-height: 1.2; opacity: .88; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stile.done { background: #4faba2; }
+.stiles.small .stile b { font-size: 11.5px; }
+.stile.cat.off { background: #5f6f7a; }
+.stile.pend { opacity: .45; }
+.stile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: hover) { .stile:hover { filter: brightness(1.07); } }
+.shopchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.shopcat { display: grid; gap: 10px; padding: 10px; border-radius: 12px; background: var(--surface-2); }
+.shopmore { justify-self: start; padding: 6px 12px; font-size: 13px; }
 .bdcard { background: radial-gradient(120% 140% at 100% 0%, #ff4b4b 0%, transparent 55%), linear-gradient(135deg, #a8000b 0%, #d9000f 55%, #ef1c24 100%); }
 .bdcard::before, .bdcard::after { background: rgba(0, 0, 0, .16); }
 .bdcard::before { width: 120px; height: 120px; right: -30px; bottom: -40px; }
