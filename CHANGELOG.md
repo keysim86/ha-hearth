@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-29
+
 ### Dodano
 - **Zakładka Zakupy** (zaraz po Dom): na górze karty lojalnościowe PAYBACK / Lidl Plus / Moja Biedronka (przeniesione
   z Dom), pod nimi **lista z Bring!** (encje `todo.*` integracji Bring!) w wyglądzie aplikacji Bring!: kafelki z ikonami
