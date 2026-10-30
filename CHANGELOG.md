@@ -7,6 +7,12 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Klimat: znacznik „głowica nie odpowiada”** na karcie pokoju (wszystkie style), gdy termostat od ponad 2 h nie odezwał
+  się do Zigbee2MQTT (czujnik „ostatnio widziany” `sensor.<ieee>_last_seen` jego urządzenia — trzeba go włączyć w HA).
+  Taka głowica nie dostaje temperatury z czujnika pokoju i reguluje według starego pomiaru; po najechaniu — ile godzin
+  milczy i co sprawdzić. Ma pierwszeństwo przed „okno otwarte” i „grzeje”; bez czujnika „ostatnio widziany” nic się nie zmienia
+
 ## [0.17.0] - 2026-10-29
 
 ### Dodano

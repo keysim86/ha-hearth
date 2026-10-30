@@ -74,6 +74,7 @@ export const styles = css`
 .chip.heat { background: var(--ember-soft); color: var(--ember); }
 .chip.window { background: var(--frost-soft); color: var(--frost); }
 .chip.off { background: var(--surface-2); color: var(--faint); }
+.chip.lost { background: color-mix(in srgb, var(--crit) 14%, var(--surface)); color: var(--crit); }
 .flame { width: 10px; height: 12px; }
 @media (prefers-reduced-motion: no-preference) {
   .chip.heat .flame { animation: flick 1.4s ease-in-out infinite; transform-origin: 50% 100%; }

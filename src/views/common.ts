@@ -109,8 +109,35 @@ export function segments(ctx: Ctx, r: Room): Segment[] {
 export const dayline = (ctx: Ctx, r: Room, ticks = true) =>
   hasProfiles(r) ? timeline(segments(ctx, r), ctx.nowMinute, ticks) : nothing;
 
+/** Czujnik „ostatnio widziany” (Zigbee2MQTT: sensor.<ieee>_last_seen) urządzenia termostatu — pamiętany na czas życia
+ *  rejestru encji, żeby nie przeszukiwać go przy każdym przerysowaniu. */
+let lastSeenCache: { key: unknown; map: Map<string, string | undefined> } | null = null;
+function lastSeenOf(ctx: Ctx, climate: string): string | undefined {
+  const h = ctx.hass;
+  if (!lastSeenCache || lastSeenCache.key !== h.entities) lastSeenCache = { key: h.entities, map: new Map() };
+  const m = lastSeenCache.map;
+  if (!m.has(climate)) {
+    const dev = h.entities[climate]?.device_id;
+    m.set(climate, dev ? Object.values(h.entities).find((e) => e.device_id === dev && /^sensor\..+_last_seen$/.test(e.entity_id))?.entity_id : undefined);
+  }
+  return m.get(climate);
+}
+
+/** Termostat milczy ponad 2 h (głowica Zigbee bez kontaktu reguluje według starego pomiaru): godziny ciszy, inaczej null.
+ *  Bez czujnika „ostatnio widziany” albo bez jego wartości — null (nic nie wiemy, nie alarmujemy). */
+export function silentHours(ctx: Ctx, r: Room): number | null {
+  const id = r.climate ? lastSeenOf(ctx, r.climate) : undefined;
+  const t = id ? Date.parse(ctx.hass.states[id]?.state ?? "") : NaN;
+  if (!Number.isFinite(t)) return null;
+  const h = (Date.now() - t) / 3_600_000;
+  return h > 2 ? h : null;
+}
+
 export function chip(ctx: Ctx, r: Room): TemplateResult {
   const c = ctx.hass.states[r.climate];
+  const cisza = silentHours(ctx, r);
+  if (cisza !== null)
+    return html`<span class="chip lost" title="Głowica nie odzywa się od ${cisza < 10 ? cisza.toFixed(1).replace(".", ",") : Math.round(cisza)} h — reguluje według starej temperatury. Sprawdź baterie i zasięg Zigbee.">⚠ głowica nie odpowiada</span>`;
   if (r.windows.some((w) => st(ctx, w) === "on")) return html`<span class="chip window">${icon("win")} okno otwarte</span>`;
   if (!c || c.state === "off") return html`<span class="chip off">wyłączona</span>`;
   if (c.attributes.hvac_action === "heating") return html`<span class="chip heat">${flame} grzeje</span>`;
