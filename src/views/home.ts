@@ -22,9 +22,13 @@ function km(lat1: number, lon1: number, lat2: number, lon2: number): number {
 
 function persons(ctx: Ctx): TemplateResult | typeof nothing {
   const h = ctx.hass;
-  const ids = ctx.opts.persons?.length
+  const base = ctx.opts.persons?.length
     ? ctx.opts.persons
     : Object.keys(h.states).filter((e) => e.startsWith("person.") && (h.states[e].attributes.device_trackers ?? []).length && !h.entities[e]?.hidden);
+  // Osoby prywatne: kafelki widoczne tylko dla właściciela HA (is_owner).
+  const privIds = h.user?.is_owner ? (ctx.opts.persons_private ?? []).filter((id) => !base.includes(id)) : [];
+  const priv = new Set(privIds);
+  const ids = [...base, ...privIds];
   if (!ids.length) return nothing;
   const cards = ids.filter((id) => h.states[id]).map((id, i) => {
     const p = h.states[id];
@@ -54,7 +58,7 @@ function persons(ctx: Ctx): TemplateResult | typeof nothing {
         ? html`<img src=${pic} alt="" loading="lazy" @error=${(e: Event) => ((e.target as HTMLElement).hidden = true)} />`
         : nothing}</div>
       <div class="pmain">
-        <b>${p.attributes.friendly_name ?? id}</b>
+        <b>${p.attributes.friendly_name ?? id}${priv.has(id) ? html` <span class="plock" title="Kafelek widoczny tylko dla Ciebie">🔒</span>` : nothing}</b>
         <span class="where"><span class="dot ${p.state === "home" ? "ok" : ""}"></span>${where}${dist !== null ? ` · ${dist < 10 ? f1(dist) : round(dist)} km` : ""} · ${sinceLabel(ctx, p.last_changed)}</span>
         <span class="pchips">
           ${battery ? html`<span class=${bat !== null && bat <= 15 && !chg ? "low" : ""}>${icon("batt")}${bat === null ? "—" : `${round(bat)}%`}${chg ? " ⚡" : ""}</span>` : nothing}

@@ -72,6 +72,7 @@
             "description": "Persons (click = map), gates, mailbox, waste and weather (forecast, radar, Windy).",
             "data": {
               "persons": "Persons",
+              "persons_private": "Private persons (only you)",
               "gates": "Gates and garages",
               "mailbox": "Mailbox — mail",
               "mailbox_battery": "Mailbox — battery",
@@ -82,6 +83,7 @@
             },
             "data_description": {
               "persons": "Empty = every person with a phone. Battery and steps from the person's phone.",
+              "persons_private": "Tiles visible only to the HA owner (you). Everyone else sees the Home tab without them.",
               "gates": "Empty = covers of class gate, garage and door.",
               "mailbox": "binary_sensor: on = mail inside.",
               "waste_calendar": "Empty = the Waste Collection Schedule calendar. A category shows only when it has a date.",

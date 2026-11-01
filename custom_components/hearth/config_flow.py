@@ -51,6 +51,7 @@ _FIELDS: dict[str, Any] = {
     c.CONF_PRESENCE: _ANY,
     c.CONF_TARIFF: _SENSOR,
     c.CONF_PERSONS: _entity("person", many=True),
+    c.CONF_PERSONS_PRIVATE: _entity("person", many=True),
     c.CONF_GATES: _entity("cover", many=True),
     c.CONF_MAILBOX: _BINARY,
     c.CONF_MAILBOX_BATTERY: _SENSOR,

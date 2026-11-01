@@ -7,6 +7,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-01
+
+### Dodano
+- **Zakładka Dom: „Osoby prywatne”** — osoby, których kafelki widzi tylko właściciel Home Assistanta (`is_owner`). Pozostali domownicy mają zakładkę Dom bez nich. Ustawiasz w opcjach integracji (sekcja Dom → „Osoby prywatne”). Prywatny kafelek ma małą kłódkę.
+
 ## [0.18.0] - 2026-10-30
 
 ### Dodano

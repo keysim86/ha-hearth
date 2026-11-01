@@ -72,6 +72,7 @@
             "description": "Osoby (kliknięcie = mapa), bramy, skrzynka pocztowa, odpady i pogoda (prognoza, radar, Windy).",
             "data": {
               "persons": "Osoby",
+              "persons_private": "Osoby prywatne (tylko Ty)",
               "gates": "Bramy i garaże",
               "mailbox": "Skrzynka pocztowa — poczta",
               "mailbox_battery": "Skrzynka pocztowa — bateria",
@@ -82,6 +83,7 @@
             },
             "data_description": {
               "persons": "Puste = wszystkie osoby z telefonem. Bateria i kroki z telefonu osoby.",
+              "persons_private": "Kafelki widoczne tylko dla właściciela HA (Ciebie). Pozostali domownicy mają zakładkę Dom bez nich.",
               "gates": "Puste = rolety klasy brama, garaż i drzwi.",
               "mailbox": "binary_sensor: on = jest poczta.",
               "waste_calendar": "Puste = kalendarz Waste Collection Schedule. Frakcja widoczna tylko, gdy ma termin.",

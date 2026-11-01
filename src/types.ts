@@ -42,7 +42,7 @@ export interface Hass {
   areas: Record<string, AreaReg>;
   themes?: { darkMode?: boolean };
   config?: { time_zone?: string; latitude?: number; longitude?: number };
-  user?: { is_admin?: boolean };
+  user?: { is_admin?: boolean; is_owner?: boolean };
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
   callService(domain: string, service: string, data?: Record<string, unknown>): Promise<unknown>;
 }
@@ -73,6 +73,7 @@ export interface Options {
   tariff?: string | null;
   // Dom
   persons?: string[];
+  persons_private?: string[];
   gates?: string[];
   mailbox?: string | null;
   mailbox_battery?: string | null;
