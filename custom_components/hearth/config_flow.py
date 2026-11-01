@@ -46,6 +46,9 @@ _FIELDS: dict[str, Any] = {
     c.CONF_TITLE: selector.TextSelector(),
     c.CONF_ICON: selector.IconSelector(),
     c.CONF_ADMIN_ONLY: selector.BooleanSelector(),
+    c.CONF_DENY_USERS: selector.SelectSelector(
+        selector.SelectSelectorConfig(options=[], multiple=True, custom_value=True, mode=selector.SelectSelectorMode.DROPDOWN)
+    ),
     **{k: _SENSOR for k in (c.CONF_OUT_TEMP, c.CONF_OUT_HUMIDITY, c.CONF_OUT_PRESSURE, c.CONF_OUT_ILLUMINANCE,
                             c.CONF_OUT_PM25, c.CONF_OUT_PM10, c.CONF_OUT_AQI, c.CONF_OUT_AQI_LEVEL)},
     c.CONF_PRESENCE: _ANY,

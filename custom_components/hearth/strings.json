@@ -25,6 +25,7 @@
               "sidebar_title": "Sidebar title",
               "sidebar_icon": "Sidebar icon",
               "require_admin": "Admins only",
+              "deny_users": "Users without access",
               "accent_color": "Accent colour"
             },
             "data_description": {
@@ -33,6 +34,7 @@
               "sidebar_title": "Sidebar entry text.",
               "sidebar_icon": "Sidebar entry icon.",
               "require_admin": "Hides the panel from regular users.",
+              "deny_users": "HA usernames that can't open Hearth (they see “no access”). Everyone else is unaffected.",
               "accent_color": "Colour of buttons, selections, tabs and the Agent page; state colours (heating, alarms) stay. A custom #rrggbb can be typed. Each device can pick its own in the panel settings."
             }
           },

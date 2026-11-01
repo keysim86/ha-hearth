@@ -42,7 +42,7 @@ export interface Hass {
   areas: Record<string, AreaReg>;
   themes?: { darkMode?: boolean };
   config?: { time_zone?: string; latitude?: number; longitude?: number };
-  user?: { is_admin?: boolean; is_owner?: boolean };
+  user?: { is_admin?: boolean; is_owner?: boolean; name?: string };
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
   callService(domain: string, service: string, data?: Record<string, unknown>): Promise<unknown>;
 }
@@ -56,6 +56,7 @@ export interface Options {
   /** Kolor wiodący: klucz gotowego koloru (ember, frost…, theme) albo „#rrggbb”. */
   accent_color?: string;
   sidebar_title?: string;
+  deny_users?: string[];
   // Klimat
   helper_prefix?: string;
   areas?: string[];

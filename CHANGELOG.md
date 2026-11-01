@@ -7,6 +7,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-11-01
+
+### Dodano
+- **Opcja „Użytkownicy bez dostępu” (sekcja Wygląd)** — wskazani użytkownicy HA (po loginie) nie otworzą panelu Hearth: widzą „Brak dostępu” zamiast kart. Reszta domowników bez zmian. Działa niezależnie od „Tylko dla administratorów”.
+
 ## [0.19.0] - 2026-11-01
 
 ### Dodano

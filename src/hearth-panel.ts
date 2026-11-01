@@ -652,6 +652,11 @@ export class HearthPanel extends LitElement {
   render() {
     if (!this.hass) return nothing;
     const hass = this.hass;
+    const deny = (this.options.deny_users ?? []).map((u) => String(u).toLowerCase());
+    if (hass.user?.name && deny.includes(hass.user.name.toLowerCase())) {
+      return html`<div class="noaccess" style="max-width:40rem;margin:4rem auto;padding:2rem;text-align:center;line-height:1.6">
+        <h2>Brak dostępu</h2><p>Panel Hearth jest niedostępny dla Twojego konta.</p></div>`;
+    }
     const c = clock(hass.config?.time_zone);
     const ctx: Ctx = {
       hass,

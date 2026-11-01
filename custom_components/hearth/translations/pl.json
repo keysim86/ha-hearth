@@ -25,6 +25,7 @@
               "sidebar_title": "Nazwa w menu",
               "sidebar_icon": "Ikona w menu",
               "require_admin": "Tylko dla administratorów",
+              "deny_users": "Użytkownicy bez dostępu",
               "accent_color": "Kolor wiodący"
             },
             "data_description": {
@@ -33,6 +34,7 @@
               "sidebar_title": "Tekst pozycji w menu bocznym.",
               "sidebar_icon": "Ikona pozycji w menu bocznym.",
               "require_admin": "Ukrywa panel przed zwykłymi użytkownikami.",
+              "deny_users": "Loginy HA, które nie otworzą Hearth (zobaczą „brak dostępu”). Reszta domowników bez zmian.",
               "accent_color": "Kolor przycisków, zaznaczeń, zakładek i strony Agenta; stany (grzanie, alarmy) bez zmian. Można wpisać własny kolor #rrggbb. Każde urządzenie może wybrać inny w Ustawieniach panelu."
             }
           },
