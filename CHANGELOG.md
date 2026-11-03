@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.11] - 2026-11-03
+
 ### Naprawiono
 - **Zdrowie → Bilanse: wróciły paski miesięczne i tygodniowe** — dolny pasek nawigacji (beta 7) miał tę samą nazwę klasy co pasek bilansu i przejmował jego wygląd.
 
