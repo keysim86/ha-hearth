@@ -50,6 +50,8 @@
 Styl domyślny wybierasz w opcjach integracji, a każde urządzenie (telefon, tablet, komputer) może mieć własny —
 **Ustawienia panelu** (koło zębate w prawym górnym rogu).
 
+Panel ma **8 sekcji**: Teraz, Zakupy, Ciepło, Urządzenia, Kamery, Zużycie, Moje zdrowie i Technika (tylko administrator). Na komputerze są w kolumnie po lewej, na telefonie w dolnym pasku z przyciskiem *Więcej*; dawne zakładki są podzakładkami sekcji, a ich adresy `/hearth/<zakładka>` działają jak dotąd.
+
 **Wygląd Neon** (opcja *Wygląd*, domyślnie *Klasyczny*): ciemne szkło, świecące kolory i nocne niebo z gwiazdami i zorzą w tle, na wszystkich zakładkach. Każde urządzenie może wybrać inny wygląd w **Ustawieniach panelu**, a przy neonie także efekty ruchu: automatycznie (pełne na dużym ekranie, spokojnie na telefonie), pełne albo spokojnie. Przy systemowym „ogranicz ruch” animacje są zawsze wyłączone.
 
 W wyglądzie Neon zakładka Dom zaczyna się od **Żywego domu**: przekroju domu z pięter i obszarów HA, w którym widać temperaturę pokoi (kolor), światło w oknach, grzanie, otwarte okna, pracę kotła (dym z komina), pobór prądu, garaże i domowników. Pod nim (w obu wyglądach) lista **Wymaga uwagi**: alerty, otwarte bramy i okna przy grzaniu, głowice bez kontaktu, odpady i poczta — z akcją w jednym dotknięciu i odkładaniem do jutra. Bez pięter w HA dom pokazuje pokoje z ogrzewaniem na jednej kondygnacji — pełny układ pojawi się po przypisaniu obszarów do pięter (Ustawienia → Obszary, etykiety i strefy).

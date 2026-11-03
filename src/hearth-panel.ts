@@ -25,6 +25,7 @@ import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { liveHouse } from "./views/livehouse";
 import { attentionView, visibleAttention } from "./views/attention";
+import { ADMIN_TABS, NAV_ICONS, PHONE_BAR, sectionsFor, type Section } from "./nav";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
 import { hasShopping, shoppingView, toBuy } from "./views/shopping";
@@ -167,7 +168,8 @@ export class HearthPanel extends LitElement {
   @state() private sched: SchedEdit | null = null;
   private ebusd = new EbusdTimers();
 
-  @query("dialog.set") private dialog?: HTMLDialogElement;
+  @query("dialog.set:not(.more)") private dialog?: HTMLDialogElement;
+  @query("dialog.more") private moreDialog?: HTMLDialogElement;
   @query("dialog.pdlg") private personDialog?: HTMLDialogElement;
   @query("dialog.pbdlg") private couponsDialog?: HTMLDialogElement;
   private mapCard?: HTMLElement & { hass?: Hass };
@@ -194,11 +196,13 @@ export class HearthPanel extends LitElement {
   private get tabs(): Tab[] {
     // Kolejność z opcji (kolejność wyboru); nieznane pomijamy. Bez wyboru: wszystkie, poza Agentem bez adresu
     // i Zdrowiem bez osób.
+    // Technika (serwer, sieć) tylko dla administratora HA — także pod starym adresem.
+    const admin = (t: Tab) => Boolean(this.hass?.user?.is_admin) || !ADMIN_TABS.includes(t);
     const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
-    return chosen.length
+    return (chosen.length
       ? chosen
       : TABS.filter((t) => (t !== "agent" || this.options.agent_url) && (t !== "health" || this.panel?.config?.health?.length)
-          && (t !== "shopping" || (this.hass ? hasShopping(this.hass) : false)));
+          && (t !== "shopping" || (this.hass ? hasShopping(this.hass) : false)))).filter(admin);
   }
 
   private get tab(): Tab {
@@ -768,22 +772,53 @@ export class HearthPanel extends LitElement {
     const alertCount = this.tabs.includes("alerts") ? activeAlerts(ctx).length : 0;
     const homeCount = this.tabs.includes("home") ? visibleAttention(ctx, this.rooms()).length : 0;
     const shopCount = this.tabs.includes("shopping") ? toBuy(hass) : 0;
-    const nav = html`<nav class="tabs" aria-label="Zakładki" @scroll=${() => this.tabsEdge()}
-      @wheel=${(e: WheelEvent) => {
-        // Kółko myszy przewija pasek w bok, gdy zakładki się nie mieszczą.
-        const el = e.currentTarget as HTMLElement;
-        if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-        el.scrollLeft += e.deltaY;
-        e.preventDefault();
-      }}>
-      ${this.tabs.map((t) => html`<a href="${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}" class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"}
-        @click=${(e: MouseEvent) => {
-          if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
-          e.preventDefault();
-          this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}`);
-        }}>${TAB_INFO[t][1]}${t === "home" && homeCount ? html`<span class="tbadge">${homeCount}</span>` : nothing}${t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}${
-          t === "shopping" && shopCount ? html`<span class="tbadge info">${shopCount}</span>` : nothing}</a>`)}
-    </nav>`;
+    // Sekcje: kolumna po lewej (desktop) albo dolny pasek + „Więcej” (telefon); podzakładki pod tytułem.
+    const prefix = this.route?.prefix ?? "/hearth";
+    const href = (t: Tab) => `${prefix}/${TAB_INFO[t][0]}`;
+    const go = (t: Tab) => (e: MouseEvent) => {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      this.moreDialog?.close();
+      this.navigate(href(t));
+    };
+    const secs = sectionsFor(this.tabs);
+    const cur = secs.find((s) => s.tabs.includes(tab));
+    const showNav = secs.length > 1;
+    const hasAgent = this.tabs.includes("agent");
+    const secBadge = (s: Section) =>
+      s.id === "teraz" && homeCount ? html`<span class="tbadge">${homeCount}</span>`
+        : s.id === "zakupy" && shopCount ? html`<span class="tbadge info">${shopCount}</span>` : nothing;
+    const secLink = (s: Section, cls = "") => html`<a href=${href(s.tabs[0])} class="${cls} ${s === cur ? "on" : ""}" aria-current=${s === cur ? "page" : "false"}
+      @click=${go(s.tabs[0])}><span class="si">${s.icon}${secBadge(s)}</span><span class="sl">${s.label}</span></a>`;
+    const side = showNav && !this.narrow ? html`<nav class="secs" aria-label="Sekcje">${secs.map((s) => secLink(s))}</nav>` : nothing;
+    const barSecs = secs.filter((s) => PHONE_BAR.includes(s.id)).slice(0, 4);
+    const moreSecs = secs.filter((s) => !barSecs.includes(s));
+    const moreOn = Boolean(cur && moreSecs.includes(cur)) || tab === "agent";
+    const bar = showNav && this.narrow
+      ? html`<nav class="bbar" aria-label="Sekcje">${barSecs.map((s) => secLink(s))}
+          ${moreSecs.length || hasAgent
+            ? html`<button type="button" class=${moreOn ? "on" : ""} aria-haspopup="dialog" @click=${() => this.moreDialog?.showModal()}><span class="si">${NAV_ICONS.more}</span><span class="sl">Więcej</span></button>`
+            : nothing}</nav>`
+      : nothing;
+    const more = showNav && this.narrow
+      ? html`<dialog class="more" aria-label="Więcej sekcji" @click=${(e: Event) => e.target === this.moreDialog && this.moreDialog?.close()}>
+          <div class="set-in"><h2>Więcej</h2>
+            <div class="more-list">${moreSecs.map((s) => secLink(s, "mitem"))}
+              ${hasAgent ? html`<a href=${href("agent")} class="mitem ${tab === "agent" ? "on" : ""}" @click=${go("agent")}><span class="si">${NAV_ICONS.chat}</span><span class="sl">Asystent</span></a>` : nothing}</div>
+            <div class="set-foot"><button class="btn" type="button" @click=${() => this.moreDialog?.close()}>Zamknij</button></div></div></dialog>`
+      : nothing;
+    const subs = cur && cur.tabs.length > 1
+      ? html`<nav class="tabs" aria-label=${cur.label} @scroll=${() => this.tabsEdge()}
+          @wheel=${(e: WheelEvent) => {
+            // Kółko myszy przewija pasek w bok, gdy podzakładki się nie mieszczą.
+            const el = e.currentTarget as HTMLElement;
+            if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+            el.scrollLeft += e.deltaY;
+            e.preventDefault();
+          }}>${cur.tabs.map((t) => html`<a href=${href(t)} class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"} @click=${go(t)}>${cur.sub[t] ?? TAB_INFO[t][1]}${
+            t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}</a>`)}</nav>`
+      : nothing;
+    const title = tab === "agent" ? "Asystent" : (cur?.label ?? TAB_INFO[tab][1]);
     const camTick = Math.floor(Date.now() / 5000);
     const views: Record<Tab, () => unknown> = {
       climate: () => this.climate(ctx),
@@ -807,19 +842,26 @@ export class HearthPanel extends LitElement {
     };
     const body = views[tab]();
 
-    return html`${this.look === "neon" ? html`<div class="sky" aria-hidden="true"><i></i></div>` : nothing}<div class="wrap s-${this.cardStyle}">
+    return html`${this.look === "neon" ? html`<div class="sky" aria-hidden="true"><i></i></div>` : nothing}<div class="wrap s-${this.cardStyle} ${showNav && !this.narrow ? "with-side" : ""} ${showNav && this.narrow ? "with-bar" : ""}">
+        ${side}
+        <div class="col">
         <header class="top">
           <div class="top-l">
             ${this.narrow
               ? html`<button class="menu" type="button" aria-label="Menu" @click=${() => this.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }))}>${menuIcon}</button>`
               : nothing}
-            <h1>${TAB_INFO[tab][1]} <small>${this.options.sidebar_title || "Hearth"}</small></h1>
+            <h1>${title} <small>${this.options.sidebar_title || "Hearth"}</small></h1>
           </div>
-          <button class="gear" type="button" @click=${() => this.dialog?.showModal()}>${gearIcon}<span>Ustawienia panelu</span></button>
+          <div class="top-r">
+            ${hasAgent && !this.narrow ? html`<a class="gear" href=${href("agent")} @click=${go("agent")}>${NAV_ICONS.chat}<span>Asystent</span></a>` : nothing}
+            <button class="gear" type="button" @click=${() => this.dialog?.showModal()}>${gearIcon}<span>Ustawienia panelu</span></button>
+          </div>
         </header>
-        ${this.tabs.length > 1 ? nav : nothing}
+        ${subs}
         ${body}
+        </div>
       </div>
+      ${bar}${more}
       ${this.settings(ctx)}
       ${this.personDialogTpl(ctx)}
       ${this.couponsDialogTpl(ctx)}
