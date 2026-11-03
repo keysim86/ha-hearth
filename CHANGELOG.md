@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.13] - 2026-11-03
+
 ### Zmieniono
 - **Czcionki z integracji zamiast Google Fonts** — Archivo, Atkinson Hyperlegible, Bricolage Grotesque i JetBrains Mono (WOFF2, znaki łacińskie z polskimi, razem ok. 380 KB) w `www/fonts/`; panel nie wysyła już zapytań do Google, a czcionki działają bez internetu. Licencja OFL 1.1 obok plików.
 
