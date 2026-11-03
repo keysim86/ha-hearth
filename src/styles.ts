@@ -951,25 +951,25 @@ a.gear { text-decoration: none; }
 .si { position: relative; display: grid; place-items: center; width: 24px; height: 24px; flex: none; }
 .si svg { width: 22px; height: 22px; }
 .si .tbadge { position: absolute; top: -7px; left: 14px; margin: 0; }
-.secs a:focus-visible, .bbar a:focus-visible, .bbar button:focus-visible, .mitem:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.secs a:focus-visible, .secbar a:focus-visible, .secbar button:focus-visible, .mitem:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .wrap.with-bar { padding-bottom: 104px; }
-.bbar { position: fixed; z-index: 6; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); display: flex; padding: 6px 4px;
+.secbar { position: fixed; z-index: 6; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); display: flex; padding: 6px 4px;
   background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 8px 30px rgba(0, 0, 0, .18); }
-.bbar a, .bbar button { flex: 1; min-width: 0; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+.secbar a, .secbar button { flex: 1; min-width: 0; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   color: var(--muted); text-decoration: none; font: 700 11px var(--f-body); background: none; border: 0; padding: 2px 0; cursor: pointer; }
-.bbar .si { width: 52px; height: 30px; border-radius: 999px; }
-.bbar .sl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bbar .on { color: var(--fg); }
-.bbar .on .si { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+.secbar .si { width: 52px; height: 30px; border-radius: 999px; }
+.secbar .sl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.secbar .on { color: var(--fg); }
+.secbar .on .si { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
 dialog.more { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--fg); padding: 0; width: min(420px, calc(100% - 24px)); }
 dialog.more::backdrop { background: rgba(10, 14, 18, .45); }
 .more-list { display: grid; gap: 6px; }
 .mitem { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--fg); text-decoration: none; font-weight: 700; font-size: 15px; }
 .mitem.on { border-color: var(--accent); background: var(--accent-soft); }
 :host([neon]) .secs a.on { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 18px -6px var(--accent); text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 50%, transparent); }
-:host([neon]) .secs a.on .si, :host([neon]) .bbar .on .si { filter: drop-shadow(0 0 6px var(--accent)); }
-:host([neon]) .bbar { background: rgba(9, 13, 28, .8); backdrop-filter: blur(20px) saturate(160%); border-color: rgba(140, 175, 255, .28); box-shadow: 0 12px 40px rgba(0, 0, 0, .55); }
-:host([neon]) .bbar .on .si { background: var(--accent); color: var(--on-accent); }
+:host([neon]) .secs a.on .si, :host([neon]) .secbar .on .si { filter: drop-shadow(0 0 6px var(--accent)); }
+:host([neon]) .secbar { background: rgba(9, 13, 28, .8); backdrop-filter: blur(20px) saturate(160%); border-color: rgba(140, 175, 255, .28); box-shadow: 0 12px 40px rgba(0, 0, 0, .55); }
+:host([neon]) .secbar .on .si { background: var(--accent); color: var(--on-accent); }
 :host([neon]) dialog.more { background: rgba(10, 15, 32, .94); backdrop-filter: blur(18px) saturate(150%); }
 
 /* ——— Wymaga uwagi (zakładka Dom) ——— */

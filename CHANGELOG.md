@@ -7,6 +7,9 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Naprawiono
+- **Zdrowie → Bilanse: wróciły paski miesięczne i tygodniowe** — dolny pasek nawigacji (beta 7) miał tę samą nazwę klasy co pasek bilansu i przejmował jego wygląd.
+
 ### Zmieniono
 - **Zakupy: lista na początku** — lista Bring! jest pierwsza, karty PAYBACK / Lidl Plus / Moja Biedronka (kody, kupony, paragony) pod nią, w sekcji *Karty przy kasie*.
 

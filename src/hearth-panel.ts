@@ -829,7 +829,7 @@ export class HearthPanel extends LitElement {
     const moreSecs = secs.filter((s) => !barSecs.includes(s));
     const moreOn = Boolean(cur && moreSecs.includes(cur)) || tab === "agent";
     const bar = showNav && this.narrow
-      ? html`<nav class="bbar" aria-label="Sekcje">${barSecs.map((s) => secLink(s))}
+      ? html`<nav class="secbar" aria-label="Sekcje">${barSecs.map((s) => secLink(s))}
           ${moreSecs.length || hasAgent
             ? html`<button type="button" class=${moreOn ? "on" : ""} aria-haspopup="dialog" @click=${() => this.moreDialog?.showModal()}><span class="si">${NAV_ICONS.more}</span><span class="sl">Więcej</span></button>`
             : nothing}</nav>`
