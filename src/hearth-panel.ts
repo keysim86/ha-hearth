@@ -26,6 +26,7 @@ import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, per
 import { liveHouse } from "./views/livehouse";
 import { attentionView, visibleAttention } from "./views/attention";
 import { ADMIN_TABS, NAV_ICONS, PHONE_BAR, sectionsFor, type Section } from "./nav";
+import { neonRoom } from "./views/neonroom";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
 import { hasShopping, shoppingView, toBuy } from "./views/shopping";
@@ -870,11 +871,13 @@ export class HearthPanel extends LitElement {
 
   private climate(ctx: Ctx) {
     const rooms = this.rooms();
+    // Neon: jedna karta pokoju (pierścień); klasyczny: kafelki, lista albo pokrętła.
+    const neon = this.look === "neon";
     const style = this.cardStyle;
-    const card = style === "list" ? row : style === "dials" ? dial : tile;
-    const cols = style === "list" ? 1 : Math.max(1, this.cols);
+    const card = neon ? neonRoom : style === "list" ? row : style === "dials" ? dial : tile;
+    const cols = !neon && style === "list" ? 1 : Math.max(1, this.cols);
     const openIdx = rooms.findIndex((r) => r.areaId === this.open);
-    const items: unknown[] = style === "list" ? [listHeader] : [];
+    const items: unknown[] = !neon && style === "list" ? [listHeader] : [];
     rooms.forEach((r, i) => {
       items.push(card(ctx, r));
       const endOfRow = (i + 1) % cols === 0 || i === rooms.length - 1;
@@ -895,9 +898,9 @@ export class HearthPanel extends LitElement {
             </div>`
           : nothing}
         ${rooms.length
-          ? html`<main class="grid">${items}</main>`
+          ? html`<main class="grid ${neon ? "nring" : ""}">${items}</main>`
           : html`<div class="empty">Nie znalazłem pokoi. Pokój to obszar Home Assistant z termostatem (encja climate.*) — przypisz głowice do obszarów w ustawieniach urządzeń.</div>`}
-        <p class="foot">${FOOT[style]}</p>
+        <p class="foot">${neon ? "Pierścień pokazuje temperaturę w skali 14–28 °C, kropka to cel, kolor zmienia się od chłodnego cyjanu do ciepłego żaru. Kliknij pokój, żeby zobaczyć ustawienia." : FOOT[style]}</p>
     `;
   }
 }

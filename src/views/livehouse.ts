@@ -27,7 +27,7 @@ const PEOPLE = ["#4f9dff", "#ff4fd8", "#ffc53d", "#45f5a1", "#a77dff", "#19d3b6"
 
 // Temperatura → kolor: 14° cyjan, 18° niebieski, 20° fiolet, 21,5° róż, 23° żar.
 const STOPS: [number, number[]][] = [[14, [38, 224, 255]], [18, [79, 157, 255]], [20, [167, 125, 255]], [21.5, [255, 79, 216]], [23, [255, 109, 46]]];
-function tcol(t: number, a: number): string {
+export function tcol(t: number, a: number): string {
   const v = Math.max(STOPS[0][0], Math.min(STOPS[STOPS.length - 1][0], t));
   let i = 0;
   while (i < STOPS.length - 2 && v > STOPS[i + 1][0]) i++;

@@ -891,6 +891,38 @@ form.ocell .orow { margin-top: 6px; }
   box-shadow: 0 0 0 1px rgba(140, 175, 255, .12), 0 30px 80px rgba(0, 0, 0, .6), 0 0 40px rgba(38, 224, 255, .08); }
 :host([neon]) dialog.set::backdrop { background: rgba(2, 4, 12, .6); }
 
+/* ——— Neon: pokój jako pierścień (Ciepło → Pokoje) ——— */
+.grid.nring { grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 14px; }
+.nroom { display: grid; gap: 8px; align-content: start; padding: 12px 12px 10px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.nroom.sel { border-color: var(--accent); }
+.nroom.heating { box-shadow: var(--shadow), inset 0 -46px 50px -42px color-mix(in srgb, var(--ember) 55%, transparent); }
+.nr-open { all: unset; cursor: pointer; display: grid; gap: 2px; justify-items: center; border-radius: 12px; }
+.nr-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nr-top { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 6px; min-height: 26px; }
+.nr-top b { font-family: var(--f-num); font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nr-ring { width: min(168px, 100%); height: auto; overflow: visible; }
+.nr-ring circle.trk, .nr-ring circle.val { fill: none; stroke-width: 7; stroke-linecap: round; }
+.nr-ring .trk { stroke: var(--ring-track); }
+.nr-ring .val { stroke: var(--tc); filter: drop-shadow(0 0 4px var(--tc)); }
+.nr-ring .tgt { fill: #fff; stroke: #050814; stroke-width: 1.5; }
+.nr-ring text { text-anchor: middle; }
+.nr-ring .tv { font: 800 21px var(--f-num); font-stretch: 87.5%; fill: var(--fg); }
+.nr-ring .tl { font: 700 7.5px var(--f-body); fill: var(--muted); }
+.nr-ctl { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; align-items: center; text-align: center; gap: 6px; }
+.nr-ctl button { height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); font-size: 22px; cursor: pointer; }
+.nr-ctl button:disabled { opacity: .4; cursor: default; }
+.nr-ctl span { font-size: 12.5px; color: var(--muted); }
+.nr-ctl b { font: 800 18px var(--f-num); color: var(--ember); }
+.nr-ctl small { display: block; font-size: 11.5px; }
+.nr-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+:host([neon]) .nr-ring .tv { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--tc) 55%, transparent)); }
+:host([neon]) .nroom.sel { box-shadow: var(--shadow), 0 0 0 1px var(--accent), 0 0 24px -8px var(--accent); }
+:host([narrow]) .grid.nring { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+:host([narrow]) .nr-ctl { grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 4px; }
+:host([narrow]) .nr-top { flex-direction: column; align-items: center; gap: 4px; }
+:host([narrow]) .nr-top b { max-width: 100%; }
+:host([narrow]) .nroom { padding: 10px 8px 8px; }
+
 /* ——— Nawigacja w sekcjach ——— */
 .wrap.with-side { max-width: 1540px; grid-template-columns: 196px minmax(0, 1fr); align-items: start; column-gap: 26px; }
 .col { display: grid; gap: 18px; min-width: 0; }
