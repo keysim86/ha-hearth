@@ -7,6 +7,9 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Zmieniono
+- **Zakupy: lista na początku** — lista Bring! jest pierwsza, karty PAYBACK / Lidl Plus / Moja Biedronka (kody, kupony, paragony) pod nią, w sekcji *Karty przy kasie*.
+
 ## [0.21.0-beta.10] - 2026-11-03
 
 ### Dodano

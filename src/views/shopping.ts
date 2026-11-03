@@ -109,9 +109,10 @@ function catalogBrowser(ctx: Ctx, list: string, cat: Catalog, items: ShopItem[])
 }
 
 export function shoppingView(ctx: Ctx): TemplateResult {
+  // Najpierw lista (po to się tu wchodzi), karty przy kasie pod nią.
   const cards = loyaltyCards(ctx);
-  const loyal = cards.length ? html`<section class="sec"><div class="cards loyal">${cards}</div></section>` : nothing;
-  return html`${loyal}${shoppingList(ctx, cards.length > 0)}`;
+  const loyal = cards.length ? html`<section class="sec"><h2>Karty przy kasie</h2><div class="cards loyal">${cards}</div></section>` : nothing;
+  return html`${shoppingList(ctx, cards.length > 0)}${loyal}`;
 }
 
 function shoppingList(ctx: Ctx, other: boolean): TemplateResult | typeof nothing {
