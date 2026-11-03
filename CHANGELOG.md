@@ -7,6 +7,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.5] - 2026-11-03
+
+### Naprawiono
+- **Żywy dom: długie nazwy pomieszczeń nie wchodzą na sąsiednie** — za długa nazwa łamie się na dwie linie (przy spacji najbliżej środka), a w ostateczności jest ściskana do szerokości pokoju.
+
 ## [0.21.0-beta.4] - 2026-11-03
 
 ### Naprawiono

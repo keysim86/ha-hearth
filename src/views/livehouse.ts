@@ -110,6 +110,23 @@ function bands(ctx: Ctx, rooms: Room[]): { bands: Band[]; floors: boolean } {
 
 /** Szerokość napisu w SVG (szacunek) → rozmiar czcionki, który mieści się w pokoju. */
 const fit = (text: string, width: number, base: number) => Math.max(8, Math.min(base, (width - 8) / (text.length * 0.6)));
+const est = (text: string, size: number) => text.length * 0.6 * size;
+
+/** Nazwa pomieszczenia, która nie wychodzi poza pokój: jedna linia, a gdy za długa — dwie (łamanie przy spacji
+ *  najbliżej środka); w ostateczności ściśnięta do szerokości (textLength). y = linia bazowa pojedynczej linii. */
+function nameSvg(name: string, cx: number, y: number, w: number): SVGTemplateResult {
+  const room = w - 8, one = fit(name, w, 11);
+  const squeeze = (t: string, size: number) => (est(t, size) > room ? room : nothing);
+  const spaces = [...name.matchAll(/ /g)].map((m) => m.index ?? 0);
+  if (one >= 9.5 || !spaces.length)
+    return svg`<text class="rn" x=${cx} y=${y} font-size=${one} textLength=${squeeze(name, one)} lengthAdjust="spacingAndGlyphs">${name}</text>`;
+  const cut = spaces.reduce((a, b) => (Math.abs(b - name.length / 2) < Math.abs(a - name.length / 2) ? b : a));
+  const a = name.slice(0, cut), b = name.slice(cut + 1), longer = a.length >= b.length ? a : b;
+  const size = Math.max(8, Math.min(10.5, room / (longer.length * 0.6)));
+  return svg`<text class="rn" x=${cx} y=${y - 4} font-size=${size}>
+    <tspan x=${cx} textLength=${squeeze(a, size)} lengthAdjust="spacingAndGlyphs">${a}</tspan>
+    <tspan x=${cx} dy=${size + 1} textLength=${squeeze(b, size)} lengthAdjust="spacingAndGlyphs">${b}</tspan></text>`;
+}
 
 function roomSvg(ctx: Ctx, s: Spot, x: number, y: number, w: number, hgt: number, i: number): SVGTemplateResult {
   const cx = x + w / 2, ww = Math.round(Math.max(24, Math.min(44, w * 0.42))), wh = hgt < FH ? 28 : 34, wx = cx - ww / 2, wy = y + 16;
@@ -141,7 +158,7 @@ function roomSvg(ctx: Ctx, s: Spot, x: number, y: number, w: number, hgt: number
       ? svg`<circle cx=${x + w - 12} cy=${y + 12} r="8" fill="#ffc53d" filter="url(#lh-gl)"></circle><text x=${x + w - 12} y=${y + 16} text-anchor="middle" font-size="12" font-weight="900" fill="#050814">!</text>`
       : nothing}
     ${s.t !== null ? svg`<text class="rt" x=${cx} y=${y + hgt - 42} font-size=${hgt < FH ? 18 : 21} fill=${s.kind === "meas" ? "#aab5d1" : "#fff"}>${f1(s.t)}°</text>` : nothing}
-    <text class="rn" x=${cx} y=${y + hgt - 27} font-size=${fit(s.name, w, 11)}>${s.name}</text>
+    ${nameSvg(s.name, cx, y + hgt - 27, w)}
   </g>`;
 }
 
@@ -253,7 +270,7 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
       const ax = peak + (j - (attic.length - 1) / 2) * step;
       parts.push(svg`<g role="img" aria-label=${`${s.name}${s.t !== null ? `, ${f1(s.t)}°` : ""}`}><title>${s.name}</title>
         ${s.t !== null ? svg`<text class="rt" x=${ax} y=${ly} font-size="17" fill="#aab5d1">${f1(s.t)}°</text>` : nothing}
-        <text class="rn" x=${ax} y=${ly + 15} font-size=${fit(s.name, step, 11)}>${s.name}</text></g>`);
+        ${nameSvg(s.name, ax, ly + 15, step)}</g>`);
     });
   }
   // woda grzewcza, gdy pali się w kotle
