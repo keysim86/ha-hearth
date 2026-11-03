@@ -25,6 +25,8 @@ export type CouponView = "kupony" | "karta" | "paragony" | "historia";
 
 export interface Actions {
   toggleRoom(areaId: string): void;
+  /** Pokój otwarty w zakładce Klimat (z Żywego domu). */
+  openRoom(areaId: string): void;
   setUi(key: string, value: string): void;
   /** Okno z mapą lokalizacji osoby (albo innego lokalizatora, np. auta). */
   openPerson(entity: string): void;

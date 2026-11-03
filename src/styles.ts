@@ -890,4 +890,31 @@ form.ocell .orow { margin-top: 6px; }
 :host([neon]) dialog.set { background: rgba(10, 15, 32, .94); backdrop-filter: blur(18px) saturate(150%);
   box-shadow: 0 0 0 1px rgba(140, 175, 255, .12), 0 30px 80px rgba(0, 0, 0, .6), 0 0 40px rgba(38, 224, 255, .08); }
 :host([neon]) dialog.set::backdrop { background: rgba(2, 4, 12, .6); }
+
+/* ——— Żywy dom (Neon, zakładka Dom) ——— */
+.lh { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; margin: -6px -4px 0; }
+.lh svg { display: block; height: auto; }
+.lh text { font-family: var(--f-num); }
+.lh .rt { font-weight: 800; font-stretch: 87.5%; text-anchor: middle; paint-order: stroke; stroke: rgba(4, 6, 13, .55); stroke-width: 3px; }
+.lh .rn { font-family: var(--f-body); font-weight: 700; fill: #c3cce6; text-anchor: middle; }
+.lh .lbl { font-family: var(--f-body); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.lh .room[role="button"] { cursor: pointer; outline: none; }
+.lh .room[role="button"]:hover .frame, .lh .room:focus-visible .frame { stroke: var(--accent); stroke-width: 2.5; }
+.lh-hint { margin: 4px 4px 0; font-size: 13px; color: var(--muted); }
+:host([fx]) .lh .flow { animation: lh-flow 1.4s linear infinite; }
+:host([fx]) .lh .pipe { animation: lh-pipe 1.6s linear infinite; }
+:host([fx]) .lh .smoke circle { animation: lh-smoke 7s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+:host([fx]) .lh .smoke circle:nth-child(2) { animation-delay: -1.75s; }
+:host([fx]) .lh .smoke circle:nth-child(3) { animation-delay: -3.5s; }
+:host([fx]) .lh .smoke circle:nth-child(4) { animation-delay: -5.25s; }
+:host([fx]) .lh .wisp { animation: lh-wisp 2.2s ease-in-out infinite alternate; }
+:host([fx]) .lh .shimmer { animation: lh-shimmer 1.8s ease-in-out infinite alternate; }
+:host([fx]) .lh .open-garage { animation: lh-blink 1.6s ease-in-out infinite; }
+@keyframes lh-flow { to { stroke-dashoffset: -19; } }
+@keyframes lh-pipe { to { stroke-dashoffset: -22; } }
+@keyframes lh-smoke { 0% { transform: translate(0, 18px) scale(.5); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(18px, -46px) scale(1.7); opacity: 0; } }
+@keyframes lh-wisp { from { transform: translateX(3px); opacity: .5; } to { transform: translateX(-3px); opacity: 1; } }
+@keyframes lh-shimmer { from { opacity: .25; } to { opacity: .85; } }
+@keyframes lh-blink { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { :host([fx]) .lh * { animation: none !important; } }
 `;

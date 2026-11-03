@@ -35,11 +35,18 @@ export interface AreaReg {
   floor_id?: string | null;
 }
 
+export interface FloorReg {
+  floor_id: string;
+  name: string;
+  level?: number | null;
+}
+
 export interface Hass {
   states: Record<string, HassEntity>;
   entities: Record<string, EntityReg>;
   devices: Record<string, DeviceReg>;
   areas: Record<string, AreaReg>;
+  floors?: Record<string, FloorReg>;
   themes?: { darkMode?: boolean };
   config?: { time_zone?: string; latitude?: number; longitude?: number };
   user?: { is_admin?: boolean; is_owner?: boolean; name?: string };

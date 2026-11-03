@@ -23,6 +23,7 @@ import { tile } from "./views/tiles";
 import { boilerView } from "./views/boiler";
 import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
+import { liveHouse } from "./views/livehouse";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
 import { hasShopping, shoppingView, toBuy } from "./views/shopping";
@@ -404,6 +405,10 @@ export class HearthPanel extends LitElement {
     toggleRoom: (areaId) => {
       this.open = this.open === areaId ? null : areaId;
     },
+    openRoom: (areaId) => {
+      this.open = areaId;
+      if (this.tabs.includes("climate")) this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO.climate[0]}`);
+    },
     setUi: (key: string, value: string) => {
       this.ui = { ...this.ui, [key]: value };
       try {
@@ -780,7 +785,7 @@ export class HearthPanel extends LitElement {
     const camTick = Math.floor(Date.now() / 5000);
     const views: Record<Tab, () => unknown> = {
       climate: () => this.climate(ctx),
-      home: () => homeView(ctx),
+      home: () => (this.look === "neon" ? html`${liveHouse(ctx, this.rooms(), this.narrow)}${homeView(ctx)}` : homeView(ctx)),
       shopping: () => shoppingView(ctx),
       switches: () => switchesView(ctx),
       energy: () => energyView(ctx),

@@ -7,6 +7,13 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Żywy dom (wygląd Neon, zakładka Dom)** — przekrój domu na nocnym niebie, zbudowany z pięter i obszarów HA: kolor pokoju odpowiada temperaturze, okno świeci, gdy pali się światło, grzejnik żarzy się, gdy pokój grzeje, a przy otwartym oknie wpada zimne powietrze. Głowica bez kontaktu ma bursztynowy znacznik. Dym z komina = pali się w kotle, czerwone rury = woda grzewcza, fioletowe kropki na przyłączu = pobór prądu (z wartością w kW). Garaże z bram stoją obok domu i świecą na bursztynowo, gdy są otwarte; domownicy w domu stoją przy domu, a poza domem — na drodze. Kliknięcie ogrzewanego pokoju otwiera go w zakładce Klimat. Ruch (dym, przepływy, migotanie) tylko przy pełnych efektach.
+- Piętra z HA: obszary z tego samego poziomu stoją obok siebie, poziomy ujemne to piwnica pod ziemią, szersza niższa kondygnacja dostaje własny daszek. Bez pięter w HA dom pokazuje pokoje z ogrzewaniem na jednej kondygnacji, a administrator widzi podpowiedź, jak przypisać piętra.
+
+### Zmieniono
+- Listy osób (z prywatnymi dla właściciela) i bram liczone w jednym miejscu dla zakładki Dom i Żywego domu.
+
 ## [0.21.0-beta.1] - 2026-11-03
 
 ### Dodano

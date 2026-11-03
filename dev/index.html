@@ -43,8 +43,15 @@
   document.body.classList.toggle("dark", dark);
   window.__calls = [];
   const todo = snap.todo_items ?? {}, todoSubs = {};
+  // ?floors=demo — przykładowe piętra (migawka ich nie ma), żeby sprawdzić Żywy dom z kondygnacjami.
+  let floors;
+  if (q.get("floors") === "demo") {
+    floors = { piwnica: { floor_id: "piwnica", name: "Piwnica", level: -1 }, parter: { floor_id: "parter", name: "Parter", level: 0 }, pietro: { floor_id: "pietro", name: "Piętro", level: 1 } };
+    const at = { parter: ["Przedpokój", "Salon", "Kuchnia", "Gabinet", "Spiżarka", "Klatka schodowa", "Garaż"], pietro: ["Sypialnia", "Pokój dziecięcy", "Łazienka", "Korytarz", "Suszarnia"], piwnica: ["Piwnica"] };
+    for (const ar of Object.values(snap.areas)) for (const [f, names] of Object.entries(at)) if (names.includes(ar.name)) ar.floor_id = f;
+  }
   const hass = {
-    states, entities: snap.entities, devices: snap.devices, areas: snap.areas,
+    states, entities: snap.entities, devices: snap.devices, areas: snap.areas, floors,
     themes: { darkMode: dark }, config: { time_zone: "Europe/Warsaw", ...(snap.config ?? {}) }, user: { is_admin: true },
     async callWS(msg) {
       if (msg.type === "call_service" && msg.domain === "calendar" && msg.service === "get_events") {

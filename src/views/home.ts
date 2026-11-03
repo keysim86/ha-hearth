@@ -20,15 +20,20 @@ function km(lat1: number, lon1: number, lat2: number, lon2: number): number {
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function persons(ctx: Ctx): TemplateResult | typeof nothing {
+/** Osoby z zakładki Dom (i Żywego domu): z opcji albo wykryte; prywatne tylko dla właściciela HA (is_owner). */
+export function personIds(ctx: Ctx): { ids: string[]; priv: Set<string> } {
   const h = ctx.hass;
   const base = ctx.opts.persons?.length
     ? ctx.opts.persons
     : Object.keys(h.states).filter((e) => e.startsWith("person.") && (h.states[e].attributes.device_trackers ?? []).length && !h.entities[e]?.hidden);
   // Osoby prywatne: kafelki widoczne tylko dla właściciela HA (is_owner).
   const privIds = h.user?.is_owner ? (ctx.opts.persons_private ?? []).filter((id) => !base.includes(id)) : [];
-  const priv = new Set(privIds);
-  const ids = [...base, ...privIds];
+  return { ids: [...base, ...privIds], priv: new Set(privIds) };
+}
+
+function persons(ctx: Ctx): TemplateResult | typeof nothing {
+  const h = ctx.hass;
+  const { ids, priv } = personIds(ctx);
   if (!ids.length) return nothing;
   const cards = ids.filter((id) => h.states[id]).map((id, i) => {
     const p = h.states[id];
@@ -84,11 +89,17 @@ function gateLights(ctx: Ctx, cover: string, gateIds: string[]): string[] {
   return lights.length >= 1 && lights.length <= 2 ? lights : [];
 }
 
-function gates(ctx: Ctx): TemplateResult | typeof nothing {
+/** Bramy, garaże i drzwi z opcji albo wykryte (cover z klasą gate / garage / door). */
+export function gateIds(ctx: Ctx): string[] {
   const h = ctx.hass;
-  const ids = ctx.opts.gates?.length
+  return ctx.opts.gates?.length
     ? ctx.opts.gates
     : Object.keys(h.states).filter((e) => e.startsWith("cover.") && ["gate", "garage", "door"].includes(h.states[e].attributes.device_class) && !h.entities[e]?.hidden);
+}
+
+function gates(ctx: Ctx): TemplateResult | typeof nothing {
+  const h = ctx.hass;
+  const ids = gateIds(ctx);
   if (!ids.length) return nothing;
   const tiles = ids.filter((id) => h.states[id]).map((id) => {
     const c = h.states[id];
