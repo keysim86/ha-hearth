@@ -11,7 +11,7 @@ import { HistoryStore } from "./history";
 import { climateTarget, discoverRooms, hasProfiles, overrideUntil, profileNow, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
-import type { Hass, Look, Options, PanelInfo, Route, Style, Tab } from "./types";
+import type { Hass, HealthProfile, Look, Me, Options, PanelInfo, Route, Style, Tab } from "./types";
 import type { Actions, CouponKind, CouponView, Ctx } from "./views/common";
 import { devices } from "./views/common";
 import { detail } from "./views/detail";
@@ -160,6 +160,9 @@ export class HearthPanel extends LitElement {
   @property({ attribute: false }) route?: Route;
 
   @state() private open: string | null = null;
+  /** Kim jest to konto (/api/hearth/me): undefined = jeszcze nie wiadomo, null = brak odpowiedzi (starsza integracja). */
+  @state() private me?: Me | null;
+  private meFor?: PanelInfo;
   @state() private cols = 1;
   @state() private localStyle: Style | null = readStyle();
   @state() private localAccent: string | null = readAccent();
@@ -198,16 +201,25 @@ export class HearthPanel extends LitElement {
     return { style: "tiles", ...(this.panel?.config?.options ?? {}) } as Options;
   }
 
+  /** Adres Asystenta dla tego konta: z /api/hearth/me (serwer sprawdza konto); starsza integracja — z opcji. */
+  private get agentUrl(): string | null {
+    return this.me === undefined ? null : this.me ? this.me.agent_url : (this.options.agent_url ?? null);
+  }
+
+  /** Osoby Zdrowia widoczne dla tego konta (administrator — wszystkie, dorosły — swoja i dzieci, dziecko — swoja). */
+  private get healthList(): HealthProfile[] {
+    return this.me?.health ?? (this.me === null ? (this.panel?.config?.health ?? []) : []);
+  }
+
   private get tabs(): Tab[] {
-    // Kolejność z opcji (kolejność wyboru); nieznane pomijamy. Bez wyboru: wszystkie, poza Agentem bez adresu
-    // i Zdrowiem bez osób.
-    // Technika (serwer, sieć) tylko dla administratora HA — także pod starym adresem.
-    const admin = (t: Tab) => Boolean(this.hass?.user?.is_admin) || !ADMIN_TABS.includes(t);
+    // Kolejność z opcji (kolejność wyboru); nieznane pomijamy. Bez wyboru: wszystkie, poza Zakupami bez list.
+    // Zawsze bez Asystenta, gdy konto go nie dostało, i bez Zdrowia, gdy nie widzi żadnej osoby (administrator widzi
+    // pustą zakładkę z podpowiedzią). Technika (serwer, sieć) tylko dla administratora HA — także pod starym adresem.
+    const isAdmin = Boolean(this.hass?.user?.is_admin);
+    const allowed = (t: Tab) => (isAdmin || !ADMIN_TABS.includes(t)) && (t !== "agent" || Boolean(this.agentUrl))
+      && (t !== "health" || this.healthList.length > 0 || (isAdmin && this.me !== undefined));
     const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
-    return (chosen.length
-      ? chosen
-      : TABS.filter((t) => (t !== "agent" || this.options.agent_url) && (t !== "health" || this.panel?.config?.health?.length)
-          && (t !== "shopping" || (this.hass ? hasShopping(this.hass) : false)))).filter(admin);
+    return (chosen.length ? chosen : TABS.filter((t) => t !== "shopping" || (this.hass ? hasShopping(this.hass) : false))).filter(allowed);
   }
 
   private get tab(): Tab {
@@ -311,6 +323,13 @@ export class HearthPanel extends LitElement {
   }
 
   protected updated(changed: PropertyValues<this>) {
+    // Rola, Asystent i osoby Zdrowia — po wczytaniu i po każdej nowej konfiguracji panelu (np. zmiana opcji).
+    if (this.hass && this.panel && this.meFor !== this.panel) {
+      this.meFor = this.panel;
+      const ask = this.hass.callApi?.<Me>("GET", "hearth/me");
+      if (ask) ask.then((m) => (this.me = m)).catch(() => (this.me = null));
+      else this.me = null;
+    }
     if ((changed as Map<string, unknown>).has("person") && this.person && !this.personDialog?.open) this.personDialog?.showModal();
     if ((changed as Map<string, unknown>).has("coupons") && this.coupons && !this.couponsDialog?.open) this.couponsDialog?.showModal();
     const dark = this.dark;
@@ -792,8 +811,8 @@ export class HearthPanel extends LitElement {
     if (!this.hass) return nothing;
     const hass = this.hass;
     const deny = (this.options.deny_users ?? []).map((u) => String(u).toLowerCase());
-    if (hass.user?.name && deny.includes(hass.user.name.toLowerCase())) {
-      return html`<div class="noaccess" style="max-width:40rem;margin:4rem auto;padding:2rem;text-align:center;line-height:1.6">
+    if ((hass.user?.name && deny.includes(hass.user.name.toLowerCase())) || this.me?.role === "denied") {
+      return html`<div class="noaccess" style="max-width:40rem;margin:0 auto;padding:6rem 2rem 2rem;text-align:center;line-height:1.6">
         <h2>Brak dostępu</h2><p>Panel Hearth jest niedostępny dla Twojego konta.</p></div>`;
     }
     const c = clock(hass.config?.time_zone);
@@ -811,7 +830,7 @@ export class HearthPanel extends LitElement {
       ui: { ...this.ui, dark: this.dark ? "1" : "0" },
       sched: this.sched,
       rows: this.rows,
-      health: this.panel?.config?.health ?? [],
+      health: this.healthList,
     };
     const cfg = circuits(this.options.ebusd_zone_topic ?? "");
     if (cfg && this.tab === "boiler") {
@@ -898,8 +917,8 @@ export class HearthPanel extends LitElement {
       proxmox: () => proxmoxView(ctx),
       health: () => healthView(ctx),
       appliances: () => appliancesView(ctx),
-      agent: () => this.options.agent_url
-        ? html`<iframe class="agent" title="Agent" src=${this.options.agent_url} @load=${(e: Event) => this.postTheme(e.target as HTMLIFrameElement)}></iframe>`
+      agent: () => this.agentUrl
+        ? html`<iframe class="agent" title="Agent" src=${this.agentUrl} @load=${(e: Event) => this.postTheme(e.target as HTMLIFrameElement)}></iframe>`
         : html`<div class="empty">Podaj adres strony w opcjach Hearth (sekcja Alerty i Agent).</div>`,
       alerts: () => alertsView(ctx),
     };

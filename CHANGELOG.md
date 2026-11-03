@@ -7,6 +7,19 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Bezpieczeństwo
+- **Adres Asystenta i osoby Zdrowia poza konfiguracją panelu** — Home Assistant wysyła ją każdemu zalogowanemu kontu (także dzieciom i kontom „bez dostępu”), a adres Asystenta zwykle zawiera sekret proxy. Panel pobiera je teraz z `/api/hearth/me`, gdzie integracja sprawdza konto: Asystent tylko dla administratora i dorosłych, osoby Zdrowia według roli.
+
+### Dodano
+- **Opcja „Dzieci” (Wygląd)** — osoby HA, których konta mają profil Dziecko: bez Asystenta, w Zdrowiu tylko własne dane.
+
+### Zmieniono
+- **Zdrowie według konta** — administrator widzi wszystkie osoby, dorosły siebie, dzieci i osoby bez przypisanej osoby HA, dziecko tylko siebie. Zakładka znika, gdy konto nie widzi nikogo.
+- **„Użytkownicy bez dostępu” sprawdzani też na serwerze** — takie konto nie dostaje adresu Asystenta ani osób Zdrowia.
+
+### Naprawiono
+- Ekran „Brak dostępu” bez pasa tła nad treścią.
+
 ## [0.21.0-beta.13] - 2026-11-03
 
 ### Zmieniono

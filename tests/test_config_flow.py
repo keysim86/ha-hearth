@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.hearth.access import health_profiles
 from custom_components.hearth.const import DEFAULTS, DOMAIN
 
 
@@ -142,8 +143,12 @@ async def test_health_person_subentry_add_and_reconfigure(hass: HomeAssistant, p
     assert sub.data["weight"] == "sensor.waga_ala"
     assert sub.data["steps_goal"] == 10000  # wartość domyślna z formularza
     assert "bp_systolic" not in sub.data  # puste pola nie trafiają do danych
-    # Nowa osoba = przeładowanie wpisu, panel dostaje profil.
-    health = register.await_args.kwargs["config"]["health"]
+    # Nowa osoba = przeładowanie wpisu; profil nie idzie w konfiguracji panelu (każde konto ją widzi),
+    # tylko przez /api/hearth/me po sprawdzeniu konta.
+    loads = register.await_count
+    assert loads >= 2
+    assert "health" not in register.await_args.kwargs["config"]
+    health = health_profiles(entry)
     assert [p["name"] for p in health] == ["Ala"]
     assert health[0]["id"] == sub_id
     assert health[0]["goals"] == [{"label": "Lato", "weight": 60}]
@@ -166,4 +171,5 @@ async def test_health_person_subentry_add_and_reconfigure(hass: HomeAssistant, p
     assert sub.title == "Alicja"
     assert sub.data["history_days"] == 180
     assert "body_fat" not in sub.data  # wyczyszczone pole znika
-    assert register.await_args.kwargs["config"]["health"][0]["bp_systolic"] == "sensor.bp_ala_skurczowe"
+    assert register.await_count > loads
+    assert health_profiles(entry)[0]["bp_systolic"] == "sensor.bp_ala_skurczowe"

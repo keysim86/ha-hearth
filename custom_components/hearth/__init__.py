@@ -11,22 +11,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 
+from .access import HearthMeView, health_profiles, panel_options, public_options
 from .bring import BringCatalogView
 from .const import (
     CONF_ADMIN_ONLY,
+    CONF_AGENT_URL,
     CONF_ICON,
     CONF_TABS,
     CONF_TITLE,
     DATA_STATIC_REGISTERED,
     DEFAULTS,
     DOMAIN,
-    H_NAME,
-    HEALTH_DEFAULTS,
     PANEL_COMPONENT,
     PANEL_URL_PATH,
     STATIC_URL,
-    SUBENTRY_HEALTH,
 )
+
+__all__ = ["health_profiles", "panel_options"]
 
 FRONTEND_DIR = Path(__file__).parent / "www"
 
@@ -37,20 +38,6 @@ def _file_digest(path: Path) -> str:
         return hashlib.sha256(path.read_bytes()).hexdigest()[:8]
     except OSError:
         return "0"
-
-
-def panel_options(entry: ConfigEntry) -> dict:
-    """Opcje wpisu uzupełnione wartościami domyślnymi."""
-    return {**DEFAULTS, **entry.options}
-
-
-def health_profiles(entry: ConfigEntry) -> list[dict]:
-    """Osoby zakładki Zdrowie (podwpisy) w kolejności dodania."""
-    return [
-        {**HEALTH_DEFAULTS, **sub.data, "id": sub_id, H_NAME: sub.title}
-        for sub_id, sub in entry.subentries.items()
-        if sub.subentry_type == SUBENTRY_HEALTH
-    ]
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -76,8 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(STATIC_URL, str(FRONTEND_DIR), cache_headers=False)]
         )
-        # Katalog Bring! dla karty Zakupy — też raz na życie HA.
+        # Katalog Bring! dla karty Zakupy i „kim jestem” (Asystent, osoby Zdrowia) — też raz na życie HA.
         hass.http.register_view(BringCatalogView())
+        hass.http.register_view(HearthMeView())
         hass.data[DATA_STATIC_REGISTERED] = True
 
     options = panel_options(entry)
@@ -92,7 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         module_url=f"{STATIC_URL}/hearth-panel.js?v={version}-{digest}",
         embed_iframe=False,
         require_admin=bool(options[CONF_ADMIN_ONLY]),
-        config={"options": options, "health": health_profiles(entry), "version": str(version)},
+        # Konfigurację panelu dostaje każde zalogowane konto — bez adresu Asystenta (sekret) i bez osób Zdrowia;
+        # te panel pobiera z /api/hearth/me, gdzie serwer sprawdza konto (access.py).
+        config={"options": public_options(options), "agent": bool(options.get(CONF_AGENT_URL)), "version": str(version)},
     )
     entry.async_on_unload(entry.add_update_listener(_options_updated))
     return True

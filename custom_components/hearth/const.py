@@ -17,6 +17,7 @@ CONF_TITLE = "sidebar_title"
 CONF_ICON = "sidebar_icon"
 CONF_ADMIN_ONLY = "require_admin"
 CONF_DENY_USERS = "deny_users"
+CONF_CHILDREN = "children"
 CONF_ACCENT = "accent_color"
 # Kolory wiodące (klucze jak w panelu); w opcjach można też wpisać własny „#rrggbb”.
 ACCENTS = ["ember", "frost", "air", "ok", "bath", "rose", "slate", "theme"]
@@ -113,7 +114,7 @@ CONF_FANS = "fans"
 CONF_EXCLUDE = "exclude_entities"
 
 SECTIONS: dict[str, list[str]] = {
-    "appearance": [CONF_LOOK, CONF_STYLE, CONF_ACCENT, CONF_TABS, CONF_TITLE, CONF_ICON, CONF_ADMIN_ONLY, CONF_DENY_USERS],
+    "appearance": [CONF_LOOK, CONF_STYLE, CONF_ACCENT, CONF_TABS, CONF_TITLE, CONF_ICON, CONF_ADMIN_ONLY, CONF_DENY_USERS, CONF_CHILDREN],
     "outdoor": [CONF_OUT_TEMP, CONF_OUT_HUMIDITY, CONF_OUT_PRESSURE, CONF_OUT_ILLUMINANCE,
                 CONF_OUT_PM25, CONF_OUT_PM10, CONF_OUT_AQI, CONF_OUT_AQI_LEVEL],
     "house": [CONF_PRESENCE, CONF_TARIFF],
@@ -145,6 +146,7 @@ DEFAULTS: dict[str, object] = {
     CONF_ICON: "mdi:home-thermometer",
     CONF_ADMIN_ONLY: False,
     CONF_DENY_USERS: [],
+    CONF_CHILDREN: [],
     CONF_PERSONS: [],
     CONF_PERSONS_PRIVATE: [],
     CONF_GATES: [],

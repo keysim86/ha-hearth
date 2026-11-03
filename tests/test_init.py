@@ -19,8 +19,8 @@ async def test_setup_registers_panel_and_unload_removes_it(hass: HomeAssistant, 
     assert entry.state is ConfigEntryState.LOADED
 
     hass.http.async_register_static_paths.assert_awaited_once()
-    # Katalog Bring! dla karty Zakupy.
-    assert type(hass.http.register_view.call_args.args[0]).__name__ == "BringCatalogView"
+    # Katalog Bring! dla karty Zakupy i „kim jestem” (Asystent, osoby Zdrowia).
+    assert [type(c.args[0]).__name__ for c in hass.http.register_view.call_args_list] == ["BringCatalogView", "HearthMeView"]
     kwargs = register.await_args.kwargs
     assert kwargs["frontend_url_path"] == "hearth"
     assert kwargs["webcomponent_name"] == "hearth-panel"
@@ -45,9 +45,9 @@ async def test_options_change_reloads_with_new_config(hass: HomeAssistant, panel
 
     assert register.await_count == 2
     assert register.await_args.kwargs["config"]["options"]["style"] == "dials"
-    # Ścieżka plików i widok katalogu rejestrowane tylko raz na uruchomienie HA.
+    # Ścieżka plików i widoki (katalog, „kim jestem”) rejestrowane tylko raz na uruchomienie HA.
     hass.http.async_register_static_paths.assert_awaited_once()
-    hass.http.register_view.assert_called_once()
+    assert hass.http.register_view.call_count == 2
 
 
 async def test_migration_adds_shopping_tab_after_home(hass: HomeAssistant, panel_mocks) -> None:

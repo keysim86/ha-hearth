@@ -97,7 +97,7 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 
 | Sekcja | Pola | Bez ustawień |
 |---|---|---|
-| **Wygląd** | wygląd (Klasyczny albo Neon), styl kart, kolor wiodący (gotowy, kolor motywu HA albo `#rrggbb`), zakładki, nazwa i ikona w menu, tylko dla administratorów | Klasyczny, wszystkie zakładki, kafelki, kolor Żar |
+| **Wygląd** | wygląd (Klasyczny albo Neon), styl kart, kolor wiodący (gotowy, kolor motywu HA albo `#rrggbb`), zakładki, nazwa i ikona w menu, tylko dla administratorów, użytkownicy bez dostępu, dzieci (profil Dziecko) | Klasyczny, wszystkie zakładki, kafelki, kolor Żar |
 | **Na zewnątrz** | temperatura, wilgotność, ciśnienie, światło, PM2,5, PM10, indeks powietrza i jego poziom | podpowiedź przy dodaniu integracji |
 | **Pasek domu** | obecność domowników, strefa taryfy | — |
 | **Zakładka Dom** | osoby, osoby prywatne (tylko właściciel HA), bramy, skrzynka pocztowa (+ bateria), kalendarz odpadów albo czujniki, przełączniki frakcji, pogoda (encja) | osoby z telefonem, rolety klasy brama/garaż/drzwi, kalendarz Waste Collection Schedule, pomocniki z „odpad/waste”, encje `sensor.payback_<konto>_*` (automat PAYBACK przez MQTT), encje `sensor.lidl_<konto>_*` (automat Lidl Plus przez MQTT), encje `sensor.biedronka_<konto>_*` (automat Moja Biedronka przez MQTT), logotypy `image.<automat>_<konto>_logo`, listy `todo.*` integracji Bring!, Open-Meteo |
@@ -125,6 +125,25 @@ każda kolejna sekcja włącza swoją podstronę:
 
 Panel liczy wszystko ze statystyk rekordera (waga dzień po dniu, średnie, odczyty ciśnienia z minimum i maksimum
 godziny). Kategorie BMI, tkanki tłuszczowej i ciśnienia służą tylko do kolorów — panel nie stawia diagnoz.
+
+Kto widzi które osoby: administrator HA — wszystkie; dorosły — siebie (osoba HA przypisana do jego konta), dzieci
+i osoby bez wskazanej osoby HA; dziecko (opcja **Dzieci**) — tylko siebie.
+
+### Dostęp i konta
+
+Konfigurację panelu Home Assistant wysyła każdemu zalogowanemu kontu, dlatego nie ma w niej adresu Asystenta
+(zwykle z sekretem) ani osób Zdrowia. Panel pobiera je z `/api/hearth/me`, a integracja sprawdza konto po swojej
+stronie:
+
+| Konto | Asystent | Zdrowie |
+|---|---|---|
+| administrator HA | tak | wszystkie osoby |
+| dorosły (każde inne) | tak | swoja osoba, dzieci, osoby bez osoby HA |
+| dziecko (osoba z opcji **Dzieci**) | nie | tylko swoja osoba |
+| użytkownik bez dostępu | nie | nic — panel pokazuje „brak dostępu” |
+
+Stany encji HA są dostępne dla każdego zalogowanego konta (to zasada Home Assistanta), więc ukrycie w panelu daje
+porządek i dyskrecję, a nie ochronę danych przed właścicielem konta.
 
 ### Profile ogrzewania (opcjonalnie)
 

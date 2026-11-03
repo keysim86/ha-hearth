@@ -52,6 +52,8 @@ export interface Hass {
   user?: { is_admin?: boolean; is_owner?: boolean; name?: string };
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
   callService(domain: string, service: string, data?: Record<string, unknown>): Promise<unknown>;
+  /** REST HA z tokenem zalogowanego konta (widoki integracji /api/hearth/…). */
+  callApi?<T>(method: "GET" | "POST", path: string): Promise<T>;
 }
 
 export type Style = "tiles" | "list" | "dials";
@@ -199,5 +201,16 @@ export interface HealthProfile {
 }
 
 export interface PanelInfo {
-  config: { options: Options; health?: HealthProfile[]; version: string };
+  /** health i options.agent_url tylko ze starszej integracji — nowa podaje je w /api/hearth/me. */
+  config: { options: Options; agent?: boolean; health?: HealthProfile[]; version: string };
+}
+
+/** Rola konta HA w Hearth (sprawdzana na serwerze, access.py). */
+export type Role = "admin" | "adult" | "child" | "denied";
+
+/** Odpowiedź /api/hearth/me: rola, adres Asystenta (gdy wolno) i osoby Zdrowia widoczne dla tego konta. */
+export interface Me {
+  role: Role;
+  agent_url: string | null;
+  health: HealthProfile[];
 }
