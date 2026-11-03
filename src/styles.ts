@@ -891,6 +891,32 @@ form.ocell .orow { margin-top: 6px; }
   box-shadow: 0 0 0 1px rgba(140, 175, 255, .12), 0 30px 80px rgba(0, 0, 0, .6), 0 0 40px rgba(38, 224, 255, .08); }
 :host([neon]) dialog.set::backdrop { background: rgba(2, 4, 12, .6); }
 
+/* ——— Wymaga uwagi (zakładka Dom) ——— */
+.attn { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px 6px; box-shadow: var(--shadow); overflow: hidden; }
+.attn-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding-bottom: 4px; }
+.attn-h h2 { margin: 0; font-family: var(--f-num); font-stretch: 90%; font-size: 20px; }
+.attn-h .n { font: 800 19px var(--f-num); color: var(--crit); }
+.attn-h .hint { margin-left: auto; font-size: 12px; color: var(--muted); }
+.arow { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line);
+  touch-action: pan-y; user-select: none; transition: transform .25s ease, box-shadow .15s; background: var(--surface); }
+.attn-h + .arow { border-top: 0; }
+.arow b { display: block; font-size: 15px; line-height: 1.3; }
+.arow small { display: block; color: var(--muted); font-size: 13px; }
+.aico { --c: var(--warn); width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--c);
+  background: color-mix(in srgb, var(--c) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent); }
+.aico svg { width: 22px; height: 22px; }
+.arow.crit .aico { --c: var(--crit); } .arow.cold .aico { --c: var(--frost); } .arow.info .aico { --c: var(--bath); } .arow.ok .aico { --c: var(--ok); }
+.aact { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.btn.later { color: var(--muted); }
+.arow.go-done { box-shadow: inset 4px 0 0 var(--ok); } .arow.go-later { box-shadow: inset -4px 0 0 var(--frost); }
+.attn-f { display: flex; align-items: center; gap: 10px; justify-content: flex-end; padding: 8px 0 6px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+:host([neon]) .aico { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 50%, transparent), 0 0 18px color-mix(in srgb, var(--c) 30%, transparent); }
+:host([neon]) .aico svg { filter: drop-shadow(0 0 5px var(--c)); }
+:host([neon]) .attn { backdrop-filter: blur(14px); }
+:host([narrow]) .arow { grid-template-columns: 36px minmax(0, 1fr); gap: 10px; }
+:host([narrow]) .aico { width: 36px; height: 36px; }
+:host([narrow]) .aact { grid-column: 2; justify-content: flex-start; }
+
 /* ——— Żywy dom (Neon, zakładka Dom) ——— */
 .lh { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; margin: -6px -4px 0; }
 .lh svg { display: block; height: auto; }

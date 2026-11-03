@@ -24,6 +24,7 @@ import { boilerView } from "./views/boiler";
 import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { liveHouse } from "./views/livehouse";
+import { attentionView, visibleAttention } from "./views/attention";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
 import { hasShopping, shoppingView, toBuy } from "./views/shopping";
@@ -765,6 +766,7 @@ export class HearthPanel extends LitElement {
     }
     const tab = this.tab;
     const alertCount = this.tabs.includes("alerts") ? activeAlerts(ctx).length : 0;
+    const homeCount = this.tabs.includes("home") ? visibleAttention(ctx, this.rooms()).length : 0;
     const shopCount = this.tabs.includes("shopping") ? toBuy(hass) : 0;
     const nav = html`<nav class="tabs" aria-label="Zakładki" @scroll=${() => this.tabsEdge()}
       @wheel=${(e: WheelEvent) => {
@@ -779,13 +781,13 @@ export class HearthPanel extends LitElement {
           if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
           e.preventDefault();
           this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO[t][0]}`);
-        }}>${TAB_INFO[t][1]}${t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}${
+        }}>${TAB_INFO[t][1]}${t === "home" && homeCount ? html`<span class="tbadge">${homeCount}</span>` : nothing}${t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}${
           t === "shopping" && shopCount ? html`<span class="tbadge info">${shopCount}</span>` : nothing}</a>`)}
     </nav>`;
     const camTick = Math.floor(Date.now() / 5000);
     const views: Record<Tab, () => unknown> = {
       climate: () => this.climate(ctx),
-      home: () => (this.look === "neon" ? html`${liveHouse(ctx, this.rooms(), this.narrow)}${homeView(ctx)}` : homeView(ctx)),
+      home: () => html`${this.look === "neon" ? liveHouse(ctx, this.rooms(), this.narrow) : nothing}${attentionView(ctx, this.rooms())}${homeView(ctx)}`,
       shopping: () => shoppingView(ctx),
       switches: () => switchesView(ctx),
       energy: () => energyView(ctx),

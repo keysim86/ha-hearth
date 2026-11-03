@@ -676,7 +676,7 @@ export function toggleFor(ctx: Ctx, name: string): string | undefined {
   });
 }
 
-function wasteRows(ctx: Ctx): WasteRow[] {
+export function wasteRows(ctx: Ctx): WasteRow[] {
   const h = ctx.hass;
   const today = new Date();
   today.setHours(0, 0, 0, 0);

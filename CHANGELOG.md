@@ -7,6 +7,9 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **„Wymaga uwagi” na zakładce Dom (oba wyglądy)** — jedno miejsce na sprawy do załatwienia, od najpilniejszych: reguły z zakładki Alerty, brama / garaż / drzwi otwarte ponad 10 min (*Zamknij*), otwarte okno przy grzaniu i głowica bez kontaktu (*Pokój* otwiera pokój w Klimacie), wywóz odpadów dziś lub jutro (*Wystawione*), poczta w skrzynce (*Odebrane*). *Jutro* odkłada sprawę do 6:00, przesunięcie palcem w prawo chowa ją do następnego razu, w lewo — do jutra; wybór pamięta to urządzenie. Licznik spraw na zakładce Dom.
+
 ## [0.21.0-beta.5] - 2026-11-03
 
 ### Naprawiono
