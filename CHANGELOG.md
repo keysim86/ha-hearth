@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.1] - 2026-11-03
+
 ### Dodano
 - **Wygląd „Neon” do wyboru** — nowa opcja *Wygląd* w ustawieniach integracji (sekcja Wygląd): *Klasyczny* (domyślny, bez zmian) albo *Neon*. Neon to ciemne szkło, świecące kolory i nocne niebo z gwiazdami i zorzą w tle, na wszystkich zakładkach; jest zawsze ciemny, niezależnie od motywu HA.
 - **Wygląd i efekty ruchu na tym urządzeniu** — w *Ustawieniach panelu*: wygląd jak w integracji, Klasyczny albo Neon, a przy neonie efekty ruchu: *Automatycznie* (pełne na dużym ekranie, spokojnie na telefonie), *Pełne* (migoczące gwiazdy, płynąca zorza, pulsujące znaczniki alertów) albo *Spokojnie*. Przy systemowym „ogranicz ruch” animacje są zawsze wyłączone.
