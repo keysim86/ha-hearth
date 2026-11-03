@@ -618,6 +618,15 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; padding
 .mlegend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: 3px; }
 .mlegend .tt { margin-left: auto; color: var(--faint); }
 .boilerhero.burn { border-color: color-mix(in srgb, var(--ember) 60%, var(--line)); background: linear-gradient(160deg, var(--surface), color-mix(in srgb, var(--ember) 10%, var(--surface))); }
+/* Kocioł — podsumowanie dla domu: pali się = żar, ciśnienie poza normą = kolor stanu (słowo jest w podpisie). */
+.bsum .hcell.burn .hval { color: var(--ember); }
+.bsum .hcell.warn .hval { color: var(--warn); }
+.bsum .hcell.crit .hval { color: var(--crit); }
+.bsum .hcell.crit { box-shadow: inset 3px 0 0 var(--crit); }
+.bwhy { display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 10px 2px 0; font-size: 13px; color: var(--muted); }
+.bwhy a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.bwhy a:hover { text-decoration: underline; }
+.bwhy a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .inds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .ind { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; font-weight: 700; }
 .ind small { font-weight: 400; color: var(--muted); }
@@ -849,6 +858,8 @@ form.ocell .orow { margin-top: 6px; }
 
 /* ——— Wygląd „Neon” (opcja Wygląd): ciemne szkło, świecące kolory, nocne niebo. Ruch tylko z atrybutem fx. ——— */
 :host([neon]) {
+  /* Tło do dołu ekranu także na krótkiej stronie (pod panelem byłoby tło HA, np. jasne). */
+  min-height: 100vh; min-height: 100dvh;
   position: relative; isolation: isolate; color-scheme: dark; background: #04060d; color: var(--fg);
   --bg: #04060d; --surface: rgba(12, 18, 38, .84); --surface-2: rgba(140, 175, 255, .08); --line: rgba(140, 175, 255, .2);
   --fg: #eef2ff; --muted: #aab5d1; --faint: #8a95b2;

@@ -1,8 +1,17 @@
 // Nawigacja w sekcjach: 16 dawnych zakładek w 8 sekcjach (adresy /hearth/<zakładka> bez zmian — dawna zakładka
 // to podzakładka sekcji). Desktop: kolumna sekcji po lewej; telefon: dolny pasek (4 sekcje + Więcej).
+// Zakładka może mieć strony (/hearth/<zakładka>/<strona>) — kolejne podzakładki bez nowej opcji w integracji.
 
 import { html, svg, type TemplateResult } from "lit";
 import type { Tab } from "./types";
+
+/** Strona wewnątrz zakładki: admin = tylko administrator HA, needs = pokazywana, gdy są dane (sprawdza panel). */
+export interface Page {
+  id: string;
+  label: string;
+  admin?: boolean;
+  needs?: "ebusd" | "gas";
+}
 
 export interface Section {
   id: string;
@@ -11,6 +20,8 @@ export interface Section {
   tabs: Tab[];
   /** Nazwy podzakładek (gdy sekcja ma więcej niż jedną). */
   sub: Partial<Record<Tab, string>>;
+  /** Strony zakładek, w pasku podzakładek zaraz po swojej zakładce. */
+  pages?: Partial<Record<Tab, Page[]>>;
 }
 
 const ico = (d: ReturnType<typeof svg>) => html`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -32,11 +43,13 @@ export const NAV_ICONS = {
 export const SECTIONS: Section[] = [
   { id: "teraz", label: "Teraz", icon: NAV_ICONS.home, tabs: ["home", "alerts"], sub: { home: "Teraz", alerts: "Alerty" } },
   { id: "zakupy", label: "Zakupy", icon: NAV_ICONS.cart, tabs: ["shopping"], sub: {} },
-  { id: "cieplo", label: "Ciepło", icon: NAV_ICONS.flame, tabs: ["climate", "boiler"], sub: { climate: "Pokoje", boiler: "Kocioł" } },
+  { id: "cieplo", label: "Ciepło", icon: NAV_ICONS.flame, tabs: ["climate", "boiler"], sub: { climate: "Pokoje", boiler: "Kocioł i ciepła woda" },
+    pages: { boiler: [{ id: "program", label: "Program tygodnia", admin: true, needs: "ebusd" }, { id: "serwis", label: "Serwis", admin: true }] } },
   { id: "urzadzenia", label: "Urządzenia", icon: NAV_ICONS.plug, tabs: ["appliances", "switches", "cars", "robots"],
     sub: { appliances: "AGD", switches: "Światła i gniazdka", cars: "Auta", robots: "Roboty" } },
   { id: "kamery", label: "Kamery", icon: NAV_ICONS.camera, tabs: ["cameras"], sub: {} },
-  { id: "zuzycie", label: "Zużycie", icon: NAV_ICONS.bolt, tabs: ["energy", "meters"], sub: { energy: "Prąd", meters: "Liczniki" } },
+  { id: "zuzycie", label: "Zużycie", icon: NAV_ICONS.bolt, tabs: ["energy", "meters"], sub: { energy: "Prąd", meters: "Liczniki" },
+    pages: { energy: [{ id: "gaz", label: "Gaz", needs: "gas" }] } },
   { id: "zdrowie", label: "Moje zdrowie", icon: NAV_ICONS.heart, tabs: ["health"], sub: {} },
   { id: "technika", label: "Technika", icon: NAV_ICONS.server, tabs: ["proxmox", "network"], sub: { proxmox: "Serwer", network: "Sieć" } },
 ];
@@ -50,4 +63,9 @@ export const PHONE_BAR = ["teraz", "zakupy", "cieplo", "urzadzenia"];
 /** Sekcje z włączonymi zakładkami (kolejność sekcji stała, zakładki w kolejności sekcji). */
 export function sectionsFor(tabs: Tab[]): Section[] {
   return SECTIONS.map((s) => ({ ...s, tabs: s.tabs.filter((t) => tabs.includes(t)) })).filter((s) => s.tabs.length);
+}
+
+/** Pozycje paska podzakładek: zakładka, po niej jej strony (page = undefined to strona główna zakładki). */
+export function subLinks(s: Section, ok: (t: Tab, p: Page) => boolean): Array<{ tab: Tab; page?: Page }> {
+  return s.tabs.flatMap((tab) => [{ tab }, ...(s.pages?.[tab] ?? []).filter((p) => ok(tab, p)).map((page) => ({ tab, page }))]);
 }

@@ -1,21 +1,24 @@
-// Zakładka Kocioł: stan i podzespoły, temperatury z 24 h, termostaty ogrzewania i ciepłej wody, gaz, ustawienia.
+// Ciepło → Kocioł. Strona główna dla domu: stan kotła, ciepła woda, ciśnienie i program jednym rzutem oka, termostaty.
+// Strony tylko dla administratora HA: Program tygodnia (harmonogramy sterownika przez ebusd — odczyt MQTT wymaga
+// administratora) i Serwis (podzespoły, parametry, temperatury z 24 h, nastawy). Gaz jest w Zużycie → Gaz.
 
 import { html, nothing, type TemplateResult } from "lit";
-import { energyPrefs, sourcesOf } from "../data/energy";
-import { daysAgo, monthsAgo, startOfDay, startOfMonth, sumSince } from "../data/stats";
 import { f1, num, round } from "../format";
-import { bars, multiLine, type Bar } from "../svg";
-import { entityName, st, timeSel, unitOf, type Ctx } from "./common";
-import { MONTH_NAMES } from "./energy";
+import { multiLine } from "../svg";
+import { entityName, st, timeSel, type Ctx } from "./common";
+import { gasToday, gasView } from "./gas";
 import { boilerState } from "./house";
 import { DAY_PL, DAY_SHORT, toMin, type Circuit, type Slot } from "../data/ebusd";
 
-const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 // Nazwy trybów jak w polskim interfejsie HA.
 const HVAC: Record<string, string> = { off: "Wyłączony", heat: "Grzanie", auto: "Automatyczny", heat_cool: "Grzanie/chłodzenie", cool: "Chłodzenie", dry: "Osuszanie", fan_only: "Tylko wentylator", eco: "Eko", electric: "Grzałka", gas: "Gaz", performance: "Wydajny", heat_pump: "Pompa ciepła", high_demand: "Duży pobór" };
 // Sterownik Vaillant przez ebusd: heat_cool = tryb ręczny (stała temperatura dzienna), auto = harmonogram.
 const EBUSD_MODES: Record<string, string> = { heat_cool: "Dzień (ręczny)", auto: "Harmonogram", off: "Wyłączony" };
 const PRESET: Record<string, string> = { none: "Normalnie", boost: "Szybko", eco: "Eko", away: "Poza domem", comfort: "Komfort", home: "W domu", sleep: "Noc", activity: "Aktywność" };
+const SF: Record<string, string> = { veto: "Veto", party: "Impreza", onedayaway: "Dzień poza domem", onedayathome: "Dzień w domu", ventilation: "Wietrzenie", holiday: "Urlop", hwcboost: "Szybka CWU" };
+
+/** Link do innej strony panelu (np. Zużycie → Gaz); brak, gdy tej strony nie ma. */
+export interface PageLink { href: string; go: (e: MouseEvent) => void }
 
 function indicator(ctx: Ctx, id: string | null | undefined, label: string, onText = "pracuje", offText = "nie") {
   if (!id || !ctx.hass.states[id]) return nothing;
@@ -23,18 +26,103 @@ function indicator(ctx: Ctx, id: string | null | undefined, label: string, onTex
   return html`<span class="ind ${on ? "on" : ""}"><i></i>${label}<small>${on ? onText : offText}</small></span>`;
 }
 
-function status(ctx: Ctx): TemplateResult | typeof nothing {
+const val = (ctx: Ctx, id: string | null | undefined) => (id ? num(st(ctx, id)) : null);
+
+/** Ciśnienie wody w instalacji: klasa koloru i zdanie, co z tym zrobić. */
+export function pressureInfo(p: number | null): { cls: string; note: string } {
+  if (p === null) return { cls: "", note: "brak odczytu" };
+  if (p < 1) return { cls: "crit", note: "za niskie — uzupełnij wodę" };
+  if (p > 2.5) return { cls: "crit", note: "za wysokie — sprawdź kocioł" };
+  if (p < 1.2) return { cls: "warn", note: "niskie — wkrótce uzupełnij wodę" };
+  if (p > 2.2) return { cls: "warn", note: "wysokie" };
+  return { cls: "ok", note: "w normie · 1,0–2,5" };
+}
+
+/** Koniec Veto ze sterownika („01.01.2019” i „00:00” znaczą brak). */
+function vetoEnd(ctx: Ctx): string {
+  return [st(ctx, ctx.opts.veto_end_date), st(ctx, ctx.opts.veto_end_time)?.slice(0, 5)].filter((x) => x && !/^01\.01\.2019$|^00:00$/.test(x)).join(" ");
+}
+
+/** Program strefy na teraz z harmonogramu sterownika: przedział dzienny albo temperatura obniżona do następnego. */
+function programNow(ctx: Ctx): { value: string; sub: string } | null {
+  const week = ctx.timers?.week("zone");
+  if (!week) return null;
+  const slots = week[(new Date().getDay() + 6) % 7] ?? [];
+  const now = ctx.nowMinute;
+  const setback = num(ctx.timers?.value("NightTemp")?.replace(",", "."));
+  const low = setback !== null ? `${f1(setback)}°` : "obniżona";
+  const cur = slots.find((s) => toMin(s.from) <= now && now < toMin(s.to));
+  if (cur) return { value: cur.temp !== null ? `${f1(cur.temp)}°` : "dzień", sub: `dzień do ${cur.to}, potem ${low}` };
+  const next = slots.find((s) => toMin(s.from) > now);
+  return { value: low, sub: `obniżona · ${next ? `od ${next.from}${next.temp !== null ? ` ${f1(next.temp)}°` : ""}` : "do jutra"}` };
+}
+
+/** Komórka „Program”: Veto, tryb ręczny, wyłączone albo przedział z harmonogramu. */
+function programCell(ctx: Ctx): { value: string; sub: string } | null {
+  const id = ctx.opts.climate_heating;
+  const c = id ? ctx.hass.states[id] : undefined;
+  if (!c) return programNow(ctx);
+  const target = num(c.attributes.temperature);
+  const sf = st(ctx, ctx.opts.boiler_sf_mode);
+  if (sf && sf !== "auto" && sf !== "unknown" && sf !== "unavailable") {
+    const end = sf === "veto" ? vetoEnd(ctx) : "";
+    return { value: target !== null ? `${f1(target)}°` : SF[sf] ?? sf, sub: `${SF[sf] ?? sf}${end ? ` do ${end}` : ""}, potem harmonogram` };
+  }
+  if (c.state === "off") return { value: "wyłączone", sub: "ogrzewanie wyłączone w sterowniku" };
+  if (c.state === "heat_cool" && ctx.opts.ebusd_zone_topic) return { value: target !== null ? `${f1(target)}°` : "dzień", sub: "dzień ręcznie, bez harmonogramu" };
+  return programNow(ctx) ?? (target !== null ? { value: `${f1(target)}°`, sub: (ctx.opts.ebusd_zone_topic ? EBUSD_MODES[c.state] : undefined) ?? HVAC[c.state] ?? c.state } : null);
+}
+
+/** Strona główna: cztery odpowiedzi (czy grzeje, czy jest ciepła woda, czy ciśnienie w normie, jaki program) i zdanie pod spodem. */
+function summary(ctx: Ctx, gasLink?: PageLink): TemplateResult | typeof nothing {
+  const o = ctx.opts;
+  const b = boilerState(ctx);
+  const cells: TemplateResult[] = [];
+  const cell = (label: string, value: string, sub: string, cls = "") =>
+    html`<div class="hcell ${cls}"><span class="hlabel">${label}</span><span class="hval">${value}</span><span class="hsub">${sub}</span></div>`;
+  const flow = val(ctx, o.boiler_flow_temperature), mod = val(ctx, o.boiler_modulation);
+  if (b)
+    cells.push(cell("Kocioł", b.text, [b.burning ? `płomień${mod !== null ? ` · moc ${round(mod)}%` : ""}` : "palnik wyłączony", flow !== null ? `zasilanie ${f1(flow)}°` : ""].filter(Boolean).join(" · "), b.burning ? "burn" : ""));
+  const dhw = val(ctx, o.dhw_temperature) ?? (o.climate_dhw ? num(ctx.hass.states[o.climate_dhw]?.attributes.current_temperature) : null);
+  const dhwTarget = val(ctx, o.dhw_target) ?? (o.climate_dhw ? num(ctx.hass.states[o.climate_dhw]?.attributes.temperature) : null);
+  if (dhw !== null) {
+    const boost = o.climate_dhw ? ctx.hass.states[o.climate_dhw]?.attributes.preset_mode === "boost" : false;
+    const how = st(ctx, o.boiler_dhw_demand) === "on" ? "podgrzewa się" : boost ? "podgrzewanie jednorazowe"
+      : dhwTarget === null ? "" : dhw >= dhwTarget - 3 ? "gotowa" : "chłodniejsza od celu";
+    cells.push(cell("Ciepła woda", `${f1(dhw)}°`, [dhwTarget !== null ? `cel ${f1(dhwTarget)}°` : "", how].filter(Boolean).join(" · ")));
+  }
+  const p = val(ctx, o.boiler_pressure);
+  if (o.boiler_pressure) {
+    const pi = pressureInfo(p);
+    cells.push(cell("Ciśnienie wody", p === null ? "—" : `${f1(p)} bar`, pi.note, pi.cls === "ok" ? "" : pi.cls));
+  }
+  const prog = programCell(ctx);
+  if (prog) cells.push(cell("Program", prog.value, prog.sub));
+  if (!cells.length) return nothing;
+  const out = val(ctx, o.boiler_outdoor), outAvg = val(ctx, o.boiler_outdoor_avg);
+  const gas = gasLink ? gasToday(ctx) : null;
+  const why = [
+    out !== null ? html`<span>Na zewnątrz ${f1(out)} °C${outAvg !== null ? ` (średnia ${f1(outAvg)} °C)` : ""}</span>` : nothing,
+    gas && gasLink ? html`<a href=${gasLink.href} @click=${gasLink.go}>Gaz dziś ${f1(gas.value)} ${gas.unit} ›</a>` : nothing,
+  ].filter((x) => x !== nothing);
+  return html`<section class="sec"><h2>Kocioł</h2>
+    <div class="house bsum">${cells}</div>
+    ${why.length ? html`<div class="bwhy">${why}</div>` : nothing}
+  </section>`;
+}
+
+/** Serwis: podzespoły, parametry pracy, temperatury instalacji i ich przebieg z 24 h. */
+function service(ctx: Ctx): TemplateResult | typeof nothing {
   const o = ctx.opts;
   const b = boilerState(ctx);
   if (!b) return nothing;
-  const val = (id: string | null | undefined, digits = 1) => (id ? num(st(ctx, id)) : null);
-  const pressure = val(o.boiler_pressure);
-  const pCls = pressure === null ? "" : pressure < 1 || pressure > 2.5 ? "crit" : pressure < 1.2 || pressure > 2.2 ? "warn" : "ok";
-  const flow = val(o.boiler_flow_temperature), ret = val(o.boiler_return_temperature), target = val(o.boiler_flow_target);
-  const out = val(o.boiler_outdoor), outAvg = val(o.boiler_outdoor_avg);
+  const pressure = val(ctx, o.boiler_pressure);
+  const pCls = pressureInfo(pressure).cls;
+  const flow = val(ctx, o.boiler_flow_temperature), ret = val(ctx, o.boiler_return_temperature), target = val(ctx, o.boiler_flow_target);
+  const out = val(ctx, o.boiler_outdoor), outAvg = val(ctx, o.boiler_outdoor_avg);
   const tile = (label: string, v: number | null, sub: string) =>
     v === null ? nothing : html`<div class="hcell"><span class="hlabel">${label}</span><span class="hval">${f1(v)}<span class="u">°C</span></span><span class="hsub">${sub}</span></div>`;
-  return html`<section class="sec"><h2>Kocioł</h2>
+  return html`<section class="sec"><h2>Praca kotła <small>tylko administrator</small></h2>
     <div class="cards two">
       <div class="ocell boilerhero ${b.burning ? "burn" : ""}">
         <span class="hlabel">Stan</span>
@@ -48,8 +136,8 @@ function status(ctx: Ctx): TemplateResult | typeof nothing {
       </div>
       <div class="ocell">
         <span class="hlabel">Parametry</span>
-        ${o.boiler_modulation ? html`<div class="row"><span>Moc palnika</span><b>${round(val(o.boiler_modulation))}%</b></div>` : nothing}
-        ${o.boiler_fan_speed ? html`<div class="row"><span>Wentylator</span><b>${round(val(o.boiler_fan_speed))} obr./min</b></div>` : nothing}
+        ${o.boiler_modulation ? html`<div class="row"><span>Moc palnika</span><b>${round(val(ctx, o.boiler_modulation))}%</b></div>` : nothing}
+        ${o.boiler_fan_speed ? html`<div class="row"><span>Wentylator</span><b>${round(val(ctx, o.boiler_fan_speed))} obr./min</b></div>` : nothing}
         ${o.boiler_pressure ? html`<div class="row"><span>Ciśnienie wody</span><b class="volt ${pCls}">${f1(pressure)} bar</b></div>` : nothing}
         ${o.boiler_heat_curve ? html`<div class="row"><span>Krzywa grzewcza</span><b>${num(st(ctx, o.boiler_heat_curve))?.toLocaleString("pl-PL") ?? "—"}</b></div>` : nothing}
       </div>
@@ -58,7 +146,7 @@ function status(ctx: Ctx): TemplateResult | typeof nothing {
       ${tile("Zasilanie", flow, target !== null ? `cel ${f1(target)} °C` : "")}
       ${tile("Powrót", ret, flow !== null && ret !== null ? `różnica ${f1(flow - ret)} °C` : "")}
       ${tile("Na zewnątrz (kocioł)", out, outAvg !== null ? `średnia ${f1(outAvg)} °C` : "")}
-      ${tile("Ciepła woda", val(o.dhw_temperature), o.dhw_target ? `cel ${f1(val(o.dhw_target))} °C` : "")}
+      ${tile("Ciepła woda", val(ctx, o.dhw_temperature), o.dhw_target ? `cel ${f1(val(ctx, o.dhw_target))} °C` : "")}
     </div>
     ${multiLine(
       [
@@ -82,12 +170,14 @@ function thermostat(ctx: Ctx, id: string | null | undefined, title: string, curr
   const modes: string[] = a.hvac_modes ?? a.operation_list ?? [];
   const presets: string[] = a.preset_modes ?? [];
   const water = id.startsWith("water_heater.");
+  // Ciepła woda: „boost” to jednorazowe podgrzanie zasobnika.
+  const dhw = water || id === ctx.opts.climate_dhw;
+  const presetLabel = (m: string) => (dhw && m === "boost" ? "Podgrzej teraz" : PRESET[m] ?? m);
   // Tryb specjalny sterownika (ebusd): Veto z godziną końca, inne tryby nazwą.
   const heating = id === ctx.opts.climate_heating;
   const sf = heating ? st(ctx, ctx.opts.boiler_sf_mode) : undefined;
   const veto = sf === "veto";
-  const vetoEnd = [st(ctx, ctx.opts.veto_end_date), st(ctx, ctx.opts.veto_end_time)?.slice(0, 5)].filter((x) => x && !/^01\.01\.2019$|^00:00$/.test(x)).join(" ");
-  const SF: Record<string, string> = { veto: "Veto", party: "Impreza", onedayaway: "Dzień poza domem", onedayathome: "Dzień w domu", ventilation: "Wietrzenie", holiday: "Urlop", hwcboost: "Szybka CWU" };
+  const end = veto ? vetoEnd(ctx) : "";
   const ebusd = heating && Boolean(ctx.opts.ebusd_zone_topic);
   const vetoHours = ctx.opts.boiler_settings?.find((e) => /veto.*duration|veto.*czas/i.test(e));
   return html`<div class="ocell thermo ${veto ? "veto" : ""}">
@@ -97,8 +187,8 @@ function thermostat(ctx: Ctx, id: string | null | undefined, title: string, curr
         <output>${f1(target)}°</output>
         <button type="button" aria-label="${title}: cel wyżej" @click=${() => ctx.actions.stepTarget(id, num(a.target_temp_step) ?? 0.5)}>+</button></span></div>
     <span class="hsub">teraz · cel ${f1(target)} °C${a.hvac_action ? ` · ${a.hvac_action === "heating" ? "grzeje" : a.hvac_action === "idle" ? "czeka" : a.hvac_action}` : ""}</span>
-    ${sf && sf !== "auto"
-      ? html`<div class="vetobar"><b><svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="currentColor"></rect><path d="M5.2 7V5a2.8 2.8 0 0 1 5.6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path></svg>${SF[sf] ?? sf}${vetoEnd ? ` do ${vetoEnd}` : ""}</b>
+    ${sf && sf !== "auto" && sf !== "unknown" && sf !== "unavailable"
+      ? html`<div class="vetobar"><b><svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="currentColor"></rect><path d="M5.2 7V5a2.8 2.8 0 0 1 5.6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path></svg>${SF[sf] ?? sf}${end ? ` do ${end}` : ""}</b>
           ${veto ? html`<button class="btn" type="button" @click=${() => ctx.actions.endVeto()}>Zakończ Veto</button>` : nothing}</div>`
       : nothing}
     ${ebusd && c.state !== "heat_cool" && c.state !== "off"
@@ -110,86 +200,47 @@ function thermostat(ctx: Ctx, id: string | null | undefined, title: string, curr
       : nothing}
     ${presets.length
       ? html`<div class="chips">${presets.map((m) => html`<button type="button" class="mchip ${a.preset_mode === m ? "on" : ""}"
-          @click=${() => ctx.actions.call("climate", "set_preset_mode", { entity_id: id, preset_mode: m })}>${PRESET[m] ?? m}</button>`)}</div>`
+          @click=${() => ctx.actions.call("climate", "set_preset_mode", { entity_id: id, preset_mode: m })}>${presetLabel(m)}</button>`)}</div>`
       : nothing}
   </div>`;
-}
-
-function gas(ctx: Ctx): TemplateResult | typeof nothing {
-  const ids = ctx.opts.gas?.length ? ctx.opts.gas : sourcesOf(energyPrefs(ctx.hass, ctx.refresh), "gas");
-  if (!ids.length) return nothing;
-  const from = Math.min(daysAgo(29).getTime(), startOfMonth().getTime());
-  const day = ctx.stats.get(ctx.hass, ids, "day", new Date(from), ctx.refresh);
-  const month = ctx.stats.get(ctx.hass, ids, "month", monthsAgo(11), ctx.refresh);
-  const names = ids.map((id) => String(ctx.hass.states[id]?.attributes.friendly_name ?? entityName(ctx.hass, id)));
-  let p = names[0] ?? "";
-  for (const n of names) while (!n.startsWith(p)) p = p.slice(0, -1);
-  p = names.length > 1 ? p.slice(0, p.lastIndexOf(" ") + 1) : "";
-  const label = (i: number) => names[i].slice(p.length) || names[i];
-  const unit = unitOf(ctx.hass, ids[0]) || "m³";
-  const colors = ["var(--ember)", "var(--bath)", "var(--frost)"];
-  const pick = (rows: typeof day, start: number) => ids.map((id) => Math.max(0, (rows[id] ?? []).find((x) => x.start === start)?.change ?? 0));
-  const DAYS = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"];
-  const dayBars: Bar[] = [...Array(30).keys()].reverse().map((k) => {
-    const d = daysAgo(k);
-    return { label: `${d.getDate()}`, title: `${DAYS[d.getDay()]} ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}${k === 0 ? " (dziś)" : ""}`, values: pick(day, d.getTime()), now: k === 0 };
-  });
-  const monthBars: Bar[] = [...Array(12).keys()].reverse().map((k) => {
-    const d = monthsAgo(k);
-    return { label: MONTHS[d.getMonth()], title: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}${k === 0 ? " (do dziś)" : ""}`, values: pick(month, d.getTime()), now: k === 0 };
-  });
-  const seriesNames = ids.map((_, i) => label(i).charAt(0).toUpperCase() + label(i).slice(1));
-  // Lata: okres roczny ze statystyk (dane są od początku zapisu statystyk w HA).
-  const yearStart = new Date(new Date().getFullYear() - 9, 0, 1);
-  const year = ctx.stats.get(ctx.hass, ids, "year", yearStart, ctx.refresh);
-  const years = [...new Set(ids.flatMap((id) => (year[id] ?? []).map((x) => new Date(x.start).getFullYear())))].sort();
-  const yearBars: Bar[] = years.map((y) => ({
-    label: String(y),
-    title: `${y}${y === new Date().getFullYear() ? " (do dziś)" : ""}`,
-    values: ids.map((id) => Math.max(0, (year[id] ?? []).filter((x) => new Date(x.start).getFullYear() === y).reduce((a, x) => a + (x.change ?? 0), 0))),
-    now: y === new Date().getFullYear(),
-  }));
-  const t0 = startOfDay().getTime(), m0 = startOfMonth().getTime();
-  return html`<section class="sec"><h2>Gaz</h2>
-    <div class="house">
-      ${ids.map((id, i) => html`<div class="hcell"><span class="hlabel"><i class="swatch" style="background:${colors[i % 3]}"></i>${label(i)}</span>
-        <span class="hval">${f1(sumSince(day[id], t0))}<span class="u"> ${unit}</span></span>
-        <span class="hsub">dziś · w miesiącu ${f1(sumSince(day[id], m0))} ${unit}</span></div>`)}
-    </div>
-    <div class="cards two">
-      <div class="ocell"><span class="hlabel">Ostatnie 30 dni</span>${bars(dayBars, colors, { unit, every: 3, names: seriesNames, valueLabels: "dense" })}</div>
-      <div class="ocell"><span class="hlabel">Ostatnie 12 miesięcy</span>${bars(monthBars, colors, { unit, every: 1, digits: 0, names: seriesNames, valueLabels: true })}</div>
-    </div>
-    ${yearBars.length
-      ? html`<div class="ocell"><span class="hlabel">Po latach <small>od początku statystyk w HA</small></span>${bars(yearBars, colors, { unit, every: 1, digits: 0, names: seriesNames, valueLabels: true, height: 120 })}</div>`
-      : nothing}
-  </section>`;
 }
 
 function settings(ctx: Ctx): TemplateResult | typeof nothing {
   const ids = (ctx.opts.boiler_settings ?? []).filter((id) => ctx.hass.states[id]);
   if (!ids.length) return nothing;
-  return html`<section class="sec"><h2>Ustawienia</h2><div class="ocell list">
+  return html`<section class="sec"><h2>Nastawy</h2><div class="ocell list">
     ${ids.map((id) => {
       const a = ctx.hass.states[id].attributes;
       const v = ctx.pending.get(id) ?? num(st(ctx, id));
       const step = num(a.step) ?? 1;
       const digits = String(step).includes(".") ? String(step).split(".")[1].length : 0;
       return html`<div class="prof setrow"><span class="pl">${entityName(ctx.hass, id)}<small>${a.min ?? "—"}–${a.max ?? "—"} ${a.unit_of_measurement ?? ""}</small></span>
-        <span class="step"><button type="button" aria-label="mniej" @click=${() => ctx.actions.stepNumber(id, -step)}>−</button>
+        <span class="step"><button type="button" aria-label="${entityName(ctx.hass, id)}: mniej" @click=${() => ctx.actions.stepNumber(id, -step)}>−</button>
           <output>${v === null ? "—" : v.toLocaleString("pl-PL", { minimumFractionDigits: digits, maximumFractionDigits: digits })}${a.unit_of_measurement ? ` ${a.unit_of_measurement}` : ""}</output>
-          <button type="button" aria-label="więcej" @click=${() => ctx.actions.stepNumber(id, step)}>+</button></span></div>`;
+          <button type="button" aria-label="${entityName(ctx.hass, id)}: więcej" @click=${() => ctx.actions.stepNumber(id, step)}>+</button></span></div>`;
     })}
   </div></section>`;
 }
 
-export function boilerView(ctx: Ctx): TemplateResult {
+const EMPTY = html`<div class="empty">Brak danych kotła. Wskaż encje w opcjach Hearth (sekcja Kocioł) — np. z ebusd.</div>`;
+
+/**
+ * page: undefined = strona główna, "program" = harmonogramy, "serwis" = parametry i nastawy.
+ * gasLink: Zużycie → Gaz istnieje — tu tylko zdanie z linkiem; bez niego wykresy gazu zostają na stronie głównej.
+ */
+export function boilerView(ctx: Ctx, page?: string, gasLink?: PageLink): TemplateResult {
   const o = ctx.opts;
+  if (page === "program") {
+    const s = schedules(ctx);
+    return s === nothing ? html`<div class="empty">Sterownik nie podał jeszcze harmonogramów (ebusd przez MQTT). Zajrzyj za chwilę.</div>` : html`${s}`;
+  }
+  if (page === "serwis") {
+    const parts = [service(ctx), settings(ctx)];
+    return parts.every((p) => p === nothing) ? EMPTY : html`${parts}`;
+  }
   const thermos = [thermostat(ctx, o.climate_heating, "Ogrzewanie"), thermostat(ctx, o.climate_dhw, "Ciepła woda", o.dhw_temperature)];
-  const parts = [status(ctx), thermos.some((t) => t !== nothing) ? html`<section class="sec"><h2>Sterowanie</h2><div class="cards two">${thermos}</div></section>` : nothing, schedules(ctx), gas(ctx), settings(ctx)];
-  return parts.every((p) => p === nothing)
-    ? html`<div class="empty">Brak danych kotła. Wskaż encje w opcjach Hearth (sekcja Kocioł) — np. z ebusd.</div>`
-    : html`${parts}`;
+  const parts = [summary(ctx, gasLink), thermos.some((t) => t !== nothing) ? html`<section class="sec"><h2>Sterowanie</h2><div class="cards two">${thermos}</div></section>` : nothing, gasLink ? nothing : gasView(ctx)];
+  return parts.every((p) => p === nothing) ? EMPTY : html`${parts}`;
 }
 
 // ---- harmonogramy sterownika (ebusd) ----

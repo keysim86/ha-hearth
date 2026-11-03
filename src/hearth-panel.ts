@@ -21,11 +21,12 @@ import { listHeader, row } from "./views/list";
 import { outdoor } from "./views/outdoor";
 import { tile } from "./views/tiles";
 import { boilerView } from "./views/boiler";
+import { gasIds, gasView } from "./views/gas";
 import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { liveHouse } from "./views/livehouse";
 import { attentionView, visibleAttention } from "./views/attention";
-import { ADMIN_TABS, NAV_ICONS, PHONE_BAR, sectionsFor, type Section } from "./nav";
+import { ADMIN_TABS, NAV_ICONS, PHONE_BAR, SECTIONS, sectionsFor, subLinks, type Page, type Section } from "./nav";
 import { neonRoom } from "./views/neonroom";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
@@ -210,6 +211,22 @@ export class HearthPanel extends LitElement {
     const slug = (this.route?.path ?? "").split("/").filter(Boolean)[0];
     const found = this.tabs.find((t) => TAB_INFO[t][0] === slug);
     return found ?? this.tabs[0];
+  }
+
+  /** Strona zakładki (/hearth/<zakładka>/<strona>): tylko znana, dostępna dla tego konta i z danymi — inaczej strona główna. */
+  private get page(): string | undefined {
+    const slug = (this.route?.path ?? "").split("/").filter(Boolean)[1];
+    if (!slug) return undefined;
+    const tab = this.tab;
+    const p = SECTIONS.flatMap((s) => s.pages?.[tab] ?? []).find((x) => x.id === slug);
+    return p && this.pageOk(p) ? p.id : undefined;
+  }
+
+  private pageOk(p: Page): boolean {
+    if (p.admin && !this.hass?.user?.is_admin) return false;
+    if (p.needs === "ebusd") return Boolean(this.options.ebusd_zone_topic);
+    if (p.needs === "gas") return this.hass ? gasIds({ hass: this.hass, opts: this.options, refresh: () => this.requestUpdate() } as Ctx).length > 0 : false;
+    return true;
   }
 
   private get cardStyle(): Style {
@@ -808,13 +825,14 @@ export class HearthPanel extends LitElement {
     const shopCount = this.tabs.includes("shopping") ? toBuy(hass) : 0;
     // Sekcje: kolumna po lewej (desktop) albo dolny pasek + „Więcej” (telefon); podzakładki pod tytułem.
     const prefix = this.route?.prefix ?? "/hearth";
-    const href = (t: Tab) => `${prefix}/${TAB_INFO[t][0]}`;
-    const go = (t: Tab) => (e: MouseEvent) => {
+    const href = (t: Tab, page?: string) => `${prefix}/${TAB_INFO[t][0]}${page ? `/${page}` : ""}`;
+    const go = (t: Tab, page?: string) => (e: MouseEvent) => {
       if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
       e.preventDefault();
       this.moreDialog?.close();
-      this.navigate(href(t));
+      this.navigate(href(t, page));
     };
+    const page = this.page;
     const secs = sectionsFor(this.tabs);
     const cur = secs.find((s) => s.tabs.includes(tab));
     const showNav = secs.length > 1;
@@ -841,7 +859,8 @@ export class HearthPanel extends LitElement {
               ${hasAgent ? html`<a href=${href("agent")} class="mitem ${tab === "agent" ? "on" : ""}" @click=${go("agent")}><span class="si">${NAV_ICONS.chat}</span><span class="sl">Asystent</span></a>` : nothing}</div>
             <div class="set-foot"><button class="btn" type="button" @click=${() => this.moreDialog?.close()}>Zamknij</button></div></div></dialog>`
       : nothing;
-    const subs = cur && cur.tabs.length > 1
+    const links = cur ? subLinks(cur, (_t, p) => this.pageOk(p)) : [];
+    const subs = cur && links.length > 1
       ? html`<nav class="tabs" aria-label=${cur.label} @scroll=${() => this.tabsEdge()}
           @wheel=${(e: WheelEvent) => {
             // Kółko myszy przewija pasek w bok, gdy podzakładki się nie mieszczą.
@@ -849,8 +868,11 @@ export class HearthPanel extends LitElement {
             if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
             el.scrollLeft += e.deltaY;
             e.preventDefault();
-          }}>${cur.tabs.map((t) => html`<a href=${href(t)} class=${t === tab ? "on" : ""} aria-current=${t === tab ? "page" : "false"} @click=${go(t)}>${cur.sub[t] ?? TAB_INFO[t][1]}${
-            t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}</a>`)}</nav>`
+          }}>${links.map(({ tab: t, page: p }) => {
+            const on = t === tab && p?.id === page;
+            return html`<a href=${href(t, p?.id)} class=${on ? "on" : ""} aria-current=${on ? "page" : "false"} @click=${go(t, p?.id)}>${p ? p.label : cur.sub[t] ?? TAB_INFO[t][1]}${
+              t === "alerts" && alertCount ? html`<span class="tbadge">${alertCount}</span>` : nothing}</a>`;
+          })}</nav>`
       : nothing;
     const title = tab === "agent" ? "Asystent" : (cur?.label ?? TAB_INFO[tab][1]);
     const camTick = Math.floor(Date.now() / 5000);
@@ -859,8 +881,12 @@ export class HearthPanel extends LitElement {
       home: () => html`${this.look === "neon" ? liveHouse(ctx, this.rooms(), this.narrow) : nothing}${attentionView(ctx, this.rooms())}${homeView(ctx)}`,
       shopping: () => shoppingView(ctx),
       switches: () => switchesView(ctx),
-      energy: () => energyView(ctx),
-      boiler: () => boilerView(ctx),
+      energy: () => (page === "gaz" ? gasView(ctx) : energyView(ctx)),
+      boiler: () => {
+        // Gaz ma stronę w Zużyciu — na Kotle wtedy tylko zdanie z linkiem.
+        const gasPage = this.tabs.includes("energy") && SECTIONS.some((s) => s.pages?.energy?.some((p) => p.id === "gaz" && this.pageOk(p)));
+        return boilerView(ctx, page, gasPage ? { href: href("energy", "gaz"), go: go("energy", "gaz") } : undefined);
+      },
       meters: () => metersView(ctx),
       network: () => networkView(ctx),
       cameras: () => camerasView(ctx, camTick),
