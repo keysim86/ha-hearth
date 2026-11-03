@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.8] - 2026-11-03
+
 ### Dodano
 - **Neon: pokój jako świecący pierścień (Ciepło → Pokoje)** — jedna karta pokoju w wyglądzie Neon: łuk 14–28 °C w kolorze temperatury (od cyjanu do żaru), kropka celu, „brakuje / ponad celem”, stan pokoju, − / + celu (profil dzień / noc / wieczór albo termostat), wilgotność i urządzenia. Kliknięcie otwiera pełne ustawienia pokoju. Na telefonie dwie karty w rzędzie. Wygląd klasyczny bez zmian (kafelki, lista, pokrętła).
 
