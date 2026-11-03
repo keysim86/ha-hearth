@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.4] - 2026-11-03
+
 ### Naprawiono
 - **Żywy dom: lampki w sprzętach nie zapalają okna** — światło w lodówce, piekarniku, okapie, zmywarce, pralce itp. (także Home Connect) nie oznacza już, że w pokoju pali się światło.
 
