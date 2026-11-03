@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.3] - 2026-11-03
+
 ### Zmieniono
 - **Żywy dom: strych w dachu** — najwyższy poziom HA o nazwie strych / poddasze rysowany jest w trójkącie dachu (okienko w szczycie, nazwa i temperatura), a nie jako osobna kondygnacja.
 - **Żywy dom: garaże jako osobny budynek** — bramy garażowe stoją obok domu, oddzielone podjazdem, pod wspólnym dachem.
