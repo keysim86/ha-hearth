@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.14] - 2026-11-03
+
 ### Bezpieczeństwo
 - **Adres Asystenta i osoby Zdrowia poza konfiguracją panelu** — Home Assistant wysyła ją każdemu zalogowanemu kontu (także dzieciom i kontom „bez dostępu”), a adres Asystenta zwykle zawiera sekret proxy. Panel pobiera je teraz z `/api/hearth/me`, gdzie integracja sprawdza konto: Asystent tylko dla administratora i dorosłych, osoby Zdrowia według roli.
 
