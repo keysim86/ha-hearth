@@ -925,6 +925,19 @@ form.ocell .orow { margin-top: 6px; }
 :host([narrow]) .nr-top b { max-width: 100%; }
 :host([narrow]) .nroom { padding: 10px 8px 8px; }
 
+/* ——— Strefy taryfy (Zużycie → Prąd) ——— */
+.tplan { display: grid; gap: 8px; margin-top: 12px; }
+.tplan .tnext { font-size: 15px; } .tplan .tnext .cheaper { color: var(--ok); }
+.tplan .tbar { position: relative; display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 2px; height: 16px; }
+.tplan .tbar i { border-radius: 3px; background: var(--c); opacity: .85; }
+.tplan .tbar i.past { opacity: .32; }
+.tplan .tnow { position: absolute; top: -5px; bottom: -5px; width: 3px; border-radius: 2px; background: var(--fg); box-shadow: 0 0 0 2px var(--surface); }
+.tplan .taxis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.tplan .tleg { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.tplan .tleg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; background: var(--c); vertical-align: -1px; }
+:host([neon]) .tplan .tbar i:not(.past) { box-shadow: 0 0 8px color-mix(in srgb, var(--c) 55%, transparent); }
+:host([neon]) .tplan .tnow { box-shadow: 0 0 10px var(--fg); }
+
 /* ——— Nawigacja w sekcjach ——— */
 .wrap.with-side { max-width: 1540px; grid-template-columns: 196px minmax(0, 1fr); align-items: start; column-gap: 26px; }
 .col { display: grid; gap: 18px; min-width: 0; }

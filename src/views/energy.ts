@@ -6,6 +6,7 @@ import { daysAgo, monthsAgo, startOfDay, startOfMonth, sumSince, type StatPoint 
 import { f1, num, round } from "../format";
 import { bars, boltIcon, line, type Bar } from "../svg";
 import { cleanName, deviceName, entityName, st, unitOf, type Ctx } from "./common";
+import { tariffStrip } from "./tariff";
 
 const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 export const MONTH_NAMES = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"];
@@ -124,6 +125,7 @@ function usage(ctx: Ctx): TemplateResult | typeof nothing {
         <div class="zchips">${chips("month")}</div>
       </div>
     </div>
+    ${tariffStrip(ctx)}
     <div class="cards two">
       <div class="ocell"><span class="hlabel">Ostatnie 30 dni</span>${bars(dayBars, ZONE_COLORS, { unit: "kWh", every: 3, names: zoneNames, valueLabels: "dense" })}${legend(zoneNames)}</div>
       <div class="ocell"><span class="hlabel">Ostatnie 12 miesięcy</span>${bars(monthBars, ZONE_COLORS, { unit: "kWh", every: 1, digits: 0, names: zoneNames, valueLabels: true })}${legend(zoneNames)}</div>

@@ -10,6 +10,7 @@ import type { Hass } from "../types";
 import { entityName, silentHours, since, st, type Ctx } from "./common";
 import { gateIds, gateLights, personIds } from "./home";
 import { boilerState } from "./house";
+import { cheaperText, tariffPlan } from "./tariff";
 
 type Kind = "heat" | "ok" | "win" | "lost" | "meas";
 interface Spot { id: string; name: string; t: number | null; kind: Kind; lit: boolean; here: boolean; room?: Room }
@@ -173,6 +174,7 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
   const bw = (b: Band) => Math.max(2, b.spots.length) * RW;
   const garages = compact ? [] : gateIds(ctx).filter((id) => h.states[id]?.attributes.device_class === "garage").slice(0, 3);
   const power = !compact && ctx.opts.power_total ? num(st(ctx, ctx.opts.power_total)) : null;
+  const tp = tariffPlan(ctx);
   const burning = Boolean(boilerState(ctx)?.burning);
   const { ids } = personIds(ctx);
   const people = ids.filter((id) => h.states[id]).map((id, i) => ({
@@ -206,7 +208,8 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
     parts.push(svg`<line x1="34" y1=${GY} x2="34" y2=${top} stroke="#5d6b96" stroke-width="4"></line><line x1="20" y1=${top + 6} x2="48" y2=${top + 6} stroke="#5d6b96" stroke-width="3"></line>
       <path d=${path} fill="none" stroke="rgba(167,125,255,.35)" stroke-width="2"></path>
       <path class="flow" d=${path} fill="none" stroke="#c4a6ff" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="1.5 8" filter="url(#lh-gl)" style="animation-duration:${dur}s"></path>
-      <text class="lbl" x="34" y=${top - 8} fill="#c4a6ff">${(power / 1000).toFixed(2).replace(".", ",")} kW</text>`);
+      <text class="lbl" x="34" y=${top - 8} fill="#c4a6ff">${(power / 1000).toFixed(2).replace(".", ",")} kW</text>
+      ${tp ? svg`<text class="lbl" x="34" y=${top - 22} fill="#9fb0d8" font-size="10" text-anchor="start">${cheaperText(tp)}</text>` : nothing}`);
   }
   // garaże (z bram): osobny budynek ze wspólnym dachem
   if (garages.length)

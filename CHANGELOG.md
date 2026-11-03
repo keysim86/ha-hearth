@@ -7,6 +7,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.10] - 2026-11-03
+
+### Dodano
+- **Strefy taryfy na dziś (Zużycie → Prąd)** — pasek 24 godzin w kolorach stref (noc, poza szczytem, szczyt) z kreską „teraz”, cena bieżącej strefy i odpowiedź „taniej od HH:00” (albo „jutro od…”, „najtańsza strefa”), legenda z cenami. Żywy dom pokazuje „taniej od…” przy przyłączu. Wymaga atrybutów `plan_dzis` / `plan_jutro` / `ceny_dzis` / `ceny_jutro` w sensorze strefy (opcja *Taryfa*); bez nich zostaje sama nazwa strefy.
+
 ## [0.21.0-beta.9] - 2026-11-03
 
 ### Dodano
