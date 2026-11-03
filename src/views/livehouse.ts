@@ -21,6 +21,8 @@ const ATTIC = /strych|poddasz|attic|loft/i;
 const KIND_TEXT: Record<Kind, string> = { heat: "grzeje", ok: "ciepło", win: "otwarte okno", lost: "głowica nie odpowiada", meas: "pomiar" };
 // Czujniki temperatury, które nie mierzą pomieszczenia (kocioł, woda, sprzęt).
 const NOT_ROOM = /kocio|piec|boiler|cwu|zasob|zasil|powr|wod[ay]|water|flow|return|cpu|procesor|dysk|disk|nvme|bater|lod[oó]w|zamra|fridge|freezer|zewn|outdoor/i;
+// Lampki w sprzętach AGD — nie oświetlają pokoju.
+const APPLIANCE = /lod[oó]w|fridge|freezer|zamra[zż]|ch[lł]odziar|piekarnik|oven|okap|hood|zmywar|dishwash|pralk|washer|suszar|dryer|akwari|aquari|mikrofal|microwave/i;
 const PEOPLE = ["#4f9dff", "#ff4fd8", "#ffc53d", "#45f5a1", "#a77dff", "#19d3b6"];
 
 // Temperatura → kolor: 14° cyjan, 18° niebieski, 20° fiolet, 21,5° róż, 23° żar.
@@ -66,7 +68,9 @@ function roomKind(ctx: Ctx, r: Room, t: number | null): Kind {
 /** Kondygnacje od najwyższej: piętra HA (te same poziomy obok siebie) albo — bez pięter — ogrzewane pokoje Hearth. */
 function bands(ctx: Ctx, rooms: Room[]): { bands: Band[]; floors: boolean } {
   const h = ctx.hass, ents = byArea(h);
-  const lit = (a: string) => (ents.get(a) ?? []).some((e) => e.startsWith("light.") && h.states[e].state === "on");
+  // Okno świeci od lamp pokoju, nie od lampek w sprzętach (lodówka, piekarnik, okap…).
+  const lit = (a: string) => (ents.get(a) ?? []).some((e) => e.startsWith("light.") && h.states[e].state === "on"
+    && h.entities[e]?.platform !== "home_connect" && !APPLIANCE.test(`${e} ${h.states[e].attributes.friendly_name ?? ""}`));
   const fromRoom = (r: Room): Spot => {
     const t = num(st(ctx, r.temp)) ?? num(h.states[r.climate]?.attributes.current_temperature);
     const here = [r.helpers.obecnosc, r.helpers.ktos].some((x) => x && st(ctx, x) === "on");
