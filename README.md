@@ -52,6 +52,8 @@ Styl domyślny wybierasz w opcjach integracji, a każde urządzenie (telefon, ta
 
 **Wygląd Neon** (opcja *Wygląd*, domyślnie *Klasyczny*): ciemne szkło, świecące kolory i nocne niebo z gwiazdami i zorzą w tle, na wszystkich zakładkach. Każde urządzenie może wybrać inny wygląd w **Ustawieniach panelu**, a przy neonie także efekty ruchu: automatycznie (pełne na dużym ekranie, spokojnie na telefonie), pełne albo spokojnie. Przy systemowym „ogranicz ruch” animacje są zawsze wyłączone.
 
+W wyglądzie Neon zakładka Dom zaczyna się od **Żywego domu**: przekroju domu z pięter i obszarów HA, w którym widać temperaturę pokoi (kolor), światło w oknach, grzanie, otwarte okna, pracę kotła (dym z komina), pobór prądu, garaże i domowników. Bez pięter w HA pokazuje pokoje z ogrzewaniem na jednej kondygnacji — pełny układ pojawi się po przypisaniu obszarów do pięter (Ustawienia → Obszary, etykiety i strefy).
+
 | Kafelki (domyślny) | Lista | Pokrętła |
 |---|---|---|
 | Łuk 16–28 °C, wykres 24 h, oś dnia, urządzenia | Wiersz na pokój, skala z celem i pomiarem — najgęstszy, na komputer | Kolorowe karty jak termostat, − / + na karcie — na telefon i tablet |
