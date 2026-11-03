@@ -122,9 +122,12 @@ function readAccent(): string | null {
 }
 const UI_KEY = "hearth.ui";
 const FONTS_ID = "hearth-fonts";
-const FONTS_URL =
-  "https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Atkinson+Hyperlegible:wght@400;700" +
-  "&family=JetBrains+Mono:wght@400;600;800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap";
+/** Czcionki z integracji (www/fonts obok panelu, ten sam parametr wersji) — bez zapytań do Google Fonts. */
+const FONTS_URL = (() => {
+  const u = new URL("fonts/fonts.css", import.meta.url);
+  u.search = new URL(import.meta.url).search;
+  return u.href;
+})();
 
 function readUi(): Record<string, string> {
   try {

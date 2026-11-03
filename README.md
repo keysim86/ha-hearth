@@ -174,3 +174,7 @@ z CHANGELOG. Panel wypisuje swoją wersję w konsoli przeglądarki (`HEARTH vX.Y
 ## Licencja
 
 [MIT](LICENSE)
+
+Czcionki (Archivo, Atkinson Hyperlegible, Bricolage Grotesque, JetBrains Mono) są dołączone do integracji
+w `custom_components/hearth/www/fonts/` — panel nie łączy się z Google Fonts. Licencja czcionek: SIL Open Font
+License 1.1, teksty w plikach `OFL-*.txt` obok czcionek.
