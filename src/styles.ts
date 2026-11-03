@@ -846,4 +846,48 @@ form.ocell .orow { margin-top: 6px; }
 .agdcare.row > span, .agdcare .row > span { flex: 1; min-width: 0; }
 .agdcare .btn { padding: 5px 10px; font-size: 12.5px; }
 .agdcare small.alarm { color: var(--crit); }
+
+/* ——— Wygląd „Neon” (opcja Wygląd): ciemne szkło, świecące kolory, nocne niebo. Ruch tylko z atrybutem fx. ——— */
+:host([neon]) {
+  position: relative; isolation: isolate; color-scheme: dark; background: #04060d; color: var(--fg);
+  --bg: #04060d; --surface: rgba(12, 18, 38, .84); --surface-2: rgba(140, 175, 255, .08); --line: rgba(140, 175, 255, .2);
+  --fg: #eef2ff; --muted: #aab5d1; --faint: #8a95b2;
+  --ember: #ff6d2e; --ember-soft: rgba(255, 109, 46, .18); --frost: #26e0ff; --frost-soft: rgba(38, 224, 255, .15);
+  --bath: #c08cff; --bath-soft: rgba(192, 140, 255, .17); --air: #19d3b6; --air-soft: rgba(25, 211, 182, .15);
+  --ok: #45f5a1; --warn: #ffc53d; --crit: #ff4f7e;
+  --temp-l: 66%; --shadow: 0 0 0 1px rgba(140, 175, 255, .07), 0 18px 46px rgba(0, 0, 0, .5);
+  --ring-track: rgba(255, 255, 255, .1); --glass: rgba(255, 255, 255, .07);
+  --glow: 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+:host([neon]) .sky { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background: radial-gradient(1100px 620px at 80% -8%, rgba(167, 125, 255, .26), transparent 62%),
+    radial-gradient(900px 560px at 16% -6%, rgba(38, 224, 255, .15), transparent 60%),
+    linear-gradient(180deg, #010208 0, #060c26 360px, #0a1440 720px, #04060d 1150px); }
+:host([neon]) .sky::before, :host([neon]) .sky::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1000px;
+  -webkit-mask-image: linear-gradient(#000 35%, transparent); mask-image: linear-gradient(#000 35%, transparent); }
+:host([neon]) .sky::before { opacity: .75; background-size: 211px 197px;
+  background-image: radial-gradient(1.2px 1.2px at 23px 41px, #fff, transparent), radial-gradient(1px 1px at 97px 13px, #cfe9ff, transparent),
+    radial-gradient(1.4px 1.4px at 151px 87px, #fff, transparent), radial-gradient(1px 1px at 62px 133px, #fff, transparent),
+    radial-gradient(1.1px 1.1px at 188px 162px, #ffe3f6, transparent); }
+:host([neon]) .sky::after { opacity: .6; background-size: 263px 241px;
+  background-image: radial-gradient(1.6px 1.6px at 41px 77px, #fff, transparent), radial-gradient(1.2px 1.2px at 129px 31px, #bfe9ff, transparent),
+    radial-gradient(1.8px 1.8px at 203px 141px, #fff, transparent); }
+:host([neon]) .sky i { position: absolute; left: 5%; top: -220px; width: 90%; height: 560px; opacity: .55;
+  background: radial-gradient(closest-side at 35% 50%, rgba(38, 224, 255, .28), transparent), radial-gradient(closest-side at 68% 46%, rgba(255, 79, 216, .22), transparent); }
+:host([neon][fx]) .sky::after { animation: hearth-twinkle 3.6s ease-in-out infinite alternate; }
+:host([neon][fx]) .sky i { animation: hearth-aurora 28s ease-in-out infinite alternate; will-change: transform; }
+:host([neon][fx]) .tbadge { animation: hearth-pulse 2.4s ease-in-out infinite; }
+@keyframes hearth-twinkle { from { opacity: .15; } to { opacity: .85; } }
+@keyframes hearth-aurora { from { transform: translateX(-7%) scaleY(.92); } to { transform: translateX(7%) scaleY(1.1); } }
+@keyframes hearth-pulse { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--crit) 25%, transparent), 0 0 14px var(--crit); } }
+@media (prefers-reduced-motion: reduce) { :host([neon][fx]) .sky::after, :host([neon][fx]) .sky i, :host([neon][fx]) .tbadge { animation: none; } }
+:host([neon]) .top h1 { font-stretch: 112%; text-shadow: 0 0 28px rgba(38, 224, 255, .3); }
+:host([neon]) .tabs a.on { text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
+  background: linear-gradient(to top, color-mix(in srgb, var(--accent) 16%, transparent), transparent 80%); box-shadow: 0 10px 16px -12px var(--accent); }
+:host([neon]) .btn.hot { color: var(--on-accent); background: var(--accent); border-color: transparent; box-shadow: var(--glow); }
+:host([neon]) .opt:has(input:checked) { box-shadow: var(--glow); }
+:host([neon]) .gear { background: rgba(12, 18, 38, .7); }
+:host([neon]) dialog.set { background: rgba(10, 15, 32, .94); backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 0 0 1px rgba(140, 175, 255, .12), 0 30px 80px rgba(0, 0, 0, .6), 0 0 40px rgba(38, 224, 255, .08); }
+:host([neon]) dialog.set::backdrop { background: rgba(2, 4, 12, .6); }
 `;

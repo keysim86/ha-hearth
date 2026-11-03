@@ -20,6 +20,7 @@
             "name": "Wygląd",
             "description": "Zakładki, styl kart pokoi i pozycja w menu. Każde urządzenie może wybrać własny styl kart w panelu (koło zębate).",
             "data": {
+              "look": "Wygląd",
               "style": "Styl kart pokoi",
               "tabs": "Zakładki",
               "sidebar_title": "Nazwa w menu",
@@ -29,6 +30,7 @@
               "accent_color": "Kolor wiodący"
             },
             "data_description": {
+              "look": "Klasyczny idzie za motywem Home Assistant. Neon: ciemne szkło, świecące kolory i nocne niebo, z efektami ruchu do wyłączenia. Każde urządzenie może wybrać inny w Ustawieniach panelu.",
               "style": "Kafelki, lista albo pokrętła.",
               "tabs": "Które zakładki pokazać i w jakiej kolejności: kolejność wyboru = kolejność w panelu (usuń i dodaj ponownie, żeby przesunąć). Pierwsza otwiera się domyślnie.",
               "sidebar_title": "Tekst pozycji w menu bocznym.",
@@ -508,6 +510,12 @@
     }
   },
   "selector": {
+    "look": {
+      "options": {
+        "classic": "Klasyczny — jak motyw HA (domyślny)",
+        "neon": "Neon — ciemne szkło, świecące kolory, efekty"
+      }
+    },
     "style": {
       "options": {
         "tiles": "Kafelki — łuk, wykres 24 h, oś dnia (domyślny)",

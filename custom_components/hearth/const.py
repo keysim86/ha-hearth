@@ -11,6 +11,7 @@ DATA_STATIC_REGISTERED = f"{DOMAIN}_static_registered"
 
 # Wygląd
 CONF_STYLE = "style"
+CONF_LOOK = "look"
 CONF_TABS = "tabs"
 CONF_TITLE = "sidebar_title"
 CONF_ICON = "sidebar_icon"
@@ -20,6 +21,7 @@ CONF_ACCENT = "accent_color"
 # Kolory wiodące (klucze jak w panelu); w opcjach można też wpisać własny „#rrggbb”.
 ACCENTS = ["ember", "frost", "air", "ok", "bath", "rose", "slate", "theme"]
 STYLES = ["tiles", "list", "dials"]
+LOOKS = ["classic", "neon"]
 TABS = ["home", "shopping", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"]
 
 # Na zewnątrz
@@ -111,7 +113,7 @@ CONF_FANS = "fans"
 CONF_EXCLUDE = "exclude_entities"
 
 SECTIONS: dict[str, list[str]] = {
-    "appearance": [CONF_STYLE, CONF_ACCENT, CONF_TABS, CONF_TITLE, CONF_ICON, CONF_ADMIN_ONLY, CONF_DENY_USERS],
+    "appearance": [CONF_LOOK, CONF_STYLE, CONF_ACCENT, CONF_TABS, CONF_TITLE, CONF_ICON, CONF_ADMIN_ONLY, CONF_DENY_USERS],
     "outdoor": [CONF_OUT_TEMP, CONF_OUT_HUMIDITY, CONF_OUT_PRESSURE, CONF_OUT_ILLUMINANCE,
                 CONF_OUT_PM25, CONF_OUT_PM10, CONF_OUT_AQI, CONF_OUT_AQI_LEVEL],
     "house": [CONF_PRESENCE, CONF_TARIFF],
@@ -135,6 +137,7 @@ SECTIONS: dict[str, list[str]] = {
 
 # Listy puste = wykrywanie automatyczne w panelu (osoby, bramy, odpady, odbiorniki i gaz z panelu Energia).
 DEFAULTS: dict[str, object] = {
+    CONF_LOOK: "classic",
     CONF_STYLE: "tiles",
     CONF_ACCENT: "ember",
     CONF_TABS: list(TABS),

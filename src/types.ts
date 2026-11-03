@@ -48,10 +48,12 @@ export interface Hass {
 }
 
 export type Style = "tiles" | "list" | "dials";
+export type Look = "classic" | "neon";
 export type Tab = "home" | "shopping" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "health" | "appliances" | "agent" | "alerts";
 
 export interface Options {
   style: Style;
+  look?: Look;
   tabs?: Tab[];
   /** Kolor wiodący: klucz gotowego koloru (ember, frost…, theme) albo „#rrggbb”. */
   accent_color?: string;

@@ -11,7 +11,7 @@ import { HistoryStore } from "./history";
 import { climateTarget, discoverRooms, hasProfiles, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
-import type { Hass, Options, PanelInfo, Route, Style, Tab } from "./types";
+import type { Hass, Look, Options, PanelInfo, Route, Style, Tab } from "./types";
 import type { Actions, CouponKind, CouponView, Ctx } from "./views/common";
 import { devices } from "./views/common";
 import { detail } from "./views/detail";
@@ -66,6 +66,20 @@ const FOOT: Record<Style, string> = {
 };
 const STYLE_KEY = "hearth.style";
 const ACCENT_KEY = "hearth.accent";
+const LOOK_KEY = "hearth.look";
+const FX_KEY = "hearth.fx";
+const LOOKS: Look[] = ["classic", "neon"];
+const FXS = ["on", "off"] as const;
+type Fx = (typeof FXS)[number];
+/** Wybór zapisany na tym urządzeniu, o ile to jedna z dozwolonych wartości. */
+function readChoice<T extends string>(key: string, allowed: readonly T[]): T | null {
+  try {
+    const v = localStorage.getItem(key) as T | null;
+    return v && allowed.includes(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
 /** Kolory wiodące: [nazwa, jasny motyw, ciemny motyw]. Własny = „#rrggbb” (ten sam w obu motywach). */
 export const ACCENTS: Record<string, [string, string, string]> = {
   ember: ["Żar (domyślny)", "#cf5a1e", "#ff8a4c"],
@@ -75,6 +89,7 @@ export const ACCENTS: Record<string, [string, string, string]> = {
   bath: ["Fioletowy", "#8a4fb8", "#c393ec"],
   rose: ["Malinowy", "#c2185b", "#f06292"],
   slate: ["Grafitowy", "#475569", "#a3b1c2"],
+  neon: ["Neon (cyjan)", "#0e7490", "#26e0ff"],
   theme: ["Kolor motywu HA", "var(--primary-color, #03a9f4)", "var(--primary-color, #03a9f4)"],
 };
 const isHex = (v: unknown): v is string => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
@@ -140,6 +155,8 @@ export class HearthPanel extends LitElement {
   @state() private cols = 1;
   @state() private localStyle: Style | null = readStyle();
   @state() private localAccent: string | null = readAccent();
+  @state() private localLook: Look | null = readChoice(LOOK_KEY, LOOKS);
+  @state() private localFx: Fx | null = readChoice(FX_KEY, FXS);
   @state() private toastText = "";
   @state() private ui: Record<string, string> = readUi();
   @state() private person: string | null = null;
@@ -164,6 +181,7 @@ export class HearthPanel extends LitElement {
   private lastTick = 0;
   private lastDark?: boolean;
   private lastAccent?: string;
+  private lastLook?: Look;
   private toastTimer?: number;
   private resize?: ResizeObserver;
 
@@ -190,6 +208,22 @@ export class HearthPanel extends LitElement {
   private get cardStyle(): Style {
     const s = this.localStyle ?? this.options.style;
     return STYLES.includes(s) ? s : "tiles";
+  }
+
+  /** Wygląd: urządzenie > opcje integracji > klasyczny. */
+  private get look(): Look {
+    const l = this.localLook ?? this.options.look;
+    return l && LOOKS.includes(l) ? l : "classic";
+  }
+
+  /** Efekty ruchu neonu: wybór urządzenia, a bez niego pełne na dużym ekranie i spokojnie na telefonie. */
+  private get fx(): boolean {
+    return this.localFx ? this.localFx === "on" : !this.narrow;
+  }
+
+  /** Neon jest zawsze ciemny; klasyczny idzie za motywem HA. */
+  private get dark(): boolean {
+    return this.look === "neon" || Boolean(this.hass?.themes?.darkMode);
   }
 
   connectedCallback() {
@@ -243,18 +277,21 @@ export class HearthPanel extends LitElement {
         const actual = kind === "t" ? num(s?.attributes.temperature) : kind === "h" ? num(s?.attributes.humidity) : num(s?.state);
         if (actual !== null && Math.abs(actual - value) < 1e-6) this.pending.delete(key);
       }
-      this.toggleAttribute("dark", Boolean(this.hass.themes?.darkMode));
     }
+    this.toggleAttribute("dark", this.dark);
+    this.toggleAttribute("neon", this.look === "neon");
+    this.toggleAttribute("fx", this.look === "neon" && this.fx);
   }
 
   protected updated(changed: PropertyValues<this>) {
     if ((changed as Map<string, unknown>).has("person") && this.person && !this.personDialog?.open) this.personDialog?.showModal();
     if ((changed as Map<string, unknown>).has("coupons") && this.coupons && !this.couponsDialog?.open) this.couponsDialog?.showModal();
-    const dark = Boolean(this.hass?.themes?.darkMode);
+    const dark = this.dark;
     const accent = this.applyAccent(dark);
-    if (dark !== this.lastDark || accent !== this.lastAccent) {
+    if (dark !== this.lastDark || accent !== this.lastAccent || this.look !== this.lastLook) {
       this.lastDark = dark;
       this.lastAccent = accent;
+      this.lastLook = this.look;
       this.postTheme();
     }
     this.syncPersonMap();
@@ -284,7 +321,7 @@ export class HearthPanel extends LitElement {
 
   /** Wybrany kolor wiodący (urządzenie > opcje integracji > domyślny) jako `--accent` na elemencie panelu. */
   private applyAccent(dark: boolean): string {
-    const key = this.localAccent ?? this.options.accent_color ?? "ember";
+    const key = this.localAccent ?? (this.look === "neon" ? "neon" : (this.options.accent_color ?? "ember"));
     const preset = ACCENTS[key];
     const value = preset ? preset[dark ? 2 : 1] : isHex(key) ? key : ACCENTS.ember[dark ? 2 : 1];
     if (this.style.getPropertyValue("--accent") !== value) this.style.setProperty("--accent", value);
@@ -314,7 +351,7 @@ export class HearthPanel extends LitElement {
       ["--bg", "--surface", "--surface-2", "--line", "--fg", "--muted", "--faint", "--ember", "--ember-soft", "--accent", "--accent-soft", "--on-accent", "--ok", "--crit", "--shadow"]
         .map((v) => [v, cs.getPropertyValue(v).trim()]),
     );
-    target.contentWindow.postMessage({ type: "hearth-theme", dark: Boolean(this.hass?.themes?.darkMode), vars }, "*");
+    target.contentWindow.postMessage({ type: "hearth-theme", dark: this.dark, vars }, "*");
   }
 
   /** Pasek zakładek szerszy niż ekran: klasy `more` / `less` = wygaszona krawędź tam, gdzie zostały schowane zakładki. */
@@ -503,6 +540,18 @@ export class HearthPanel extends LitElement {
     },
   };
 
+  private setChoice(kind: "look" | "fx", v: string | null) {
+    if (kind === "look") this.localLook = v as Look | null;
+    else this.localFx = v as Fx | null;
+    try {
+      const key = kind === "look" ? LOOK_KEY : FX_KEY;
+      if (v) localStorage.setItem(key, v);
+      else localStorage.removeItem(key);
+    } catch {
+      /* pamięć przeglądarki niedostępna — wybór działa do odświeżenia */
+    }
+  }
+
   private setStyle(s: Style | null) {
     this.localStyle = s;
     try {
@@ -550,7 +599,7 @@ export class HearthPanel extends LitElement {
               ? nothing
               : helpers
                 ? html`<div class="pmap" id="pmap"></div>`
-                : tileMap(lat, lon, 15, Boolean(ctx.hass.themes?.darkMode))}
+                : tileMap(lat, lon, 15, ctx.ui.dark === "1")}
           </div>`
         : nothing}
     </dialog>`;
@@ -590,6 +639,7 @@ export class HearthPanel extends LitElement {
     return html`<dialog class="set" aria-labelledby="ust-tytul" @click=${(e: Event) => e.target === this.dialog && this.dialog?.close()}>
       <div class="set-in">
         <h2 id="ust-tytul">Ustawienia panelu</h2>
+        ${this.lookChooser()}
         <h3>Wygląd kart pokoi na tym urządzeniu</h3>
         <div role="radiogroup" style="display:grid;gap:8px">
           ${opt(null, "Jak w ustawieniach integracji", `teraz: ${STYLE_INFO[def][0]}`)}
@@ -608,10 +658,35 @@ export class HearthPanel extends LitElement {
     </dialog>`;
   }
 
+  /** Wygląd na tym urządzeniu (klasyczny albo neon) i — przy neonie — efekty ruchu. */
+  private lookChooser() {
+    const def = this.options.look === "neon" ? "Neon" : "Klasyczny";
+    const opt = (name: string, checked: boolean, pick: () => void, title: string, sub: string) => html`<label class="opt">
+      <input type="radio" name=${name} .checked=${checked} @change=${pick} />
+      <span><b>${title}</b><small>${sub}</small></span>
+    </label>`;
+    const look = (v: Look | null, title: string, sub: string) => opt("wyglad", this.localLook === v, () => this.setChoice("look", v), title, sub);
+    const fx = (v: Fx | null, title: string, sub: string) => opt("efekty", this.localFx === v, () => this.setChoice("fx", v), title, sub);
+    return html`<h3>Wygląd na tym urządzeniu</h3>
+      <div role="radiogroup" aria-label="Wygląd" style="display:grid;gap:8px">
+        ${look(null, "Jak w ustawieniach integracji", `teraz: ${def}`)}
+        ${look("classic", "Klasyczny", "jasny albo ciemny, jak motyw Home Assistant")}
+        ${look("neon", "Neon", "ciemne szkło, świecące kolory, nocne niebo w tle")}
+      </div>
+      ${this.look === "neon"
+        ? html`<h3>Efekty ruchu</h3>
+          <div role="radiogroup" aria-label="Efekty ruchu" style="display:grid;gap:8px">
+            ${fx(null, "Automatycznie", this.narrow ? "teraz: spokojnie (mały ekran)" : "teraz: pełne (duży ekran)")}
+            ${fx("on", "Pełne", "migoczące gwiazdy, płynąca zorza, pulsujące znaczniki")}
+            ${fx("off", "Spokojnie", "bez ruchu; przy systemowym „ogranicz ruch” zawsze spokojnie")}
+          </div>`
+        : nothing}`;
+  }
+
   /** Kolor wiodący na tym urządzeniu: jak w integracji, gotowe kolory albo własny (próbnik). */
   private accentChooser() {
-    const dark = Boolean(this.hass?.themes?.darkMode);
-    const def = this.options.accent_color ?? "ember";
+    const dark = this.dark;
+    const def = this.look === "neon" ? "neon" : (this.options.accent_color ?? "ember");
     const swatch = (key: string) => (ACCENTS[key] ? ACCENTS[key][dark ? 2 : 1] : isHex(key) ? key : ACCENTS.ember[dark ? 2 : 1]);
     const custom = this.localAccent && isHex(this.localAccent) ? this.localAccent : null;
     const item = (value: string | null, title: string, color: string) => html`<label class="acc">
@@ -620,7 +695,7 @@ export class HearthPanel extends LitElement {
     </label>`;
     return html`<h3>Kolor wiodący na tym urządzeniu</h3>
       <div class="accs" role="radiogroup" aria-label="Kolor wiodący">
-        ${item(null, `Jak w integracji: ${accentName(def)}`, swatch(def))}
+        ${item(null, `${this.look === "neon" ? "Domyślny dla neonu" : "Jak w integracji"}: ${accentName(def)}`, swatch(def))}
         ${Object.keys(ACCENTS).map((k) => item(k, ACCENTS[k][0], swatch(k)))}
         <label class="acc">
           <input type="radio" name="akcent" .checked=${Boolean(custom)} @change=${() => this.setAccent(custom ?? "#cf5a1e")} />
@@ -669,7 +744,7 @@ export class HearthPanel extends LitElement {
       actions: this.actions,
       stats: this.stats,
       refresh: () => this.requestUpdate(),
-      ui: { ...this.ui, dark: hass.themes?.darkMode ? "1" : "0" },
+      ui: { ...this.ui, dark: this.dark ? "1" : "0" },
       sched: this.sched,
       rows: this.rows,
       health: this.panel?.config?.health ?? [],
@@ -725,7 +800,7 @@ export class HearthPanel extends LitElement {
     };
     const body = views[tab]();
 
-    return html`<div class="wrap s-${this.cardStyle}">
+    return html`${this.look === "neon" ? html`<div class="sky" aria-hidden="true"><i></i></div>` : nothing}<div class="wrap s-${this.cardStyle}">
         <header class="top">
           <div class="top-l">
             ${this.narrow

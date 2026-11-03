@@ -20,6 +20,7 @@
             "name": "Appearance",
             "description": "Tabs, room card style and the sidebar entry. Each device can pick its own card style in the panel (gear icon).",
             "data": {
+              "look": "Look",
               "style": "Room card style",
               "tabs": "Tabs",
               "sidebar_title": "Sidebar title",
@@ -29,6 +30,7 @@
               "accent_color": "Accent colour"
             },
             "data_description": {
+              "look": "Classic follows the Home Assistant theme. Neon: dark glass, glowing colours and a night sky, with motion effects that can be turned off. Each device can choose its own in the panel settings.",
               "style": "Tiles, list or dials.",
               "tabs": "Which tabs to show and in what order: selection order = panel order (remove and add again to move one). The first opens by default.",
               "sidebar_title": "Sidebar entry text.",
@@ -508,6 +510,12 @@
     }
   },
   "selector": {
+    "look": {
+      "options": {
+        "classic": "Classic — follows the HA theme (default)",
+        "neon": "Neon — dark glass, glowing colours, effects"
+      }
+    },
     "style": {
       "options": {
         "tiles": "Tiles — arc, 24 h chart, day timeline (default)",

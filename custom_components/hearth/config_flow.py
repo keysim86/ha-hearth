@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
 
 from . import const as c
-from .const import ACCENTS, DEFAULTS, DOMAIN, SECTIONS, STYLES, SUBENTRY_HEALTH, TABS
+from .const import ACCENTS, DEFAULTS, DOMAIN, LOOKS, SECTIONS, STYLES, SUBENTRY_HEALTH, TABS
 from .discovery import guess_outdoor
 from .health import HealthSubentryFlow
 
@@ -32,6 +32,10 @@ _ANY = _entity()
 
 # Pole -> selektor. Kolejność w sekcjach bierze się z SECTIONS.
 _FIELDS: dict[str, Any] = {
+    # Klasyczny = motyw HA; neon = ciemne szkło i świecące kolory (urządzenie może wybrać inaczej).
+    c.CONF_LOOK: selector.SelectSelector(
+        selector.SelectSelectorConfig(options=LOOKS, translation_key="look", mode=selector.SelectSelectorMode.LIST)
+    ),
     c.CONF_STYLE: selector.SelectSelector(
         selector.SelectSelectorConfig(options=STYLES, translation_key="style", mode=selector.SelectSelectorMode.LIST)
     ),
@@ -132,7 +136,7 @@ _FIELDS: dict[str, Any] = {
     c.CONF_EXCLUDE: _entity(many=True),
 }
 # Pola z wartością domyślną są wymagane (zawsze coś wybrane); reszta może zostać pusta.
-_REQUIRED = {c.CONF_STYLE, c.CONF_ACCENT, c.CONF_TABS, c.CONF_TITLE, c.CONF_ICON, c.CONF_ADMIN_ONLY}
+_REQUIRED = {c.CONF_LOOK, c.CONF_STYLE, c.CONF_ACCENT, c.CONF_TABS, c.CONF_TITLE, c.CONF_ICON, c.CONF_ADMIN_ONLY}
 
 
 def options_schema(current: dict[str, Any]) -> vol.Schema:

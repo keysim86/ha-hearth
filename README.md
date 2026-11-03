@@ -50,6 +50,8 @@
 Styl domyślny wybierasz w opcjach integracji, a każde urządzenie (telefon, tablet, komputer) może mieć własny —
 **Ustawienia panelu** (koło zębate w prawym górnym rogu).
 
+**Wygląd Neon** (opcja *Wygląd*, domyślnie *Klasyczny*): ciemne szkło, świecące kolory i nocne niebo z gwiazdami i zorzą w tle, na wszystkich zakładkach. Każde urządzenie może wybrać inny wygląd w **Ustawieniach panelu**, a przy neonie także efekty ruchu: automatycznie (pełne na dużym ekranie, spokojnie na telefonie), pełne albo spokojnie. Przy systemowym „ogranicz ruch” animacje są zawsze wyłączone.
+
 | Kafelki (domyślny) | Lista | Pokrętła |
 |---|---|---|
 | Łuk 16–28 °C, wykres 24 h, oś dnia, urządzenia | Wiersz na pokój, skala z celem i pomiarem — najgęstszy, na komputer | Kolorowe karty jak termostat, − / + na karcie — na telefon i tablet |
@@ -91,7 +93,7 @@ Puste pole albo lista = panel wykrywa sam. Wpisujesz tylko wyjątki.
 
 | Sekcja | Pola | Bez ustawień |
 |---|---|---|
-| **Wygląd** | styl kart, kolor wiodący (gotowy, kolor motywu HA albo `#rrggbb`), zakładki, nazwa i ikona w menu, tylko dla administratorów | wszystkie zakładki, kafelki, kolor Żar |
+| **Wygląd** | wygląd (Klasyczny albo Neon), styl kart, kolor wiodący (gotowy, kolor motywu HA albo `#rrggbb`), zakładki, nazwa i ikona w menu, tylko dla administratorów | Klasyczny, wszystkie zakładki, kafelki, kolor Żar |
 | **Na zewnątrz** | temperatura, wilgotność, ciśnienie, światło, PM2,5, PM10, indeks powietrza i jego poziom | podpowiedź przy dodaniu integracji |
 | **Pasek domu** | obecność domowników, strefa taryfy | — |
 | **Zakładka Dom** | osoby, osoby prywatne (tylko właściciel HA), bramy, skrzynka pocztowa (+ bateria), kalendarz odpadów albo czujniki, przełączniki frakcji, pogoda (encja) | osoby z telefonem, rolety klasy brama/garaż/drzwi, kalendarz Waste Collection Schedule, pomocniki z „odpad/waste”, encje `sensor.payback_<konto>_*` (automat PAYBACK przez MQTT), encje `sensor.lidl_<konto>_*` (automat Lidl Plus przez MQTT), encje `sensor.biedronka_<konto>_*` (automat Moja Biedronka przez MQTT), logotypy `image.<automat>_<konto>_logo`, listy `todo.*` integracji Bring!, Open-Meteo |

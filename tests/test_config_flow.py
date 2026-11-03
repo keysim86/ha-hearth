@@ -24,6 +24,7 @@ async def test_user_flow_creates_entry_with_outdoor_guess(hass: HomeAssistant, p
     assert result["type"] is FlowResultType.CREATE_ENTRY
     options = result["options"]
     assert options["style"] == "tiles"
+    assert options["look"] == "classic"
     # Czujnik powietrza, nie podgrzewanej komory HECA ani termometr w salonie.
     assert options["outdoor_temperature"] == "sensor.nettigo_air_monitor_bme280_temperatura"
     assert options["outdoor_pressure"] == "sensor.nettigo_air_monitor_bme280_cisnienie"

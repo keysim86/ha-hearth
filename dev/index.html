@@ -119,7 +119,7 @@
   el.route = { prefix: "/hearth", path: "/" + (q.get("tab") || "klimat") };
   // Klik w zakładkę: atrapa nawigacji HA (zmienia trasę panelu).
   window.addEventListener("location-changed", () => { el.route = { prefix: "/hearth", path: location.pathname.replace(/^\/hearth/, "") || "/" }; });
-  el.panel = { config: { options: { ...options, style: q.get("style") || options.style || "tiles" }, health: health.profiles ?? [], version: "dev" } };
+  el.panel = { config: { options: { ...options, style: q.get("style") || options.style || "tiles", look: q.get("look") || options.look || "classic" }, health: health.profiles ?? [], version: "dev" } };
   document.body.append(el);
   window.__panel = el;
 </script>
