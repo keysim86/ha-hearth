@@ -7,6 +7,13 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Żywe niebo (Neon)** — tło idzie za porą dnia ze słońca (`sun.sun`: noc, świt / zmierzch, dzień) i za pogodą: deszcz, ulewa, burza z błyskami, śnieg, deszcz ze śniegiem, mgła, chmury. Pogoda z encji pogody z opcji (sekcja Dom), a bez niej z bieżących warunków Open-Meteo (to samo zapytanie co prognoza). Opady i chmury ruszają się tylko z włączonymi efektami (i bez „ogranicz ruch” w systemie); bez efektów zostaje nieruchomy obraz.
+- **Żywy dom: słońce w dzień** — o świcie i zmierzchu nisko i pomarańczowe; księżyc i słońce przygasają za chmurami i w opadach.
+
+### Naprawiono
+- Żywy dom: pas ziemi wygaszony na bokach (w dzień nie odcina się prostokątem).
+
 ## [0.21.0-beta.14] - 2026-11-03
 
 ### Bezpieczeństwo

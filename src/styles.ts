@@ -892,6 +892,51 @@ form.ocell .orow { margin-top: 6px; }
 @keyframes hearth-aurora { from { transform: translateX(-7%) scaleY(.92); } to { transform: translateX(7%) scaleY(1.1); } }
 @keyframes hearth-pulse { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--crit) 25%, transparent), 0 0 14px var(--crit); } }
 @media (prefers-reduced-motion: reduce) { :host([neon][fx]) .sky::after, :host([neon][fx]) .sky i, :host([neon][fx]) .tbadge { animation: none; } }
+/* Żywe niebo: pora dnia (data-phase) i pogoda (data-wx) — sky.ts. */
+:host([neon]) .sky[data-phase="twilight"] {
+  background: radial-gradient(1200px 360px at 50% 470px, rgba(255, 128, 92, .30), transparent 66%),
+    radial-gradient(900px 520px at 80% -8%, rgba(167, 125, 255, .22), transparent 62%),
+    linear-gradient(180deg, #060a24 0, #1e1a4e 300px, #4a2763 520px, #160d2a 820px, #04060d 1150px); }
+:host([neon]) .sky[data-phase="day"] {
+  background: radial-gradient(900px 520px at 84% -10%, rgba(255, 214, 120, .26), transparent 60%),
+    radial-gradient(900px 560px at 16% -6%, rgba(38, 224, 255, .16), transparent 60%),
+    linear-gradient(180deg, #0a2a62 0, #12468c 340px, #0e356f 640px, #071a3c 900px, #04060d 1150px); }
+:host([neon]) .sky[data-phase="day"]::before, :host([neon]) .sky[data-phase="day"]::after { opacity: 0; animation: none; }
+:host([neon]) .sky[data-phase="day"] i { opacity: .12; }
+:host([neon]) .sky[data-phase="twilight"]::before, :host([neon]) .sky[data-phase="twilight"]::after { opacity: .3; animation: none; }
+/* Zachmurzenie i opady przygaszają gwiazdy i zorzę. */
+:host([neon]) .sky:is([data-wx="cloud"], [data-wx="rain"], [data-wx="pour"], [data-wx="storm"], [data-wx="snow"], [data-wx="sleet"], [data-wx="fog"])::before,
+:host([neon]) .sky:is([data-wx="cloud"], [data-wx="rain"], [data-wx="pour"], [data-wx="storm"], [data-wx="snow"], [data-wx="sleet"], [data-wx="fog"])::after { opacity: .12; animation: none; }
+:host([neon]) .sky:is([data-wx="cloud"], [data-wx="rain"], [data-wx="pour"], [data-wx="storm"], [data-wx="sleet"]) i { opacity: .22; }
+:host([neon]) .sky .wx { position: absolute; left: 0; right: 0; top: 0; height: 1000px;
+  -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent); }
+:host([neon]) .sky[data-wx="rain"] .wx, :host([neon]) .sky[data-wx="sleet"] .wx { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='%23b4d4ff' stroke-opacity='.55' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M14 4l-2.5 13M50 28l-2.5 13M88 10l-2.5 13M110 56l-2.5 13M32 68l-2.5 13M70 90l-2.5 13M98 100l-2.5 13'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='%23b4d4ff' stroke-opacity='.55' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M14 4l-2.5 13M50 28l-2.5 13M88 10l-2.5 13M110 56l-2.5 13M32 68l-2.5 13M70 90l-2.5 13M98 100l-2.5 13'/%3E%3C/g%3E%3C/svg%3E"); background-size: 120px 120px, 190px 190px; opacity: .8; }
+:host([neon]) .sky[data-wx="pour"] .wx, :host([neon]) .sky[data-wx="storm"] .wx { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='%23b4d4ff' stroke-opacity='.55' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M14 4l-2.5 13M50 28l-2.5 13M88 10l-2.5 13M110 56l-2.5 13M32 68l-2.5 13M70 90l-2.5 13M98 100l-2.5 13'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='%23b4d4ff' stroke-opacity='.55' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M14 4l-2.5 13M50 28l-2.5 13M88 10l-2.5 13M110 56l-2.5 13M32 68l-2.5 13M70 90l-2.5 13M98 100l-2.5 13'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke='%23b4d4ff' stroke-opacity='.55' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M14 4l-2.5 13M50 28l-2.5 13M88 10l-2.5 13M110 56l-2.5 13M32 68l-2.5 13M70 90l-2.5 13M98 100l-2.5 13'/%3E%3C/g%3E%3C/svg%3E"); background-size: 90px 90px, 120px 120px, 190px 190px; }
+:host([neon]) .sky[data-wx="snow"] .wx { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='%23f2f6ff' fill-opacity='.85'%3E%3Ccircle cx='18' cy='22' r='2.2'/%3E%3Ccircle cx='74' cy='10' r='1.6'/%3E%3Ccircle cx='118' cy='46' r='2.4'/%3E%3Ccircle cx='46' cy='78' r='1.8'/%3E%3Ccircle cx='96' cy='104' r='2'/%3E%3Ccircle cx='14' cy='122' r='1.5'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='%23f2f6ff' fill-opacity='.85'%3E%3Ccircle cx='18' cy='22' r='2.2'/%3E%3Ccircle cx='74' cy='10' r='1.6'/%3E%3Ccircle cx='118' cy='46' r='2.4'/%3E%3Ccircle cx='46' cy='78' r='1.8'/%3E%3Ccircle cx='96' cy='104' r='2'/%3E%3Ccircle cx='14' cy='122' r='1.5'/%3E%3C/g%3E%3C/svg%3E"); background-size: 140px 140px, 230px 230px; }
+:host([neon]) .sky[data-wx="sleet"] .wx::before { content: ""; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='%23f2f6ff' fill-opacity='.85'%3E%3Ccircle cx='18' cy='22' r='2.2'/%3E%3Ccircle cx='74' cy='10' r='1.6'/%3E%3Ccircle cx='118' cy='46' r='2.4'/%3E%3Ccircle cx='46' cy='78' r='1.8'/%3E%3Ccircle cx='96' cy='104' r='2'/%3E%3Ccircle cx='14' cy='122' r='1.5'/%3E%3C/g%3E%3C/svg%3E"); background-size: 200px 200px; opacity: .7; }
+:host([neon]) .sky[data-wx="fog"] .wx { background: radial-gradient(60% 14% at 30% 33%, rgba(205, 218, 255, .2), transparent 70%),
+    radial-gradient(55% 13% at 72% 40%, rgba(205, 218, 255, .18), transparent 70%), linear-gradient(transparent 18%, rgba(190, 205, 240, .14) 36%, rgba(190, 205, 240, .1) 46%, transparent 60%); }
+:host([neon]) .sky:is([data-wx="cloud"], [data-wx="partly"], [data-wx="rain"], [data-wx="pour"], [data-wx="storm"], [data-wx="snow"], [data-wx="sleet"]) .wx::after {
+  content: ""; position: absolute; left: -10%; right: -10%; top: 0; height: 420px;
+  background: radial-gradient(300px 80px at 18% 70px, rgba(196, 210, 245, .16), transparent 70%), radial-gradient(380px 96px at 58% 40px, rgba(196, 210, 245, .14), transparent 70%),
+    radial-gradient(260px 70px at 86% 110px, rgba(196, 210, 245, .13), transparent 70%), radial-gradient(320px 84px at 38% 170px, rgba(196, 210, 245, .10), transparent 70%); }
+:host([neon]) .sky[data-wx="partly"] .wx::after { opacity: .55; }
+:host([neon]) .sky[data-phase="day"] .wx::after { filter: brightness(1.6); }
+:host([neon][fx]) .sky:is([data-wx="rain"], [data-wx="sleet"]) .wx { animation: hearth-rain .7s linear infinite; }
+:host([neon][fx]) .sky:is([data-wx="pour"], [data-wx="storm"]) .wx { animation: hearth-pour .5s linear infinite; }
+:host([neon][fx]) .sky[data-wx="snow"] .wx, :host([neon][fx]) .sky[data-wx="sleet"] .wx::before { animation: hearth-snow 11s linear infinite; }
+:host([neon][fx]) .sky .wx::after { animation: hearth-clouds 70s ease-in-out infinite alternate; }
+:host([neon][fx]) .sky[data-wx="fog"] .wx { animation: hearth-fog 30s ease-in-out infinite alternate; }
+:host([neon][fx]) .sky[data-wx="storm"]::before { content: ""; position: absolute; inset: 0; height: auto; background: rgba(210, 225, 255, .9);
+  -webkit-mask-image: linear-gradient(#000, transparent 70%); mask-image: linear-gradient(#000, transparent 70%); opacity: 0; animation: hearth-flash 9s linear infinite; }
+@keyframes hearth-rain { to { background-position: 0 120px, 0 190px; } }
+@keyframes hearth-pour { to { background-position: 0 90px, 0 120px, 0 190px; } }
+@keyframes hearth-snow { to { background-position: 0 140px, 0 230px; } }
+@keyframes hearth-clouds { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+@keyframes hearth-fog { from { transform: translateX(-3%); } to { transform: translateX(3%); } }
+@keyframes hearth-flash { 0%, 90.5%, 92.5%, 94%, 100% { opacity: 0; } 91% { opacity: .32; } 93% { opacity: .18; } }
+@media (prefers-reduced-motion: reduce) { :host([neon][fx]) .sky .wx, :host([neon][fx]) .sky .wx::before, :host([neon][fx]) .sky .wx::after, :host([neon][fx]) .sky::before { animation: none; } }
+
 :host([neon]) .top h1 { font-stretch: 112%; text-shadow: 0 0 28px rgba(38, 224, 255, .3); }
 :host([neon]) .tabs a.on { text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
   background: linear-gradient(to top, color-mix(in srgb, var(--accent) 16%, transparent), transparent 80%); box-shadow: 0 10px 16px -12px var(--accent); }

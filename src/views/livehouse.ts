@@ -9,6 +9,7 @@ import { windowOpen, type Room } from "../model";
 import type { Hass } from "../types";
 import { entityName, silentHours, since, st, type Ctx } from "./common";
 import { gateIds, gateLights, personIds } from "./home";
+import { skyPhase, skyWeather } from "../sky";
 import { boilerState } from "./house";
 import { cheaperText, tariffPlan } from "./tariff";
 
@@ -195,12 +196,20 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
   const parts: SVGTemplateResult[] = [];
   let idx = 0;
 
-  // niebo: księżyc nocą
+  // niebo: księżyc nocą, słońce w dzień — o świcie i zmierzchu nisko nad ziemią i pomarańczowe; za chmurami przygaszone
+  const overcast = !["", "partly"].includes(skyWeather(ctx.hass, ctx.opts, ctx.refresh));
   if (st(ctx, "sun.sun") === "below_horizon")
-    parts.push(svg`<circle cx=${W - 90} cy="50" r="70" fill="url(#lh-halo)"></circle><circle cx=${W - 90} cy="50" r="19" fill="url(#lh-moon)"></circle>`);
+    parts.push(svg`<g opacity=${overcast ? 0.35 : 1}><circle cx=${W - 90} cy="50" r="70" fill="url(#lh-halo)"></circle><circle cx=${W - 90} cy="50" r="19" fill="url(#lh-moon)"></circle></g>`);
+  else if (st(ctx, "sun.sun") === "above_horizon") {
+    const low = skyPhase(ctx.hass) !== "day";
+    const cy = low ? Math.max(70, GY - 60) : 48;
+    parts.push(svg`<g opacity=${overcast ? 0.35 : 1}><circle cx=${W - 90} cy=${cy} r="86" fill=${low ? "url(#lh-dusk)" : "url(#lh-sunhalo)"}></circle>
+      <circle cx=${W - 90} cy=${cy} r=${low ? 20 : 17} fill=${low ? "url(#lh-sunlow)" : "url(#lh-sun)"}></circle></g>`);
+  }
   // ziemia
-  parts.push(svg`<rect x="0" y=${GY} width=${W} height=${H - GY} fill="url(#lh-gnd)"></rect>
-    <line x1="0" y1=${GY} x2=${W} y2=${GY} stroke="#4f9dff" stroke-width="1.6" opacity=".75" filter="url(#lh-gl)"></line>`);
+  // (wygaszona na bokach — w dzień ciemny pas ziemi nie urywa się na krawędzi rysunku)
+  parts.push(svg`<g mask="url(#lh-gmask)"><rect x="0" y=${GY} width=${W} height=${H - GY} fill="url(#lh-gnd)"></rect>
+    <line x1="0" y1=${GY} x2=${W} y2=${GY} stroke="#4f9dff" stroke-width="1.6" opacity=".75" filter="url(#lh-gl)"></line></g>`);
   // przyłącze prądu
   if (power !== null) {
     const top = Math.max(26, GY - 230), path = `M48,${top + 8} Q${(48 + x0) / 2},${top + 70} ${x0},${GY - FH + 14}`;
@@ -302,9 +311,15 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
       <defs>
         <linearGradient id="lh-edge" x1="0" x2="1"><stop offset="0" stop-color="#26e0ff"></stop><stop offset=".5" stop-color="#a77dff"></stop><stop offset="1" stop-color="#ff4fd8"></stop></linearGradient>
         <linearGradient id="lh-lit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe6ad"></stop><stop offset="1" stop-color="#ff9a4a"></stop></linearGradient>
+        <linearGradient id="lh-gfade" x1="0" x2="1"><stop offset="0" stop-color="#000"></stop><stop offset=".05" stop-color="#fff"></stop><stop offset=".95" stop-color="#fff"></stop><stop offset="1" stop-color="#000"></stop></linearGradient>
+        <mask id="lh-gmask" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#lh-gfade)"></rect></mask>
         <linearGradient id="lh-gnd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1a48"></stop><stop offset="1" stop-color="rgba(4,6,13,0)"></stop></linearGradient>
         <radialGradient id="lh-moon" cx=".38" cy=".36" r=".72"><stop offset="0" stop-color="#fffdf2"></stop><stop offset=".62" stop-color="#ebe6cf"></stop><stop offset="1" stop-color="#c8c1a2"></stop></radialGradient>
         <radialGradient id="lh-halo"><stop offset="0" stop-color="rgba(200,220,255,.3)"></stop><stop offset="1" stop-color="rgba(200,220,255,0)"></stop></radialGradient>
+        <radialGradient id="lh-sun" cx=".42" cy=".4" r=".7"><stop offset="0" stop-color="#fffbe6"></stop><stop offset=".55" stop-color="#ffe08a"></stop><stop offset="1" stop-color="#ffb347"></stop></radialGradient>
+        <radialGradient id="lh-sunhalo"><stop offset="0" stop-color="rgba(255,214,120,.42)"></stop><stop offset="1" stop-color="rgba(255,214,120,0)"></stop></radialGradient>
+        <radialGradient id="lh-sunlow" cx=".45" cy=".42" r=".7"><stop offset="0" stop-color="#ffe2b0"></stop><stop offset=".6" stop-color="#ff9a52"></stop><stop offset="1" stop-color="#ff5f3a"></stop></radialGradient>
+        <radialGradient id="lh-dusk"><stop offset="0" stop-color="rgba(255,120,80,.45)"></stop><stop offset="1" stop-color="rgba(255,120,80,0)"></stop></radialGradient>
         <filter id="lh-gl" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
         <filter id="lh-gl2" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
         <filter id="lh-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"></feGaussianBlur></filter>

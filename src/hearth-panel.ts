@@ -9,6 +9,7 @@ import { DAYS, EbusdTimers, circuits, validate, writes, type Circuit, type Slot 
 import type { SchedEdit } from "./views/boiler";
 import { HistoryStore } from "./history";
 import { climateTarget, discoverRooms, hasProfiles, overrideUntil, profileNow, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
+import { skyPhase, skyWeather } from "./sky";
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
 import type { Hass, HealthProfile, Look, Me, Options, PanelInfo, Route, Style, Tab } from "./types";
@@ -924,7 +925,11 @@ export class HearthPanel extends LitElement {
     };
     const body = views[tab]();
 
-    return html`${this.look === "neon" ? html`<div class="sky" aria-hidden="true"><i></i></div>` : nothing}<div class="wrap s-${this.cardStyle} ${showNav && !this.narrow ? "with-side" : ""} ${showNav && this.narrow ? "with-bar" : ""}">
+    // Żywe niebo: pora dnia i pogoda (sky.ts) — tylko w wyglądzie Neon.
+    const sky = this.look === "neon"
+      ? html`<div class="sky" data-phase=${skyPhase(hass)} data-wx=${skyWeather(hass, this.options, () => this.requestUpdate())} aria-hidden="true"><i></i><span class="wx"></span></div>`
+      : nothing;
+    return html`${sky}<div class="wrap s-${this.cardStyle} ${showNav && !this.narrow ? "with-side" : ""} ${showNav && this.narrow ? "with-bar" : ""}">
         ${side}
         <div class="col">
         <header class="top">
