@@ -17,16 +17,16 @@ const ico = (d: ReturnType<typeof svg>) => html`<svg viewBox="0 0 24 24" aria-hi
   stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 
 export const NAV_ICONS = {
-  home: ico(svg`<path d="M3 11 12 4l9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>`),
-  cart: ico(svg`<path d="M3 4h2.5l2.2 11h10.6L21 7.5H6.4"/><circle cx="9.5" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/>`),
-  flame: ico(svg`<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.6-5.4 3.8-8.8.9 1.6 1.4 2.8 1.4 4.3 1.5-.9 2.4-2.6 2.4-5.3 2.9 2.4 5.4 5.8 5.4 9.8 0 3.6-2.6 6.2-6.5 6.2Z"/>`),
-  plug: ico(svg`<rect x="4.5" y="3" width="15" height="18" rx="2.5"/><circle cx="12" cy="13" r="4.2"/><path d="M8 6.5h1.5M12 6.5h1"/>`),
-  camera: ico(svg`<rect x="3" y="7" width="12" height="10" rx="2"/><path d="m15 10.5 6-3.5v10l-6-3.5z"/>`),
-  bolt: ico(svg`<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/>`),
-  heart: ico(svg`<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.2C19.5 15.4 12 20 12 20Z"/><path d="M6.5 12.5h3l1.5-2.5 2 4 1.5-1.5h3"/>`),
-  server: ico(svg`<rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/><path d="M7.5 7.5h.01M7.5 16.5h.01M11 7.5h5M11 16.5h5"/>`),
-  more: ico(svg`<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>`),
-  chat: ico(svg`<path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 16h-7l-4.5 3.5V16H5a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 5 5Z"/><path d="M8 10.5h8"/>`),
+  home: ico(svg`<path d="M3 11 12 4l9 7"></path><path d="M5.5 9.5V20h13V9.5"></path><path d="M10 20v-5h4v5"></path>`),
+  cart: ico(svg`<path d="M3 4h2.5l2.2 11h10.6L21 7.5H6.4"></path><circle cx="9.5" cy="19" r="1.4"></circle><circle cx="17" cy="19" r="1.4"></circle>`),
+  flame: ico(svg`<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.6-5.4 3.8-8.8.9 1.6 1.4 2.8 1.4 4.3 1.5-.9 2.4-2.6 2.4-5.3 2.9 2.4 5.4 5.8 5.4 9.8 0 3.6-2.6 6.2-6.5 6.2Z"></path>`),
+  plug: ico(svg`<rect x="4.5" y="3" width="15" height="18" rx="2.5"></rect><circle cx="12" cy="13" r="4.2"></circle><path d="M8 6.5h1.5M12 6.5h1"></path>`),
+  camera: ico(svg`<rect x="3" y="7" width="12" height="10" rx="2"></rect><path d="m15 10.5 6-3.5v10l-6-3.5z"></path>`),
+  bolt: ico(svg`<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"></path>`),
+  heart: ico(svg`<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.2C19.5 15.4 12 20 12 20Z"></path><path d="M6.5 12.5h3l1.5-2.5 2 4 1.5-1.5h3"></path>`),
+  server: ico(svg`<rect x="4" y="4" width="16" height="7" rx="1.5"></rect><rect x="4" y="13" width="16" height="7" rx="1.5"></rect><path d="M7.5 7.5h.01M7.5 16.5h.01M11 7.5h5M11 16.5h5"></path>`),
+  more: ico(svg`<circle cx="5.5" cy="12" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="18.5" cy="12" r="1.3"></circle>`),
+  chat: ico(svg`<path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 16h-7l-4.5 3.5V16H5a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 5 5Z"></path><path d="M8 10.5h8"></path>`),
 };
 
 export const SECTIONS: Section[] = [

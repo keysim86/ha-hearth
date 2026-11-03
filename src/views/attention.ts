@@ -20,12 +20,12 @@ const NEVER = 9e15;
 
 const ico = (d: TemplateResult) => html`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const I = {
-  garage: ico(svg`<path d="M3 21V9l9-5 9 5v12"/><path d="M6.5 21v-9h11v9"/><path d="M6.5 14.5h11M6.5 17.5h11"/>`),
-  window: ico(svg`<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M12 3v18M4 12h8"/><path d="m14 9 4-2v12l-4-2z"/>`),
-  radiator: ico(svg`<path d="M5 6v13M9.5 6v13M14 6v13M18.5 6v13M3 9h18M3 16h18"/><path d="m3 3 18 18"/>`),
-  bell: ico(svg`<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>`),
-  bin: ico(svg`<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/>`),
-  check: ico(svg`<path d="m5 12.5 4.5 4.5L19 7.5"/>`),
+  garage: ico(svg`<path d="M3 21V9l9-5 9 5v12"></path><path d="M6.5 21v-9h11v9"></path><path d="M6.5 14.5h11M6.5 17.5h11"></path>`),
+  window: ico(svg`<rect x="4" y="3" width="16" height="18" rx="1.5"></rect><path d="M12 3v18M4 12h8"></path><path d="m14 9 4-2v12l-4-2z"></path>`),
+  radiator: ico(svg`<path d="M5 6v13M9.5 6v13M14 6v13M18.5 6v13M3 9h18M3 16h18"></path><path d="m3 3 18 18"></path>`),
+  bell: ico(svg`<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"></path><path d="M10 21h4"></path>`),
+  bin: ico(svg`<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"></path><path d="M10 11v6M14 11v6"></path>`),
+  check: ico(svg`<path d="m5 12.5 4.5 4.5L19 7.5"></path>`),
 };
 
 const ms = (t: string | undefined) => (t ? Date.parse(t) : NaN);
