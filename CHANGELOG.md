@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.7] - 2026-11-03
+
 ### Zmieniono
 - **Nawigacja w 8 sekcjach zamiast 16 zakładek** — Teraz (Dom, Alerty), Zakupy, Ciepło (Pokoje, Kocioł), Urządzenia (AGD, Światła i gniazdka, Auta, Roboty), Kamery, Zużycie (Prąd, Liczniki), Moje zdrowie, Technika (Serwer, Sieć). Na komputerze sekcje w kolumnie po lewej, na telefonie dolny pasek (Teraz, Zakupy, Ciepło, Urządzenia, Więcej); dawne zakładki to podzakładki pod tytułem. Adresy `/hearth/<zakładka>` bez zmian — linki z powiadomień i zakładki przeglądarki działają. Agent jako przycisk *Asystent* w nagłówku (na telefonie w *Więcej*). Liczniki: sprawy na Teraz, lista zakupów na Zakupach.
 - **Technika (Serwer, Sieć) tylko dla administratora HA** — także pod starym adresem.
