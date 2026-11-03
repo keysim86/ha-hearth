@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.12] - 2026-11-03
+
 ### Zmieniono
 - **Ciepło → Kocioł w trzech stronach** — *Kocioł i ciepła woda* dla wszystkich: cztery odpowiedzi (czy kocioł grzeje, czy ciepła woda jest gotowa, czy ciśnienie jest w normie — przy złym ze zdaniem, co zrobić, jaki jest program na teraz), temperatura na zewnątrz i termostaty; *Program tygodnia* (harmonogramy sterownika przez ebusd) i *Serwis* (podzespoły, parametry, temperatury instalacji z wykresem 24 h, nastawy) tylko dla administratora HA. Strony mają własne adresy (`/hearth/kociol/program`, `/hearth/kociol/serwis`); stary adres zakładki prowadzi na stronę główną.
 - **Gaz w Zużyciu** — dziś, miesiąc, 30 dni, 12 miesięcy i lata jako *Zużycie → Gaz* (`/hearth/energia/gaz`); na Kotle zostaje „Gaz dziś … ›” z linkiem. Bez zakładki Energia wykresy gazu zostają na Kotle.
