@@ -7,6 +7,13 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Zmieniono
+- **Żywy dom: strych w dachu** — najwyższy poziom HA o nazwie strych / poddasze rysowany jest w trójkącie dachu (okienko w szczycie, nazwa i temperatura), a nie jako osobna kondygnacja.
+- **Żywy dom: garaże jako osobny budynek** — bramy garażowe stoją obok domu, oddzielone podjazdem, pod wspólnym dachem.
+
+### Dodano
+- **Światło w garażu w Żywym domu** — otwarty garaż z włączonym światłem świeci w środku, zamknięty — okienkami w bramie. Lampy wybierane tak jak przycisk żarówki na kafelku bramy w zakładce Dom.
+
 ## [0.21.0-beta.2] - 2026-11-03
 
 ### Dodano

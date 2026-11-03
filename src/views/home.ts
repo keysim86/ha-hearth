@@ -78,7 +78,8 @@ function persons(ctx: Ctx): TemplateResult | typeof nothing {
 const GATE_STATE: Record<string, string> = { open: "Otwarta", closed: "Zamknięta", opening: "Otwiera się…", closing: "Zamyka się…", unavailable: "Niedostępna", unknown: "Nie wiadomo" };
 
 /** Światło przy bramie: obszar z dokładnie jedną bramą i 1–2 światłami (np. osobny obszar jednego garażu). */
-function gateLights(ctx: Ctx, cover: string, gateIds: string[]): string[] {
+/** Światła garażu / bramy: 1–2 lampy w obszarze, w którym jest tylko ta jedna brama. */
+export function gateLights(ctx: Ctx, cover: string, gateIds: string[]): string[] {
   const h = ctx.hass;
   const area = areaOf(h, cover);
   if (!area) return [];

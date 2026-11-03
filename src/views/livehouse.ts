@@ -8,7 +8,7 @@ import { f1, num } from "../format";
 import { windowOpen, type Room } from "../model";
 import type { Hass } from "../types";
 import { entityName, silentHours, since, st, type Ctx } from "./common";
-import { gateIds, personIds } from "./home";
+import { gateIds, gateLights, personIds } from "./home";
 import { boilerState } from "./house";
 
 type Kind = "heat" | "ok" | "win" | "lost" | "meas";
@@ -190,16 +190,21 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
   // garaże (z bram): osobny budynek ze wspólnym dachem
   if (garages.length)
     parts.push(svg`<polygon points="${left - 10},${GY - 88} ${(left + gEnd) / 2},${GY - 116} ${gEnd + 10},${GY - 88}" fill="#070c22" stroke="url(#lh-edge)" stroke-width="2.5" stroke-linejoin="round" filter="url(#lh-gl)"></polygon>`);
+  const allGates = gateIds(ctx);
   garages.forEach((id, i) => {
     const c = h.states[id], gx = left + i * (GW + 8), gy = GY - 90, opened = c.state !== "closed";
+    const lit = gateLights(ctx, id, allGates).some((l) => st(ctx, l) === "on");
     const full = entityName(h, id), name = full.length > 18 ? `${full.slice(0, 17)}…` : full;
-    parts.push(svg`<g role="img" aria-label=${`${full}: ${opened ? "otwarty" : "zamknięty"}`}>
+    parts.push(svg`<g role="img" aria-label=${`${full}: ${opened ? "otwarty" : "zamknięty"}${lit ? ", światło włączone" : ""}`}>
       <rect x=${gx} y=${gy} width=${GW} height="90" fill="#090f2a" stroke="url(#lh-edge)" stroke-width="2.5" filter="url(#lh-gl)"></rect>
       <rect x=${gx + 10} y=${gy + 16} width=${GW - 20} height="74" fill=${opened ? "#02040b" : "#121a3c"}></rect>
+      ${lit && opened ? svg`<rect x=${gx + 12} y=${gy + 26} width=${GW - 24} height="62" fill="url(#lh-lit)" opacity=".55" filter="url(#lh-gl2)"></rect>` : nothing}
       ${opened
         ? svg`<rect x=${gx + 10} y=${gy + 16} width=${GW - 20} height="10" fill="#1a2452" stroke="#ffc53d"></rect>
           <rect class="open-garage" x=${gx + 8} y=${gy + 14} width=${GW - 16} height="76" fill="none" stroke="#ffc53d" stroke-width="2" stroke-dasharray="6 5" filter="url(#lh-gl)"></rect>`
-        : [1, 2, 3, 4].map((k) => svg`<line x1=${gx + 10} x2=${gx + GW - 10} y1=${gy + 16 + k * 15} y2=${gy + 16 + k * 15} stroke="rgba(150,180,255,.25)"></line>`)}
+        : svg`${[1, 2, 3, 4].map((k) => svg`<line x1=${gx + 10} x2=${gx + GW - 10} y1=${gy + 16 + k * 15} y2=${gy + 16 + k * 15} stroke="rgba(150,180,255,.25)"></line>`)}
+          ${[0, 1, 2, 3].map((k) => svg`<rect x=${gx + 16 + k * ((GW - 32) / 4)} y=${gy + 20} width=${(GW - 32) / 4 - 6} height="8" rx="1.5"
+            fill=${lit ? "url(#lh-lit)" : "rgba(80,110,200,.14)"} filter=${lit ? "url(#lh-gl)" : "none"}></rect>`)}`}
       <text class="lbl" x=${gx + GW / 2} y=${GY + 17} fill=${opened ? "#ffc53d" : "#aab5d1"} font-size=${fit(name, GW + 6, 11)}>${name}</text>
       ${opened ? svg`<text class="lbl" x=${gx + GW / 2} y=${GY + 31} fill="#ffc53d" font-size="10">otwarty od ${since(c.last_changed)}</text>` : nothing}
     </g>`);
