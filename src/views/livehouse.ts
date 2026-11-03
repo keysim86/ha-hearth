@@ -13,9 +13,11 @@ import { boilerState } from "./house";
 
 type Kind = "heat" | "ok" | "win" | "lost" | "meas";
 interface Spot { id: string; name: string; t: number | null; kind: Kind; lit: boolean; here: boolean; room?: Room }
-interface Band { level: number; spots: Spot[] }
+/** attic = najwyższy poziom to strych / poddasze — rysowany w dachu, nie jako kondygnacja. */
+interface Band { level: number; spots: Spot[]; attic?: boolean }
 
-const RW = 92, FH = 120, BH = 96, GW = 112, TOP = 44;
+const RW = 92, FH = 120, BH = 96, GW = 112, TOP = 44, GAP = 64;
+const ATTIC = /strych|poddasz|attic|loft/i;
 const KIND_TEXT: Record<Kind, string> = { heat: "grzeje", ok: "ciepło", win: "otwarte okno", lost: "głowica nie odpowiada", meas: "pomiar" };
 // Czujniki temperatury, które nie mierzą pomieszczenia (kocioł, woda, sprzęt).
 const NOT_ROOM = /kocio|piec|boiler|cwu|zasob|zasil|powr|wod[ay]|water|flow|return|cpu|procesor|dysk|disk|nvme|bater|lod[oó]w|zamra|fridge|freezer|zewn|outdoor/i;
@@ -74,6 +76,7 @@ function bands(ctx: Ctx, rooms: Room[]): { bands: Band[]; floors: boolean } {
   if (!Object.keys(floors).length) return { bands: rooms.length ? [{ level: 0, spots: rooms.map(fromRoom) }] : [], floors: false };
   const byRoom = new Map(rooms.map((r) => [r.areaId, r]));
   const levels = new Map<number, Spot[]>();
+  const names = new Map<number, Set<string>>();
   for (const a of Object.values(h.areas)) {
     const f = a.floor_id ? floors[a.floor_id] : undefined;
     if (!f || /^gara[żz]/i.test(a.name)) continue; // garaże rysujemy z bram, obok domu
@@ -91,11 +94,14 @@ function bands(ctx: Ctx, rooms: Room[]): { bands: Band[]; floors: boolean } {
       s = { id: a.area_id, name: a.name, t: ts ? num(h.states[ts].state) : null, kind: open ? "win" : "meas", lit: lit(a.area_id), here: false };
     }
     const lv = f.level ?? 0;
+    names.set(lv, (names.get(lv) ?? new Set()).add(f.name));
     const list = levels.get(lv);
     if (list) list.push(s);
     else levels.set(lv, [s]);
   }
-  return { bands: [...levels].sort((a, b) => b[0] - a[0]).map(([level, spots]) => ({ level, spots })), floors: true };
+  const sorted = [...levels].sort((a, b) => b[0] - a[0]).map(([level, spots]): Band => ({ level, spots }));
+  if (sorted.length > 1 && sorted[0].level > 0 && [...(names.get(sorted[0].level) ?? [])].every((n) => ATTIC.test(n))) sorted[0].attic = true;
+  return { bands: sorted, floors: true };
 }
 
 /** Szerokość napisu w SVG (szacunek) → rozmiar czcionki, który mieści się w pokoju. */
@@ -141,6 +147,7 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
   const { bands: all, floors } = bands(ctx, rooms);
   if (!all.length) return nothing;
   const up = all.filter((b) => b.level >= 0), down = all.filter((b) => b.level < 0);
+  const attic = up.length > 1 && up[0].attic ? up.shift()!.spots : [];
   if (!up.length) up.push({ level: 0, spots: [] });
   const bw = (b: Band) => Math.max(2, b.spots.length) * RW;
   const garages = compact ? [] : gateIds(ctx).filter((id) => h.states[id]?.attributes.device_class === "garage").slice(0, 3);
@@ -152,8 +159,10 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
   }));
 
   const left = power !== null ? 70 : 20;
-  const x0 = left + garages.length * (GW + 8) + (garages.length ? 6 : 0);
-  const wTop = bw(up[0]), roofH = Math.min(110, wTop * 0.27);
+  // garaże to osobny budynek: blok bram, przerwa (podjazd), potem dom
+  const gEnd = left + garages.length * (GW + 8) - 8;
+  const x0 = garages.length ? gEnd + GAP : left;
+  const wTop = bw(up[0]), roofH = Math.min(attic.length ? 124 : 110, wTop * (attic.length ? 0.3 : 0.27));
   const GY = TOP + roofH + up.length * FH;
   const wMax = Math.max(...all.map(bw));
   const home = people.filter((p) => p.home), away = people.filter((p) => !p.home);
@@ -178,7 +187,9 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
       <path class="flow" d=${path} fill="none" stroke="#c4a6ff" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="1.5 8" filter="url(#lh-gl)" style="animation-duration:${dur}s"></path>
       <text class="lbl" x="34" y=${top - 8} fill="#c4a6ff">${(power / 1000).toFixed(2).replace(".", ",")} kW</text>`);
   }
-  // garaże (z bram) obok domu
+  // garaże (z bram): osobny budynek ze wspólnym dachem
+  if (garages.length)
+    parts.push(svg`<polygon points="${left - 10},${GY - 88} ${(left + gEnd) / 2},${GY - 116} ${gEnd + 10},${GY - 88}" fill="#070c22" stroke="url(#lh-edge)" stroke-width="2.5" stroke-linejoin="round" filter="url(#lh-gl)"></polygon>`);
   garages.forEach((id, i) => {
     const c = h.states[id], gx = left + i * (GW + 8), gy = GY - 90, opened = c.state !== "closed";
     const full = entityName(h, id), name = full.length > 18 ? `${full.slice(0, 17)}…` : full;
@@ -224,6 +235,18 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
           <circle cx=${chx + 10} cy=${chTop - 31} r="10"></circle><circle cx=${chx + 4} cy=${chTop - 53} r="13"></circle><circle cx=${chx + 17} cy=${chTop - 78} r="16"></circle></g>`
       : nothing}
     <polygon points="${x0 - 14},${yT + 2} ${peak},${yT - roofH} ${x0 + wTop + 14},${yT + 2}" fill="#070c22" stroke="url(#lh-edge)" stroke-width="3" stroke-linejoin="round" filter="url(#lh-gl)"></polygon>`);
+  // strych w dachu: okienko w szczycie, pod nim nazwy i temperatury
+  if (attic.length) {
+    const lit = attic.some((s) => s.lit), ly = yT - roofH * 0.26, span = (wTop + 28) * 0.7, step = Math.min(120, span / attic.length);
+    parts.push(svg`<circle cx=${peak} cy=${yT - roofH * 0.62} r="9" fill=${lit ? "url(#lh-lit)" : "rgba(80,110,200,.12)"} stroke=${lit ? "none" : "rgba(150,180,255,.4)"}
+      filter=${lit ? "url(#lh-gl2)" : "none"}></circle>`);
+    attic.forEach((s, j) => {
+      const ax = peak + (j - (attic.length - 1) / 2) * step;
+      parts.push(svg`<g role="img" aria-label=${`${s.name}${s.t !== null ? `, ${f1(s.t)}°` : ""}`}><title>${s.name}</title>
+        ${s.t !== null ? svg`<text class="rt" x=${ax} y=${ly} font-size="17" fill="#aab5d1">${f1(s.t)}°</text>` : nothing}
+        <text class="rn" x=${ax} y=${ly + 15} font-size=${fit(s.name, step, 11)}>${s.name}</text></g>`);
+    });
+  }
   // woda grzewcza, gdy pali się w kotle
   if (burning)
     parts.push(svg`<g class="pipes" fill="none" stroke="#ff6d2e" stroke-width="1.8" stroke-dasharray="5 6" opacity=".9" filter="url(#lh-gl)">
