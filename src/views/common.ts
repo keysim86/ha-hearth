@@ -4,7 +4,7 @@ import { html, nothing, type TemplateResult } from "lit";
 import { clock, duration, f1, num } from "../format";
 import { HistoryStore, sumPeriods } from "../history";
 import type { StatsStore } from "../data/stats";
-import {
+import { overrideUntil,
   climateTarget,
   hasProfiles,
   PROFILE_NAME,
@@ -50,6 +50,10 @@ export interface Actions {
   schedClose(): void;
   stepProfile(room: Room, p: Profile, delta: number): void;
   stepClimate(room: Room, delta: number): void;
+  /** − / + „teraz”: temperatura chwilowa na 2 h (gdy pokój ma pomocniki), inaczej jak dotąd profil albo termostat. */
+  stepNow(room: Room, delta: number): void;
+  /** Koniec temperatury chwilowej: keep = zapisz ją na stałe do bieżącego profilu. */
+  endOverride(room: Room, keep: boolean): void;
   stepHumidity(entity: string, delta: number): void;
   toggleEntity(entity: string): void;
   /** Krótki komunikat na dole ekranu. */
@@ -84,8 +88,12 @@ export interface Ctx {
 export const st = (ctx: Ctx, id?: string | null) => (id ? ctx.hass.states[id]?.state : undefined);
 
 /** Bieżący cel pokoju: wartość profilu, który teraz działa, albo nastawa termostatu. */
-export function targetNow(ctx: Ctx, r: Room): { z: number | null; p: ProfileNow } {
+export function targetNow(ctx: Ctx, r: Room): { z: number | null; p: ProfileNow; until?: number } {
   const p = profileNow(ctx.hass, r);
+  // Temperatura chwilowa (− / + na karcie) ma pierwszeństwo, dopóki trwa; przy otwartym oknie i tak nie grzeje.
+  const until = overrideUntil(ctx.hass, r);
+  if (until !== null && p !== "okno" && r.helpers.chwilowa)
+    return { z: ctx.pending.get(r.helpers.chwilowa) ?? num(ctx.hass.states[r.helpers.chwilowa]?.state), p, until };
   if (p && p !== "okno") return { z: profileValue(ctx.hass, r, p, ctx.pending), p };
   const pendingClimate = ctx.pending.get(`${r.climate}#t`);
   return { z: pendingClimate ?? climateTarget(ctx.hass, r), p };

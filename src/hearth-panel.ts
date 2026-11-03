@@ -8,7 +8,7 @@ import { RowsStore } from "./data/health";
 import { DAYS, EbusdTimers, circuits, validate, writes, type Circuit, type Slot } from "./data/ebusd";
 import type { SchedEdit } from "./views/boiler";
 import { HistoryStore } from "./history";
-import { climateTarget, discoverRooms, hasProfiles, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
+import { climateTarget, discoverRooms, hasProfiles, overrideUntil, profileNow, profileValue, PROFILE_HELPER, type Profile, type Room } from "./model";
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
 import type { Hass, Look, Options, PanelInfo, Route, Style, Tab } from "./types";
@@ -447,6 +447,39 @@ export class HearthPanel extends LitElement {
       const a = this.hass!.states[r.climate].attributes;
       const v = clamp(roundStep(cur + delta, num(a.target_temp_step) ?? 0.5), num(a.min_temp) ?? 5, num(a.max_temp) ?? 30);
       this.setPending(key, v, () => this.hass!.callService("climate", "set_temperature", { entity_id: r.climate, temperature: v }));
+    },
+    stepNow: (r: Room, delta: number) => {
+      const h = this.hass!, cw = r.helpers.chwilowa, cwd = r.helpers.chwilowaDo;
+      const p = profileNow(h, r);
+      if (!cw || !cwd) {
+        if (p && p !== "okno") this.actions.stepProfile(r, p, delta);
+        else this.actions.stepClimate(r, delta);
+        return;
+      }
+      if (p === "okno") return;
+      const until = overrideUntil(h, r);
+      const prog = p ? profileValue(h, r, p, this.pending) : (this.pending.get(`${r.climate}#t`) ?? climateTarget(h, r));
+      const base = until !== null ? (this.pending.get(cw) ?? num(h.states[cw]?.state) ?? prog) : prog;
+      if (base === null) return;
+      const v = clamp(roundStep(base + delta, 0.5), 5, 30);
+      const two = (n: number) => String(n).padStart(2, "0");
+      const d = new Date(until ?? Date.now() + 2 * 3_600_000);
+      const end = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}:00`;
+      // Najpierw wartość, potem koniec — sterowanie pokoju przestawia głowicę dopiero, gdy chwilowa zaczyna działać.
+      this.setPending(cw, v, async () => {
+        await h.callService("input_number", "set_value", { entity_id: cw, value: v });
+        if (until === null) await h.callService("input_datetime", "set_datetime", { entity_id: cwd, datetime: end });
+      });
+    },
+    endOverride: (r: Room, keep: boolean) => {
+      const h = this.hass!, cw = r.helpers.chwilowa, cwd = r.helpers.chwilowaDo;
+      if (!cw || !cwd) return;
+      const p = profileNow(h, r), v = num(h.states[cw]?.state);
+      const save = keep && p && p !== "okno" && v !== null ? r.helpers[PROFILE_HELPER[p]] : undefined;
+      (save ? h.callService("input_number", "set_value", { entity_id: save, value: v }) : Promise.resolve())
+        .then(() => h.callService("input_datetime", "set_datetime", { entity_id: cwd, datetime: "2000-01-01 00:00:00" }))
+        .then(() => this.toast(keep ? "Zapisane na stałe" : "Wraca program"))
+        .catch((err) => this.toast(`Nie udało się: ${(err as Error)?.message ?? err}`));
     },
     stepHumidity: (entity: string, delta: number) => {
       const key = `${entity}#h`;

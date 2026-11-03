@@ -7,6 +7,9 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Temperatura chwilowa** — − / + na karcie pokoju (pierścień w Neon, pokrętła w klasycznym) zmienia cel **na 2 h**, a potem wraca program; karta pokazuje „chwilowo do HH:MM” i przyciski *na stałe* (wpisuje wartość do bieżącego profilu) oraz *wróć do programu*. Wymaga pomocników `input_number.<pokój>_chwilowa` i `input_datetime.<pokój>_chwilowa_do` (pakiet ogrzewania); pokoje bez nich działają jak dotąd. Kafelki pokazują „chwilowo do HH:MM” przy celu.
+
 ## [0.21.0-beta.8] - 2026-11-03
 
 ### Dodano

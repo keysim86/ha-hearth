@@ -7,6 +7,9 @@ import type { Hass, Options } from "./types";
 export interface Helpers {
   komfort?: string;
   eko?: string;
+  /** Temperatura chwilowa (ha-package): wartość i koniec — potem wraca program. */
+  chwilowa?: string;
+  chwilowaDo?: string;
   wieczor?: string;
   nocOd?: string;
   nocDo?: string;
@@ -75,6 +78,8 @@ function helpersFor(hass: Hass, prefix: string | undefined, areaId: string): Hel
   return {
     komfort: has(`input_number.${p}_komfort`),
     eko: has(`input_number.${p}_eko`),
+    chwilowa: has(`input_number.${p}_chwilowa`),
+    chwilowaDo: has(`input_datetime.${p}_chwilowa_do`),
     wieczor: has(`input_number.${p}_wieczor`),
     nocOd: has(`input_datetime.${p}_noc_od`),
     nocDo: has(`input_datetime.${p}_noc_do`),
@@ -233,6 +238,14 @@ export function presenceUsed(hass: Hass, r: Room): boolean {
 
 export function windowOpen(hass: Hass, r: Room): boolean {
   return r.windows.some((w) => st(hass, w) === "on");
+}
+
+/** Koniec temperatury chwilowej (ms) albo null, gdy jej nie ma lub już minęła. */
+export function overrideUntil(hass: Hass, r: Room): number | null {
+  if (!r.helpers.chwilowa || !r.helpers.chwilowaDo) return null;
+  const s = hass.states[r.helpers.chwilowaDo]?.state ?? "";
+  const t = Date.parse(s.replace(" ", "T"));
+  return Number.isFinite(t) && t > Date.now() ? t : null;
 }
 
 export function profileNow(hass: Hass, r: Room): ProfileNow {

@@ -8,11 +8,11 @@ import { chip, dayline, deviceIcon, devices, profileLabel, roomTemp, st, targetN
 
 export function dial(ctx: Ctx, r: Room) {
   const t = roomTemp(ctx.hass, r);
-  const { z, p } = targetNow(ctx, r);
+  const { z, p, until } = targetNow(ctx, r);
   const d = t !== null && z !== null ? t - z : null;
   const label = p === "okno" ? "grzanie wstrzymane" : d === null ? "" : d >= 0 ? `${f1(d)}° ponad celem` : `brakuje ${f1(-d)}°`;
   const heating = ctx.hass.states[r.climate]?.attributes.hvac_action === "heating";
-  const step = (delta: number) => (p && p !== "okno" ? ctx.actions.stepProfile(r, p, delta) : ctx.actions.stepClimate(r, delta));
+  const step = (delta: number) => ctx.actions.stepNow(r, delta);
   const pills = hasProfiles(r)
     ? (["k", "e", "w"] as Profile[])
         .map((k) => [k, profileValue(ctx.hass, r, k, ctx.pending)] as const)
@@ -28,7 +28,7 @@ export function dial(ctx: Ctx, r: Room) {
     </button>
     <div class="dial-ctl">
       <button type="button" aria-label="${r.name}: cel niżej" ?disabled=${p === "okno"} @click=${() => step(-0.5)}>−</button>
-      <span class="cel"><b>${f1(z)}°</b><small>${p === "okno" ? "okno otwarte" : `cel · ${profileLabel(ctx, r, p)}`}</small></span>
+      <span class="cel"><b>${f1(z)}°</b><small>${p === "okno" ? "okno otwarte" : until ? `chwilowo do ${ctx.clock.hm(until)}` : `cel · ${profileLabel(ctx, r, p)}`}</small></span>
       <button type="button" aria-label="${r.name}: cel wyżej" ?disabled=${p === "okno"} @click=${() => step(0.5)}>+</button>
     </div>
     <div class="pills">

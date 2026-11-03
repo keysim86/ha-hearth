@@ -13,12 +13,12 @@ const frac = (v: number) => (Math.max(LO, Math.min(HI, v)) - LO) / (HI - LO);
 
 export function neonRoom(ctx: Ctx, r: Room) {
   const t = roomTemp(ctx.hass, r);
-  const { z, p } = targetNow(ctx, r);
+  const { z, p, until } = targetNow(ctx, r);
   const heating = ctx.hass.states[r.climate]?.attributes.hvac_action === "heating";
   const col = t === null ? "rgba(150,180,255,.45)" : tcol(t, 1);
   const d = t !== null && z !== null ? t - z : null;
   const label = p === "okno" ? "okno otwarte" : d === null ? "" : d >= 0 ? `${f1(d)}° ponad celem` : `brakuje ${f1(-d)}°`;
-  const step = (delta: number) => (p && p !== "okno" ? ctx.actions.stepProfile(r, p, delta) : ctx.actions.stepClimate(r, delta));
+  const step = (delta: number) => ctx.actions.stepNow(r, delta);
   let dot: unknown = nothing;
   if (z !== null) {
     const a = ((135 + 270 * frac(z)) * Math.PI) / 180;
@@ -41,9 +41,13 @@ export function neonRoom(ctx: Ctx, r: Room) {
     </button>
     <div class="nr-ctl">
       <button type="button" aria-label="${r.name}: cel niżej" ?disabled=${p === "okno"} @click=${() => step(-0.5)}>−</button>
-      <span>cel <b>${f1(z)}°</b><small>${p === "okno" ? "grzanie wstrzymane" : profileLabel(ctx, r, p)}</small></span>
+      <span>cel <b>${f1(z)}°</b><small>${p === "okno" ? "grzanie wstrzymane" : until ? `chwilowo do ${ctx.clock.hm(until)}` : profileLabel(ctx, r, p)}</small></span>
       <button type="button" aria-label="${r.name}: cel wyżej" ?disabled=${p === "okno"} @click=${() => step(0.5)}>+</button>
     </div>
+    ${until
+      ? html`<div class="nr-tmp"><button type="button" @click=${() => ctx.actions.endOverride(r, true)}>na stałe</button>
+          <button type="button" @click=${() => ctx.actions.endOverride(r, false)}>wróć do programu</button></div>`
+      : nothing}
     <div class="nr-pills">
       ${hum === null ? nothing : html`<span class="pill">${icon("drop")}${round(hum)}%</span>`}
       ${devices(ctx, r).map((dv) => html`<span class="pill ${dv.on ? "on air" : ""}">${deviceIcon(dv)}${dv.name.toLowerCase()} ${dv.state}</span>`)}

@@ -914,6 +914,8 @@ form.ocell .orow { margin-top: 6px; }
 .nr-ctl span { font-size: 12.5px; color: var(--muted); }
 .nr-ctl b { font: 800 18px var(--f-num); color: var(--ember); }
 .nr-ctl small { display: block; font-size: 11.5px; }
+.nr-tmp { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.nr-tmp button { font: 700 11.5px var(--f-body); color: var(--accent); background: none; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
 .nr-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 :host([neon]) .nr-ring .tv { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--tc) 55%, transparent)); }
 :host([neon]) .nroom.sel { box-shadow: var(--shadow), 0 0 0 1px var(--accent), 0 0 24px -8px var(--accent); }
