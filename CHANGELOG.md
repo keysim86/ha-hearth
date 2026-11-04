@@ -7,6 +7,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.16] - 2026-11-04
+
+### Naprawiono
+- **Zużycie → Prąd: te same kolory stref na pasku i na wykresach** — wykresy 30 dni i 12 miesięcy brały kolory po kolejności źródeł, więc szczyt był pomarańczowy na pasku, a cyjanowy na wykresie. Teraz kolor wynika z nazwy strefy (noc — fiolet, poza szczytem — morski, szczyt — pomarańcz), a warstwy i legenda idą w kolejności paska.
+
 ## [0.21.0-beta.15] - 2026-11-03
 
 ### Dodano
