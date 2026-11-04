@@ -36,11 +36,11 @@
 | 📟 **Liczniki** | Dowolne encje pogrupowane według urządzeń (licznik, sprzedawca, zmiękczacz, zmywarka…) · liczniki narastające z zużyciem dziś i w miesiącu · pomiary z wykresem 24 h · stany drzwi, soli i daty po polsku |
 
 <table><tr>
-<td><img src="assets/dom.png" alt="Dom"/></td>
-<td><img src="assets/energia.png" alt="Energia"/></td>
+<td><img src="assets/dom.png" alt="Teraz — Wymaga uwagi, domownicy, bramy, pogoda"/></td>
+<td><img src="assets/energia.png" alt="Zużycie — prąd"/></td>
 </tr><tr>
-<td><img src="assets/kociol.png" alt="Kocioł"/></td>
-<td><img src="assets/liczniki.png" alt="Liczniki"/></td>
+<td><img src="assets/kociol.png" alt="Ciepło — kocioł i ciepła woda"/></td>
+<td><img src="assets/liczniki.png" alt="Zużycie — liczniki"/></td>
 </tr><tr>
 <td><img src="assets/zdrowie.png" alt="Zdrowie — waga"/></td>
 <td><img src="assets/zdrowie-cisnienie.png" alt="Zdrowie — ciśnienie"/></td>
@@ -56,6 +56,11 @@ Panel ma **8 sekcji**: Teraz, Zakupy, Ciepło, Urządzenia, Kamery, Zużycie, Mo
 **Wygląd Neon** (opcja *Wygląd*, domyślnie *Klasyczny*): ciemne szkło, świecące kolory i nocne niebo z gwiazdami i zorzą w tle, na wszystkich zakładkach. Każde urządzenie może wybrać inny wygląd w **Ustawieniach panelu**, a przy neonie także efekty ruchu: automatycznie (pełne na dużym ekranie, spokojnie na telefonie), pełne albo spokojnie. Przy systemowym „ogranicz ruch” animacje są zawsze wyłączone.
 
 W wyglądzie Neon tło to **żywe niebo**: noc z gwiazdami i zorzą, świt i zmierzch, dzień (ze słońca `sun.sun`) oraz pogoda — deszcz, ulewa, burza, śnieg, mgła, chmury — z encji pogody z opcji, a bez niej z bieżących warunków Open-Meteo; ruch tylko z włączonymi efektami. Zakładka Dom zaczyna się od **Żywego domu**: przekroju domu z pięter i obszarów HA, w którym widać temperaturę pokoi (kolor), światło w oknach, grzanie, otwarte okna, pracę kotła (dym z komina), pobór prądu, garaże i domowników. Pod nim (w obu wyglądach) lista **Wymaga uwagi**: alerty, otwarte bramy i okna przy grzaniu, głowice bez kontaktu, odpady i poczta — z akcją w jednym dotknięciu i odkładaniem do jutra. Bez pięter w HA dom pokazuje pokoje z ogrzewaniem na jednej kondygnacji — pełny układ pojawi się po przypisaniu obszarów do pięter (Ustawienia → Obszary, etykiety i strefy).
+
+<table><tr>
+<td><img src="assets/neon-dom.png" alt="Wygląd Neon — Żywy dom i Wymaga uwagi"/></td>
+<td width="260"><img src="assets/neon-telefon.png" alt="Wygląd Neon na telefonie — pokoje jako pierścienie"/></td>
+</tr></table>
 
 | Kafelki (domyślny) | Lista | Pokrętła |
 |---|---|---|

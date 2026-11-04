@@ -7,6 +7,39 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-04
+
+Nowy układ i wygląd panelu — zbiorcze podsumowanie bet 0.21.0-beta.1…25 (szczegóły w ich sekcjach niżej).
+Po aktualizacji uruchom ponownie Home Assistanta i odśwież panel w przeglądarce.
+
+### Dodano
+- **Wygląd Neon** (opcja *Wygląd*, domyślnie *Klasyczny*) — ciemne szkło, świecące kolory i żywe niebo w tle: pora dnia ze słońca (`sun.sun`) i pogoda z encji pogody albo z Open-Meteo. Wygląd i efekty ruchu można wybrać osobno na każdym urządzeniu (*Ustawienia panelu*); systemowe „ogranicz ruch” zawsze wyłącza animacje.
+- **Żywy dom** na *Teraz* (Neon) — przekrój domu z pięter i obszarów HA: temperatura pokoi kolorem, światło w oknach, grzanie, otwarte okna, praca kotła, pobór prądu, garaże ze światłem i domownicy; strych w dachu, piwnica pod ziemią, kliknięcie pokoju otwiera jego ustawienia.
+- **Wymaga uwagi** (oba wyglądy) — jedno miejsce na sprawy od najpilniejszych: alerty, otwarte bramy, okna otwarte przy grzaniu, głowice bez kontaktu (z radą: baterie albo zasięg Zigbee), odpady, poczta, koniec prania, suszenia i zmywania, kupony kończące się dziś, przesyłki do odbioru. Akcja jednym dotknięciem, *Jutro*, przesunięcie palcem.
+- **Przesyłki** (integracja Polish Shipment Tracking, wykrywana sama) — *Zakupy → Przesyłki* z kodami odbioru, odświeżaniem, ukrywaniem i śledzeniem po numerze; kafelek na *Teraz*.
+- **Profil Dziecko** (opcja *Dzieci*) — sekcje Teraz, Zakupy (sama lista), *Mój pokój* (obszary z etykietą o imieniu dziecka), *Światła* i Moje zdrowie; temperaturę zmienia tylko chwilowo.
+- **Temperatura chwilowa** — − / + na karcie pokoju zmienia cel na 2 h, z *na stałe* i *wróć do programu* (pomocniki `input_number.<pokój>_chwilowa` i `input_datetime.<pokój>_chwilowa_do`).
+- **Ciepło** — pokój jako świecący pierścień (Neon), „osiągnie cel ok. HH:MM”, pokoje w grupach według pięter, na telefonie szczegóły pokoju w arkuszu od dołu.
+- **Zużycie → Prąd** — strefy taryfy na dziś z odpowiedzią „taniej od HH:00” (atrybuty `plan_dzis`, `plan_jutro`, `ceny_dzis`, `ceny_jutro` w sensorze strefy) i zużycie dziś godzina po godzinie w kolorach stref.
+- **Klasy ryzyka akcji** — od razu (światła), z „Cofnij” (gniazdka), z przytrzymaniem 0,9 s (AGD, auta, kocioł, lodówki, pracujące pralki, zamek auta, brama poza domem), tylko administrator (infrastruktura sieci i serwera).
+- **Zakupy** — strony *Kupony* i *Paragony* z przełącznikiem konta, „Pokaż kartę” w nagłówku.
+- **Mikroanimacje** (Neon z efektami) — wejście kart, przewijane liczby, „Wszystko ogarnięte!”.
+
+### Zmieniono
+- **Nawigacja w 8 sekcjach zamiast 16 zakładek** — Teraz, Zakupy, Ciepło, Urządzenia, Kamery, Zużycie, Moje zdrowie, Technika (tylko administrator); na komputerze kolumna po lewej, na telefonie dolny pasek. Adresy `/hearth/<zakładka>` działają jak dotąd. Agent jako przycisk *Asystent* w nagłówku.
+- **Kocioł w trzech stronach** — *Kocioł i ciepła woda* dla wszystkich, *Program tygodnia* i *Serwis* dla administratora; **gaz w Zużyciu** (*Zużycie → Gaz*).
+- **Zdrowie według konta** — administrator widzi wszystkich, dorosły siebie i dzieci, dziecko tylko siebie.
+- **Zakupy: lista Bring! na początku**, karty przy kasie pod nią.
+- **Czcionki dołączone do integracji** zamiast Google Fonts — działają bez internetu.
+- **Jedna skala typografii i zaokrągleń, kontrast WCAG AA** w wyglądzie klasycznym.
+- README: nowe zrzuty ekranu, także wyglądu Neon i telefonu.
+
+### Bezpieczeństwo
+- **Adres Asystenta i osoby Zdrowia poza konfiguracją panelu**, którą HA wysyła każdemu kontu — panel pobiera je z `/api/hearth/me`, gdzie integracja sprawdza rolę konta (także „Użytkownicy bez dostępu”).
+
+### Naprawiono
+- Paski bilansów w Zdrowiu, ikony rysujące tylko pierwszy kształt, różne kolory stref na pasku i wykresach, lampki w sprzętach zapalające okno w Żywym domu, nachodzące na siebie długie nazwy pomieszczeń.
+
 ## [0.21.0-beta.25] - 2026-11-04
 
 ### Zmieniono
