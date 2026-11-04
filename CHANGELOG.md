@@ -7,6 +7,17 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-04
+
+Wilgotność w Żywym domu — zbiorczo z 0.22.0-beta.1 (szczegóły niżej). Zmienił się tylko panel: wystarczy odświeżyć go w przeglądarce.
+
+### Dodano
+- **Żywy dom: przełącznik *Temperatura | Wilgotność*** nad domem (wybór pamięta urządzenie) — warstwa wilgotności koloruje pokoje (sucho ≤ 35%, 40–60%, wilgotno ≥ 65%) i pokazuje % zamiast stopni; pokój bez czujnika jest szary.
+- **Kropla przy pokoju** — za wilgotno (pełna niebieska) albo za sucho (pusta piaskowa) bez przerwy od ponad 2 h, z historii czujnika; krótki skok po prysznicu jej nie zapala.
+
+### Zmieniono
+- README: zrzut wyglądu Neon z przełącznikiem warstwy.
+
 ## [0.22.0-beta.1] - 2026-11-04
 
 ### Dodano
