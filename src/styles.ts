@@ -49,9 +49,13 @@ export const styles = css`
 .top h1 small { font-weight: 500; font-stretch: 100%; color: var(--muted); font-size: 15px; margin-left: 8px; letter-spacing: 0; }
 
 /* pasek domu */
-.house { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line);
+.house { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--surface);
   border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .hcell { background: var(--surface); padding: 12px 16px; display: grid; gap: 2px; min-width: 0; }
+/* Linie siatki to obrysy komórek w 1-pikselowych szczelinach (na brzegu chowa je ramka), a tło siatki jest tłem karty:
+   niepełny ostatni rząd zostaje pusty, zamiast świecić kolorem linii. */
+.house > * { outline: 1px solid var(--line); }
+:where(.house) > .hcell { background: none; }
 .hlabel { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .hval { font-family: var(--f-num); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.15; }
 .hval .u { font-size: 15px; font-weight: 500; color: var(--muted); margin-left: 1px; }
@@ -250,7 +254,8 @@ dialog.set::backdrop { background: rgba(10, 14, 18, .45); }
 :host([dark]) .s-dials { --c-l1: 20%; --c-l2: 10%; --c-sat: 45%; --ring-track: rgba(255, 255, 255, .1); --glass: rgba(255, 255, 255, .07); }
 .s-dials .top h1 { font-family: var(--f-dial); font-stretch: 100%; }
 .s-dials .house { background: none; border: 0; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-.s-dials .hcell { border-radius: 16px; border: 1px solid var(--line); }
+.s-dials .hcell { border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+.s-dials .house > * { outline: 0; }
 .s-dials .hval { font-family: var(--f-dial); }
 .s-dials .grid { grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 16px; }
 .dial { --h: 200; border-radius: 16px; padding: 14px 14px 12px; display: grid; gap: 6px; position: relative; isolation: isolate; overflow: hidden;

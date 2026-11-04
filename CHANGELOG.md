@@ -7,6 +7,14 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-11-04
+
+### Naprawiono
+- **Siatki liczb bez szarej plamy** — gdy ostatni rząd siatki nie był pełny (np. *Moje zdrowie → Waga*: „Następny cel” i „Spalono tłuszczu” pod sześcioma kafelkami), puste miejsce wypełniał kolor linii. Linie między komórkami rysują teraz obrysy komórek, a puste miejsce ma tło karty — dotyczy wszystkich takich siatek (pasek domu, kocioł, gaz, zdrowie, sieć, kamery) w obu wyglądach; styl Pokrętła bez zmian.
+
+### Zmieniono
+- **Podgląd deweloperski (`dev/`)** dorabia dzisiejsze zużycie godzina po godzinie z profilu doby (średnia z ostatnich 7 dni migawki, strefy G13s według sezonu i typu dnia) — migawka powstała tuż po północy i nie ma statystyk godzinowych, więc „Dziś” pokazywało 0,0 kWh. Zrzut *Zużycie → Prąd* w README pokazuje teraz dzisiejsze zużycie i wykres godzinowy.
+
 ## [0.21.0] - 2026-11-04
 
 Nowy układ i wygląd panelu — zbiorcze podsumowanie bet 0.21.0-beta.1…25 (szczegóły w ich sekcjach niżej).

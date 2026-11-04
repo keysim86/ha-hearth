@@ -45,6 +45,24 @@
     d.setHours(0, 0, 0, 0);
     return d.getTime();
   };
+  // Migawka powstała tuż po północy (jej „dziś” jest puste) i nie ma statystyk godzinowych — dzisiejsze godziny
+  // dorabiamy z profilu doby: średnia z 7 ostatnich niezerowych dni migawki, rozłożona na godziny wg DEMO_W.
+  // Źródła stref G13s (…_nocna, …_dzienna_szczytowa, …_dzienna_pozaszczytowa, też …_cost) dostają tylko godziny
+  // swojej strefy i tylko w sezonie (zima: paź–mar) i typie dnia (robocze / weekend) jak dziś.
+  const DEMO_W = [.5, .45, .4, .4, .45, .6, .9, 1.3, 1.2, 1, .95, .9, 1, .95, 1, 1.1, 1.3, 1.6, 1.8, 1.7, 1.5, 1.2, .9, .7];
+  const demoZone = (h) => (h < 7 || h >= 21 ? "nocna" : h >= 10 && h < 15 ? "dzienna_pozaszczytowa" : "dzienna_szczytowa");
+  const demoToday = (id) => {
+    const vals = (snap.statistics?.day?.[id] ?? []).map(([, change]) => change).filter((v) => v > 0).slice(-7);
+    if (!vals.length) return null;
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const now = new Date(), nowH = now.getHours();
+    const m = id.match(/_(lato|zima)_(robocze|weekend)_(nocna|dzienna_szczytowa|dzienna_pozaszczytowa)(?:_cost)?$/);
+    if (m && (m[1] === "zima") !== (now.getMonth() >= 9 || now.getMonth() <= 2)) return null;
+    if (m && (m[2] === "weekend") !== (now.getDay() === 0 || now.getDay() === 6)) return null;
+    const on = (h) => !m || demoZone(h) === m[3];
+    const sumW = DEMO_W.reduce((s, w, h) => s + (on(h) ? w : 0), 0);
+    return DEMO_W.map((w, h) => (!on(h) || h > nowH ? 0 : (avg * w) / sumW * (h === nowH ? now.getMinutes() / 60 : 1)));
+  };
   document.body.classList.toggle("dark", dark);
   window.__calls = [];
   const todo = snap.todo_items ?? {}, todoSubs = {};
@@ -80,7 +98,14 @@
         // Statystyki z migawki przesunięte na „teraz”; okresy dzienne i miesięczne wyrównane do północy w strefie przeglądarki.
         const rows = snap.statistics?.[msg.period] ?? {};
         const out = {};
-        for (const id of msg.statistic_ids) if (rows[id]) out[id] = rows[id].map(([start, change]) => ({ start: alignStart(start, msg.period), change }));
+        const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+        for (const id of msg.statistic_ids) {
+          let list = (rows[id] ?? []).map(([start, change]) => ({ start: alignStart(start, msg.period), change }));
+          const hrs = msg.period === "hour" || msg.period === "day" ? demoToday(id) : null;
+          if (hrs && msg.period === "hour") list = hrs.map((change, h) => ({ start: new Date(t0).setHours(h), change })).filter((r) => r.change > 0);
+          else if (hrs && !list.some((r) => r.start === t0.getTime())) list.push({ start: t0.getTime(), change: hrs.reduce((a, b) => a + b, 0) });
+          if (list.length) out[id] = list;
+        }
         return out;
       }
       if (msg.type !== "history/history_during_period") throw new Error("atrapa: " + msg.type);
