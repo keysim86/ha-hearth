@@ -481,6 +481,21 @@ function dniOdDzis(t: number): number {
   return Math.round((a.getTime() - b.getTime()) / 864e5);
 }
 
+/** Kupony kończące się dziś (PAYBACK, Lidl Plus — atrybut `kupony` z datą `do`) — dla „Wymaga uwagi”. */
+export function expiringCoupons(ctx: Ctx): Array<{ kind: CouponKind; konto: string; n: number; names: string[] }> {
+  const h = ctx.hass, out: Array<{ kind: CouponKind; konto: string; n: number; names: string[] }> = [];
+  const zrodla: Array<[CouponKind, RegExp, string]> = [["payback", /^sensor\.payback_([a-z0-9_]+)_kupony$/, "partner"], ["lidl", /^sensor\.lidl_([a-z0-9_]+)_kupony$/, "tytul"]];
+  for (const [kind, re, pole] of zrodla)
+    for (const id of Object.keys(h.states).sort()) {
+      const m = re.exec(id);
+      if (!m || h.entities[id]?.hidden) continue;
+      const lista = (h.states[id].attributes.kupony ?? []) as Array<Record<string, unknown>>;
+      const dzis = lista.filter((k) => k && k.id && !k.wykluczony && typeof k.do === "string" && Number.isFinite(Date.parse(k.do)) && dniOdDzis(Date.parse(k.do)) === 0);
+      if (dzis.length) out.push({ kind, konto: m[1], n: dzis.length, names: [...new Set(dzis.map((k) => String(k[pole] ?? "").trim()).filter(Boolean))].slice(0, 3) });
+    }
+  return out;
+}
+
 interface Kupon { id: string; partner: string; korzysc: string; warunek: string; opis: string; do: string; online: boolean; link: string | null; logo: string }
 
 const PB_FILTRY: Array<[string, string]> = [["all", "Wszystkie"], ["online", "Online"], ["sklep", "W sklepie"]];
@@ -532,7 +547,7 @@ const LIDL_STATE: Record<string, [string, boolean]> = {
 };
 
 /** Odmiana po liczbie: 1 kupon, 2–4 (22–24…) kupony, 5–21 kuponów. */
-function odmiana(n: number, jeden: string, kilka: string, wiele: string): string {
+export function odmiana(n: number, jeden: string, kilka: string, wiele: string): string {
   const d = n % 10, s = n % 100;
   return n === 1 ? jeden : d >= 2 && d <= 4 && (s < 12 || s > 14) ? kilka : wiele;
 }

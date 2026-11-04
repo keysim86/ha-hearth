@@ -1,6 +1,7 @@
 // „Wymaga uwagi” (zakładka Dom, oba wyglądy): jedno miejsce na sprawy do załatwienia, od najpilniejszych.
 // Źródła: reguły z zakładki Alerty, bramy/garaże/drzwi otwarte za długo, otwarte okno przy grzaniu, głowica bez kontaktu,
-// jutrzejszy wywóz odpadów, poczta w skrzynce, przesyłki (do odbioru, u kuriera, problem — Polish Shipment Tracking).
+// jutrzejszy wywóz odpadów, poczta w skrzynce, koniec prania / suszenia / zmywania, kupony kończące się dziś,
+// przesyłki (do odbioru, u kuriera, problem — Polish Shipment Tracking).
 // Każda sprawa ma akcję w jednym dotknięciu; „Jutro” odkłada ją do 6:00,
 // „Zrobione” (przesunięcie w prawo) chowa ją do następnego razu — wybór pamięta to urządzenie (ctx.ui.attn).
 
@@ -9,7 +10,8 @@ import { windowOpen, type Room } from "../model";
 import { mailIcon } from "../svg";
 import { activeAlerts } from "./alerts";
 import { entityName, isChild, silentHours, since, st, valueText, type Ctx } from "./common";
-import { gateIds, toggleFor, wasteRows } from "./home";
+import { expiringCoupons, gateIds, odmiana, toggleFor, wasteRows } from "./home";
+import { cycleSources } from "./appliances";
 import { DELIVERY, courierName, shipments } from "../data/shipments";
 import { parcelIcon } from "./shipments";
 
@@ -29,6 +31,8 @@ const I = {
   bell: ico(svg`<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"></path><path d="M10 21h4"></path>`),
   bin: ico(svg`<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"></path><path d="M10 11v6M14 11v6"></path>`),
   check: ico(svg`<path d="m5 12.5 4.5 4.5L19 7.5"></path>`),
+  washer: ico(svg`<rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="13" r="4.5"></circle><path d="M7.5 6.5h1.5M11.5 6.5h1"></path>`),
+  coupon: ico(svg`<path d="M3 8.5V7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v1.5a2.5 2.5 0 0 0 0 5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3.5a2.5 2.5 0 0 0 0-5Z"></path><path d="M14.5 6.5v11" stroke-dasharray="2 2"></path>`),
 };
 
 const ms = (t: string | undefined) => (t ? Date.parse(t) : NaN);
@@ -84,6 +88,27 @@ export function attentionItems(ctx: Ctx, rooms: Room[]): Item[] {
   if (mail?.state === "on")
     items.push({ key: `mail:${mail.last_changed}`, kind: "info", icon: mailIcon, title: "Poczta w skrzynce", sub: `od ${ago(mail.last_changed)}`, at: ms(mail.last_changed),
       action: { label: "Odebrane", dismiss: true } });
+  // pranie / suszenie / zmywanie skończone: z historii — praca ≥ 10 min, koniec w ostatnich 6 h (stan po restarcie HA nie myli)
+  for (const c of child ? [] : cycleSources(h, ctx.opts)) {
+    const periods = ctx.hist.periods(h, c.id, (v) => c.running(String(v)));
+    const last = periods[periods.length - 1];
+    if (!last || c.running(st(ctx, c.id) ?? "")) continue;
+    const [t0, t1] = last;
+    if (Date.now() - t1 < 90_000 || t1 - t0 < 10 * 60_000 || Date.now() - t1 > 6 * 3_600_000) continue;
+    items.push({ key: `agd:${c.id}:${Math.round(t1 / 60_000)}`, kind: "info", icon: I.washer, title: `${c.name}: ${c.what.toLowerCase()} skończone`,
+      sub: `o ${ctx.clock.hm(t1)}${c.what === "Zmywanie" ? " · rozładuj" : c.what === "Pranie" || c.what === "Suszenie" ? " · wyjmij" : ""}`, at: t1,
+      action: { label: "Wyjęte", dismiss: true } });
+  }
+  // kupony kończące się dziś (PAYBACK, Lidl Plus): przypomnienie przed zakupami
+  const coupons = child ? [] : expiringCoupons(ctx);
+  const multi = (k: string) => coupons.filter((x) => x.kind === k).length > 1;
+  for (const c of coupons) {
+    const brand = c.kind === "payback" ? "PAYBACK" : c.kind === "lidl" ? "Lidl Plus" : "Biedronka";
+    const konto = multi(c.kind) ? ` (${c.konto.charAt(0).toUpperCase()}${c.konto.slice(1)})` : "";
+    items.push({ key: `kupony:${c.kind}:${c.konto}:${new Date().toDateString()}`, kind: "info", icon: I.coupon,
+      title: `${c.n} ${odmiana(c.n, "kupon", "kupony", "kuponów")} ${brand}${konto} ${c.n === 1 ? "kończy" : odmiana(c.n, "kończy", "kończą", "kończy")} się dziś`,
+      sub: c.names.join(", "), at: Date.now(), action: { label: "Pokaż", run: () => ctx.actions.openCoupons(c.kind, c.konto) } });
+  }
   // przesyłki (dorośli — kody odbioru): czeka w punkcie, kurier wiezie dziś, problem z doręczeniem
   for (const s of child ? [] : shipments(h)) {
     const who = courierName(s.courier);

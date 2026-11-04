@@ -344,6 +344,35 @@ function plugCard(ctx: Ctx, p: Plug): TemplateResult {
   </div>`;
 }
 
+// ---- źródła cykli dla „Wymaga uwagi” (koniec prania, suszenia, zmywania) ----
+
+export interface CycleSource {
+  /** Encja, której historia mówi, kiedy sprzęt pracował (moc gniazdka albo stan programu). */
+  id: string;
+  name: string;
+  /** „Pranie”, „Suszenie”, „Zmywanie”… */
+  what: string;
+  running: (state: string) => boolean;
+}
+
+const CYCLE_WHAT: Record<string, string> = { washer: "Pranie", dryer: "Suszenie", dishwasher: "Zmywanie" };
+
+/** Gniazdka z opcji (praca = pobór > 5 W), hOn ze stanem trybu (praca = „2”), Home Connect (praca = „run”). */
+export function cycleSources(h: Hass, opts: Options): CycleSource[] {
+  const out: CycleSource[] = [];
+  for (const p of opts.appliance_plugs ?? []) {
+    if (p.power) out.push({ id: p.power, name: p.name, what: CYCLE_WHAT[p.kind ?? ""] ?? "Praca", running: (s) => (num(s) ?? 0) > PLUG_WORK });
+  }
+  for (const a of discover(h, new Set(opts.appliances_exclude ?? []))) {
+    const mode = a.ents.find((e) => e.startsWith("sensor.") && /_mode$/.test(tk(h, e)));
+    const what = (key: string) => (a.kind === "dishwasher" || /dish/.test(key) ? "Zmywanie" : /wash/.test(key) ? "Pranie" : /dry/.test(key) ? "Suszenie" : "Program");
+    if (mode) out.push({ id: mode, name: a.name, what: what(tk(h, mode)), running: (s) => s === "2" });
+    const op = a.ents.find((e) => e.startsWith("sensor.") && tk(h, e) === "operation_state");
+    if (op) out.push({ id: op, name: a.name, what: what(a.name.toLowerCase()), running: (s) => s === "run" });
+  }
+  return out;
+}
+
 // ---- pozostałe urządzenia wspieranych integracji ----
 
 function other(ctx: Ctx, a: Appliance): TemplateResult {

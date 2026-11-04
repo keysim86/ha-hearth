@@ -40,7 +40,7 @@ import { proxmoxView } from "./views/proxmox";
 import { switchesView } from "./views/switches";
 import { carsView, robotsView } from "./views/vehicles";
 import { healthView } from "./views/health";
-import { appliancesView } from "./views/appliances";
+import { appliancesView, cycleSources } from "./views/appliances";
 
 const STYLES: Style[] = ["tiles", "list", "dials"];
 const TABS: Tab[] = ["home", "shopping", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"];
@@ -404,7 +404,8 @@ export class HearthPanel extends LitElement {
         ...this.rooms().flatMap((r) => [r.temp, ...r.fans, ...r.dehumidifiers.flatMap((d) => [d.entity, d.power, d.energy])]),
         o.outdoor_temperature, o.outdoor_pressure, o.outdoor_illuminance, o.outdoor_pm25,
       ],
-      home: [], shopping: [],
+      // Teraz: historia sprzętów z cyklem (koniec prania / zmywania w „Wymaga uwagi”).
+      home: cycleSources(this.hass, o).map((c) => c.id), shopping: [],
       energy: [o.power_total, ...(o.phase_power ?? [])],
       boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
       network: [...(this.hass ? speedIds({ hass: this.hass, opts: o } as Ctx) : []), ...(o.net_status ?? [])],

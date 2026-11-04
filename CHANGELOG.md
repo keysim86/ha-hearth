@@ -7,6 +7,12 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.20] - 2026-11-04
+
+### Dodano
+- **Wymaga uwagi: koniec prania, suszenia i zmywania** — pralki, suszarki i inne sprzęty z gniazdka z pomiarem (opcja AGD) oraz zmywarki hOn i sprzęty Home Connect ze stanem programu: „Pralka: pranie skończone — o 14:32 · wyjmij” z przyciskiem „Wyjęte”. Koniec cyklu z historii (praca co najmniej 10 min, koniec w ostatnich 6 h), więc stan po restarcie HA nie wywołuje fałszywej sprawy.
+- **Wymaga uwagi: kupony kończące się dziś** — PAYBACK i Lidl Plus: liczba kuponów i kilka nazw, przycisk „Pokaż” otwiera listę kuponów konta.
+
 ## [0.21.0-beta.19] - 2026-11-04
 
 ### Dodano
