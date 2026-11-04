@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.18] - 2026-11-04
+
 ### Dodano
 - **Przesyłki (integracja Polish Shipment Tracking)** — wykrywane same, bez opcji. *Zakupy → Przesyłki* (`/hearth/zakupy/przesylki`): paczki ze wszystkich kont kurierów (InPost, DPD, GLS, DHL, ORLEN Paczka, Pocztex, Allegro, UPS) od najpilniejszych — do odbioru, wydane do doręczenia, z problemem, w drodze, nadane — z nadawcą, punktem odbioru, kodem odbioru (InPost) albo PIN-em dla kuriera, odświeżaniem jednej albo wszystkich, ukrywaniem (z listą ukrytych i „Przywróć”) i śledzeniem paczki InPost po numerze. *Wymaga uwagi*: paczka do odbioru (z miejscem i kodem), kurier w drodze, problem z doręczeniem. *Teraz*: kafelek przesyłek pod skrzynką pocztową. Profil Dziecko nie widzi przesyłek ani kodów.
 
