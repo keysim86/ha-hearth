@@ -4,11 +4,12 @@ import { html, nothing } from "lit";
 import { f1, hue, num, round } from "../format";
 import { hasProfiles, profileValue, type Profile, type Room } from "../model";
 import { icon, ring } from "../svg";
-import { chip, dayline, deviceIcon, devices, profileLabel, roomTemp, st, targetNow, type Ctx } from "./common";
+import { chip, dayline, deviceIcon, devices, etaToTarget, profileLabel, roomTemp, st, targetNow, type Ctx } from "./common";
 
 export function dial(ctx: Ctx, r: Room) {
   const t = roomTemp(ctx.hass, r);
   const { z, p, until } = targetNow(ctx, r);
+  const eta = p === "okno" ? null : etaToTarget(ctx, r, roomTemp(ctx.hass, r), z);
   const d = t !== null && z !== null ? t - z : null;
   const label = p === "okno" ? "grzanie wstrzymane" : d === null ? "" : d >= 0 ? `${f1(d)}° ponad celem` : `brakuje ${f1(-d)}°`;
   const heating = ctx.hass.states[r.climate]?.attributes.hvac_action === "heating";
@@ -28,7 +29,7 @@ export function dial(ctx: Ctx, r: Room) {
     </button>
     <div class="dial-ctl">
       <button type="button" aria-label="${r.name}: cel niżej" ?disabled=${p === "okno"} @click=${() => step(-0.5)}>−</button>
-      <span class="cel"><b>${f1(z)}°</b><small>${p === "okno" ? "okno otwarte" : until ? `chwilowo do ${ctx.clock.hm(until)}` : `cel · ${profileLabel(ctx, r, p)}`}</small></span>
+      <span class="cel"><b>${f1(z)}°</b><small>${p === "okno" ? "okno otwarte" : until ? `chwilowo do ${ctx.clock.hm(until)}` : `cel · ${profileLabel(ctx, r, p)}`}${eta ? ` · ok. ${ctx.clock.hm(eta)}` : ""}</small></span>
       <button type="button" aria-label="${r.name}: cel wyżej" ?disabled=${p === "okno"} @click=${() => step(0.5)}>+</button>
     </div>
     <div class="pills">

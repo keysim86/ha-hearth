@@ -4,11 +4,12 @@ import { html, nothing } from "lit";
 import { f1, num, round, tempColor } from "../format";
 import { windowOpen, type Room } from "../model";
 import { gauge, icon, spark } from "../svg";
-import { chip, dayline, delta, deviceRow, devices, profileLabel, roomTemp, st, targetNow, type Ctx } from "./common";
+import { chip, dayline, delta, deviceRow, devices, etaToTarget, profileLabel, roomTemp, st, targetNow, type Ctx } from "./common";
 
 export function tile(ctx: Ctx, r: Room) {
   const t = roomTemp(ctx.hass, r);
   const { z, p, until } = targetNow(ctx, r);
+  const eta = p === "okno" ? null : etaToTarget(ctx, r, roomTemp(ctx.hass, r), z);
   const devs = devices(ctx, r);
   const hum = num(st(ctx, r.humidity));
   const bat = num(st(ctx, r.battery));
@@ -18,7 +19,7 @@ export function tile(ctx: Ctx, r: Room) {
     <div class="rmain">${gauge(t, z)}
       <div class="now">
         <span class="tbig" style="color:${tempColor(t)}">${f1(t)}<span class="u">°</span></span>
-        <span class="target">cel <b>${f1(z)}°</b> · ${p === "okno" ? "okno otwarte" : until ? `chwilowo do ${ctx.clock.hm(until)}` : profileLabel(ctx, r, p)}</span>
+        <span class="target">cel <b>${f1(z)}°</b> · ${p === "okno" ? "okno otwarte" : until ? `chwilowo do ${ctx.clock.hm(until)}` : profileLabel(ctx, r, p)}${eta ? ` · ok. ${ctx.clock.hm(eta)}` : ""}</span>
         ${delta(t, z)}
       </div>
     </div>

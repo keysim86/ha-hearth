@@ -9,7 +9,7 @@ import { html, nothing, svg, type TemplateResult } from "lit";
 import { windowOpen, type Room } from "../model";
 import { mailIcon } from "../svg";
 import { activeAlerts } from "./alerts";
-import { entityName, isChild, silentHours, since, st, valueText, type Ctx } from "./common";
+import { entityName, isChild, lostAdvice, silentHours, since, st, valueText, type Ctx } from "./common";
 import { expiringCoupons, gateIds, odmiana, toggleFor, wasteRows } from "./home";
 import { cycleSources } from "./appliances";
 import { DELIVERY, courierName, shipments } from "../data/shipments";
@@ -65,7 +65,7 @@ export function attentionItems(ctx: Ctx, rooms: Room[]): Item[] {
     }
     const silent = silentHours(ctx, r);
     if (silent !== null)
-      items.push({ key: `lost:${r.areaId}`, kind: "warn", icon: I.radiator, title: `${r.name}: głowica nie odpowiada`, sub: `brak kontaktu od ${Math.floor(silent)} h`,
+      items.push({ key: `lost:${r.areaId}`, kind: "warn", icon: I.radiator, title: `${r.name}: głowica nie odpowiada`, sub: `brak kontaktu od ${Math.floor(silent)} h · ${lostAdvice(ctx, r)}`,
         at: Date.now() - silent * 3_600_000, action: { label: "Pokój", run: () => ctx.actions.openRoom(r.areaId) } });
   }
   // reguły z zakładki Alerty (bez encji już pokazanych wyżej)

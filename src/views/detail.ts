@@ -4,7 +4,7 @@ import { html, nothing, type TemplateResult } from "lit";
 import { f1, hhmm, num, round } from "../format";
 import { areaOf, entityList, hasProfiles, OPENINGS, presenceUsed, profileValue, PROFILE_HELPER, type Profile, type Room } from "../model";
 import { activity, fanIcon } from "../svg";
-import { dayline, devices, isChild, nightNow, roomTemp, st, targetNow, timeSel, workTime, type Ctx } from "./common";
+import { dayline, devices, etaToTarget, isChild, lostAdvice, nightNow, roomTemp, silentHours, st, targetNow, timeSel, workTime, type Ctx } from "./common";
 
 /** Pomocnik input_text mieści 255 znaków — dłuższej listy nie zapisujemy (HA by ją odrzucił). */
 const MAX_TEXT = 255;
@@ -245,6 +245,7 @@ function head(ctx: Ctx, r: Room) {
     ${r.valve ? html`<div class="row"><span>Zawór w ostatniej godzinie</span><b>${round(num(st(ctx, r.valve)) ?? 0)}%</b></div>` : nothing}
     ${r.battery ? html`<div class="row"><span>Bateria</span><b>${num(st(ctx, r.battery)) === null ? "brak odczytu" : `${round(num(st(ctx, r.battery)))}%`}</b></div>` : nothing}
     ${lock ? lockRow : nothing}
+    ${silentHours(ctx, r) !== null ? html`<div class="row"><span>Co zrobić<small>głowica nie odpowiada — reguluje według starej temperatury</small></span><b class="alarm">${lostAdvice(ctx, r)}</b></div>` : nothing}
   </div>`;
 }
 
@@ -310,7 +311,11 @@ export function detail(ctx: Ctx, r: Room) {
     <div class="dhead"><h2>${r.name}</h2>
       <div class="acts"><button class="btn" type="button" @click=${() => ctx.actions.toggleRoom(r.areaId)}>Zamknij</button></div>
     </div>
-    <div class="why">${why(ctx, r, z, p)}</div>
+    <div class="why">${why(ctx, r, z, p)}${(() => {
+      // Przy obecnym tempie nagrzewania (ostatnia godzina z czujnika pokoju).
+      const eta = p === "okno" ? null : etaToTarget(ctx, r, roomTemp(ctx.hass, r), z);
+      return eta ? html` Przy obecnym tempie osiągnie go ok. <b>${ctx.clock.hm(eta)}</b>.` : nothing;
+    })()}</div>
     <div class="dcols">
       ${isChild(ctx)
         ? html`${head(ctx, r)}${air(ctx, r)}

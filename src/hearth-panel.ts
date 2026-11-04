@@ -368,6 +368,9 @@ export class HearthPanel extends LitElement {
   }
 
   protected updated(changed: PropertyValues<this>) {
+    // Arkusz pokoju na telefonie: fokus do środka (Escape zamyka).
+    if ((changed as Map<string, unknown>).has("open") && this.open && this.narrow)
+      this.renderRoot.querySelector<HTMLElement>(".sheet")?.focus();
     // Rola, Asystent i osoby Zdrowia — po wczytaniu i po każdej nowej konfiguracji panelu (np. zmiana opcji).
     if (this.hass && this.panel && this.meFor !== this.panel) {
       this.meFor = this.panel;
@@ -1048,13 +1051,27 @@ export class HearthPanel extends LitElement {
     const style = this.cardStyle;
     const card = neon ? neonRoom : style === "list" ? row : style === "dials" ? dial : tile;
     const cols = !neon && style === "list" ? 1 : Math.max(1, this.cols);
-    const openIdx = rooms.findIndex((r) => r.areaId === this.open);
-    const items: unknown[] = !neon && style === "list" ? [listHeader] : [];
-    rooms.forEach((r, i) => {
-      items.push(card(ctx, r));
-      const endOfRow = (i + 1) % cols === 0 || i === rooms.length - 1;
-      if (openIdx >= 0 && endOfRow && Math.floor(openIdx / cols) === Math.floor(i / cols)) items.push(detail(ctx, rooms[openIdx]));
-    });
+    // Telefon: szczegóły pokoju w arkuszu od dołu (nie w siatce, gdzie odsuwały resztę pokoi poza ekran).
+    const sheet = this.narrow;
+    const grid = (list: Room[]) => {
+      const openIdx = sheet ? -1 : list.findIndex((r) => r.areaId === this.open);
+      const items: unknown[] = !neon && style === "list" ? [listHeader] : [];
+      list.forEach((r, i) => {
+        items.push(card(ctx, r));
+        const endOfRow = (i + 1) % cols === 0 || i === list.length - 1;
+        if (openIdx >= 0 && endOfRow && Math.floor(openIdx / cols) === Math.floor(i / cols)) items.push(detail(ctx, list[openIdx]));
+      });
+      return html`<main class="grid ${neon ? "nring" : ""}">${items}</main>`;
+    };
+    // Grupy według pięter HA (od najwyższego), gdy pokoje są na co najmniej dwóch; bez piętra — „Pozostałe” na końcu.
+    const floors = this.hass!.floors ?? {};
+    const floorOf = (r: Room) => this.hass!.areas[r.areaId]?.floor_id ?? "";
+    const ids = [...new Set(rooms.map(floorOf))];
+    const groups: Array<[string, Room[]]> = ids.length > 1
+      ? ids.sort((a, b) => (floors[b]?.level ?? -99) - (floors[a]?.level ?? -99)).map((f) => [floors[f]?.name ?? "Pozostałe", rooms.filter((r) => floorOf(r) === f)])
+      : [["", rooms]];
+    const openRoom = sheet ? rooms.find((r) => r.areaId === this.open) : undefined;
+    const many = (n: number) => (n === 1 ? "pokój" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "pokoje" : "pokoi");
     const profiles = rooms.some(hasProfiles);
     const anyDevices = rooms.some((r) => devices(ctx, r).length);
     return html`${child ? nothing : html`${outdoor(ctx)} ${house(ctx, rooms)}`}
@@ -1070,9 +1087,14 @@ export class HearthPanel extends LitElement {
             </div>`
           : nothing}
         ${rooms.length
-          ? html`<main class="grid ${neon ? "nring" : ""}">${items}</main>`
+          ? groups.map(([name, list]) => html`${name ? html`<h3 class="rgrp">${name} <small>${list.length} ${many(list.length)}</small></h3>` : nothing}${grid(list)}`)
           : html`<div class="empty">Nie znalazłem pokoi. Pokój to obszar Home Assistant z termostatem (encja climate.*) — przypisz głowice do obszarów w ustawieniach urządzeń.</div>`}
         <p class="foot">${neon ? "Pierścień pokazuje temperaturę w skali 14–28 °C, kropka to cel, kolor zmienia się od chłodnego cyjanu do ciepłego żaru. Kliknij pokój, żeby zobaczyć ustawienia." : FOOT[style]}</p>
+        ${openRoom
+          ? html`<div class="sheet-bg" @click=${() => ctx.actions.toggleRoom(openRoom.areaId)}></div>
+              <div class="sheet" role="dialog" aria-modal="true" aria-label="Ustawienia: ${openRoom.name}" tabindex="-1"
+                @keydown=${(e: KeyboardEvent) => e.key === "Escape" && ctx.actions.toggleRoom(openRoom.areaId)}><span class="sheet-grip" aria-hidden="true"></span>${detail(ctx, openRoom)}</div>`
+          : nothing}
     `;
   }
 }

@@ -246,6 +246,38 @@ export function silentHours(ctx: Ctx, r: Room): number | null {
   return h > 2 ? h : null;
 }
 
+/** Kiedy pokój dojdzie do celu przy obecnym tempie (regresja z ~75 min czujnika pokoju; tylko gdy rośnie ≥ 0,1 °C/h
+ *  i zostało ≤ 6 h). Bez czujnika pokoju (sam pomiar głowicy) — null. */
+export function etaToTarget(ctx: Ctx, r: Room, t: number | null, z: number | null): number | null {
+  if (!r.temp || t === null || z === null || z - t < 0.15) return null;
+  const now = Date.now(), t0 = now - 75 * 60_000;
+  const pts: Array<[number, number]> = [];
+  for (const [ts, v] of ctx.hist.series(ctx.hass, r.temp)) {
+    const n = num(v);
+    if (n !== null) pts.push([ts, n]);
+  }
+  const before = pts.filter(([ts]) => ts < t0).pop();
+  const series: Array<[number, number]> = [...(before ? [[t0, before[1]] as [number, number]] : []), ...pts.filter(([ts]) => ts >= t0), [now, t]];
+  if (series.length < 3 || series[series.length - 1][0] - series[0][0] < 30 * 60_000) return null;
+  const xs = series.map(([ts]) => (ts - t0) / 3_600_000), ys = series.map(([, v]) => v);
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = ys.reduce((a, b) => a + b, 0) / ys.length;
+  let sxy = 0, sxx = 0;
+  xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; });
+  const slope = sxx > 0 ? sxy / sxx : 0; // °C na godzinę
+  if (slope < 0.1) return null;
+  const hours = (z - t) / slope;
+  return hours <= 6 ? now + hours * 3_600_000 : null;
+}
+
+/** Co zrobić, gdy głowica milczy: przy słabej baterii — wymiana, inaczej zasięg Zigbee. */
+export function lostAdvice(ctx: Ctx, r: Room): string {
+  const b = num(st(ctx, r.battery));
+  if (b !== null && b < 20) return `bateria ${Math.round(b)}% — wymień baterie w głowicy`;
+  return b !== null
+    ? `bateria ${Math.round(b)}% — sprawdź zasięg Zigbee (router bliżej albo zdejmij i załóż głowicę)`
+    : "sprawdź baterie i zasięg Zigbee";
+}
+
 export function chip(ctx: Ctx, r: Room): TemplateResult {
   const c = ctx.hass.states[r.climate];
   const cisza = silentHours(ctx, r);

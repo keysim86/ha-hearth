@@ -7,6 +7,16 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.21] - 2026-11-04
+
+### Dodano
+- **Ciepło: „osiągnie cel ok. HH:MM”** — przy celu na karcie pokoju (Neon, kafelki, pokrętła) i zdaniem w szczegółach („Przy obecnym tempie osiągnie go ok. 19:20”). Tempo z czujnika pokoju z ostatnich ~75 min, tylko gdy temperatura rośnie co najmniej 0,1 °C/h, a do celu jest najwyżej 6 h.
+- **Głowica bez kontaktu mówi, co zrobić** — przy słabej baterii (< 20%) „wymień baterie w głowicy”, inaczej „sprawdź zasięg Zigbee”; na karcie pokoju (Neon), w szczegółach i w *Wymaga uwagi*.
+- **Pokoje w grupach według pięter HA** (od najwyższego), gdy pokoje są na co najmniej dwóch piętrach; bez piętra — „Pozostałe”.
+
+### Zmieniono
+- **Telefon: szczegóły pokoju w arkuszu od dołu** zamiast w siatce (gdzie odsuwały resztę pokoi poza ekran); Escape, tło albo „Zamknij” zamyka.
+
 ## [0.21.0-beta.20] - 2026-11-04
 
 ### Dodano

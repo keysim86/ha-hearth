@@ -5,7 +5,7 @@ import { html, nothing, svg } from "lit";
 import { f1, num, round } from "../format";
 import type { Room } from "../model";
 import { icon } from "../svg";
-import { chip, deviceIcon, devices, isChild, profileLabel, roomTemp, st, targetNow, type Ctx } from "./common";
+import { chip, deviceIcon, devices, etaToTarget, isChild, lostAdvice, profileLabel, roomTemp, silentHours, st, targetNow, type Ctx } from "./common";
 import { tcol } from "./livehouse";
 
 const LO = 14, HI = 28, R = 40, C = 2 * Math.PI * R, L = C * 0.75;
@@ -25,6 +25,9 @@ export function neonRoom(ctx: Ctx, r: Room) {
     dot = svg`<circle class="tgt" cx=${50 + R * Math.cos(a)} cy=${52 + R * Math.sin(a)} r="3.6"></circle>`;
   }
   const hum = num(st(ctx, r.humidity));
+  // „osiągnie cel ok. HH:MM” przy obecnym tempie; milcząca głowica — co zrobić.
+  const eta = p === "okno" ? null : etaToTarget(ctx, r, t, z);
+  const silent = silentHours(ctx, r);
   return html`<article class="nroom ${heating ? "heating" : ""} ${ctx.open === r.areaId ? "sel" : ""}" style="--tc:${col}">
     <button class="nr-open" type="button" aria-expanded=${ctx.open === r.areaId} aria-controls="szczegoly" @click=${() => ctx.actions.toggleRoom(r.areaId)}
       aria-label="${r.name}: ${t === null ? "brak pomiaru" : `${f1(t)}°`}${z !== null ? `, cel ${f1(z)}°` : ""}${label ? `, ${label}` : ""}">
@@ -41,13 +44,14 @@ export function neonRoom(ctx: Ctx, r: Room) {
     </button>
     <div class="nr-ctl">
       <button type="button" aria-label="${r.name}: cel niżej" ?disabled=${p === "okno"} @click=${() => step(-0.5)}>−</button>
-      <span>cel <b>${f1(z)}°</b><small>${p === "okno" ? "grzanie wstrzymane" : until ? `chwilowo do ${ctx.clock.hm(until)}` : profileLabel(ctx, r, p)}</small></span>
+      <span>cel <b>${f1(z)}°</b><small>${p === "okno" ? "grzanie wstrzymane" : until ? `chwilowo do ${ctx.clock.hm(until)}` : profileLabel(ctx, r, p)}${eta ? ` · ok. ${ctx.clock.hm(eta)}` : ""}</small></span>
       <button type="button" aria-label="${r.name}: cel wyżej" ?disabled=${p === "okno"} @click=${() => step(0.5)}>+</button>
     </div>
     ${until
       ? html`<div class="nr-tmp">${isChild(ctx) ? nothing : html`<button type="button" @click=${() => ctx.actions.endOverride(r, true)}>na stałe</button>`}
           <button type="button" @click=${() => ctx.actions.endOverride(r, false)}>wróć do programu</button></div>`
       : nothing}
+    ${silent !== null ? html`<div class="nr-warn" role="note">⚠ ${lostAdvice(ctx, r)}</div>` : nothing}
     <div class="nr-pills">
       ${hum === null ? nothing : html`<span class="pill">${icon("drop")}${round(hum)}%</span>`}
       ${devices(ctx, r).map((dv) => html`<span class="pill ${dv.on ? "on air" : ""}">${deviceIcon(dv)}${dv.name.toLowerCase()} ${dv.state}</span>`)}

@@ -302,6 +302,18 @@ dialog.set::backdrop { background: rgba(10, 14, 18, .45); }
 .prof.airp { color: var(--air); }
 .toast[hidden] { display: none; }
 .toast { display: flex; align-items: center; gap: 12px; }
+/* Ciepło: pokoje w grupach według pięter HA; telefon — szczegóły pokoju w arkuszu od dołu. */
+.rgrp { margin: 20px 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.rgrp small { text-transform: none; letter-spacing: 0; color: var(--faint); font-weight: 400; margin-left: 4px; }
+.sheet-bg { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .5); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; max-height: 86vh; overflow-y: auto; overscroll-behavior: contain; outline: none;
+  background: var(--bg); border-radius: 20px 20px 0 0; box-shadow: 0 -12px 40px rgba(0, 0, 0, .4); padding: 6px 10px calc(14px + env(safe-area-inset-bottom, 0px)); }
+:host([neon]) .sheet { background: #070b1a; border-top: 1px solid var(--line); }
+.sheet-grip { display: block; width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 8px; }
+.sheet .detail { margin: 0; }
+@media (prefers-reduced-motion: no-preference) { .sheet { animation: sheet-up .22s ease-out; } }
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
+.nr-warn { font-size: 12px; line-height: 1.35; color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border-radius: 10px; padding: 6px 8px; }
 .toast.above-bar { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
 .toast .tact { font: inherit; font-weight: 800; color: inherit; background: none; border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
   border-radius: 8px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
