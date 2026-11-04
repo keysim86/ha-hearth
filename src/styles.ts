@@ -310,6 +310,10 @@ details.phases > summary::-webkit-details-marker { display: none; }
 details.phases > summary .hlabel::after { content: " ▸"; }
 details.phases[open] > summary .hlabel::after { content: " ▾"; }
 details.phases[open] > summary { margin-bottom: 8px; }
+/* Zakupy → Kupony / Paragony jako strony: lista rośnie ze stroną (w oknie przewijała się w ramce). */
+.lpage .lbody { margin-top: 12px; display: grid; gap: 10px; }
+.lpage .pblist { max-height: none; overflow: visible; }
+.cardsw { margin-bottom: 10px; flex-wrap: wrap; }
 .rgrp { margin: 20px 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .rgrp small { text-transform: none; letter-spacing: 0; color: var(--faint); font-weight: 400; margin-left: 4px; }
 .sheet-bg { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .5); }

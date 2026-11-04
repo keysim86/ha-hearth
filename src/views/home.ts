@@ -7,6 +7,7 @@ import { f1, num, round, zl } from "../format";
 import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } from "../svg";
 import { areaOf } from "../model";
 import { code128, ean13, pdf417, qr } from "../barcode";
+import type { Hass } from "../types";
 import { entityName, gateHold, holdButton, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
 import { shipmentsBox } from "./shipments";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
@@ -479,6 +480,23 @@ function dniOdDzis(t: number): number {
   a.setHours(0, 0, 0, 0);
   b.setHours(0, 0, 0, 0);
   return Math.round((a.getTime() - b.getTime()) / 864e5);
+}
+
+export interface LoyaltySource { kind: CouponKind; konto: string; label: string }
+const BRAND: Record<CouponKind, string> = { payback: "PAYBACK", lidl: "Lidl Plus", biedronka: "Moja Biedronka" };
+const KIND_ORDER: CouponKind[] = ["payback", "lidl", "biedronka"];
+
+/** Konta automatów z danym sensorem (…_kupony, …_paragony, …_karta) — strony Zakupów i „Pokaż kartę”. */
+export function loyaltySources(h: Hass, what: "kupony" | "paragony" | "karta"): LoyaltySource[] {
+  const re = new RegExp(`^sensor\\.(payback|lidl|biedronka)_([a-z0-9_]+)_${what}$`);
+  const found: Array<{ kind: CouponKind; konto: string }> = [];
+  for (const id of Object.keys(h.states).sort()) {
+    const m = re.exec(id);
+    if (m && !h.entities[id]?.hidden) found.push({ kind: m[1] as CouponKind, konto: m[2] });
+  }
+  found.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind));
+  const many = (k: CouponKind) => found.filter((x) => x.kind === k).length > 1;
+  return found.map((x) => ({ ...x, label: `${BRAND[x.kind]}${many(x.kind) ? ` · ${x.konto.charAt(0).toUpperCase()}${x.konto.slice(1)}` : ""}` }));
 }
 
 /** Kupony kończące się dziś (PAYBACK, Lidl Plus — atrybut `kupony` z datą `do`) — dla „Wymaga uwagi”. */

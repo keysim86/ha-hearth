@@ -25,8 +25,9 @@ import { boilerView } from "./views/boiler";
 import { gasIds, gasView } from "./views/gas";
 import { hasShipments } from "./data/shipments";
 import { shipmentsView } from "./views/shipments";
+import { loyaltyPage } from "./views/loyalty";
 import { energyView } from "./views/energy";
-import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
+import { homeView, lidlCoupons, loyaltyCard, loyaltySources, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { liveHouse } from "./views/livehouse";
 import { attentionView, visibleAttention } from "./views/attention";
 import { ADMIN_TABS, CHILD_TABS, NAV_ICONS, PHONE_BAR, SECTIONS, sectionsFor, subLinks, type Page, type Section } from "./nav";
@@ -124,6 +125,7 @@ function readAccent(): string | null {
   }
 }
 const UI_KEY = "hearth.ui";
+const cardIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M3 10h18M7 15h4"></path></svg>`;
 /** Identyfikator etykiety HA z nazwy (jak w HA: małe litery, bez polskich znaków, „_” zamiast reszty). */
 const labelSlug = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/Ł/g, "L").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -223,7 +225,8 @@ export class HearthPanel extends LitElement {
   private get mePerson(): string | undefined {
     const uid = this.hass?.user?.id;
     if (!this.hass || !uid) return undefined;
-    return Object.values(this.hass.states).find((s) => s.entity_id.startsWith("person.") && s.attributes.user_id === uid)?.entity_id;
+    const states = this.hass.states;
+    return Object.keys(states).find((id) => id.startsWith("person.") && states[id]?.attributes.user_id === uid);
   }
 
   /** Rola konta: z /api/hearth/me; zanim przyjdzie albo gdy zawiedzie — ta sama reguła z konfiguracji panelu
@@ -284,6 +287,8 @@ export class HearthPanel extends LitElement {
     if (p.admin && !this.hass?.user?.is_admin) return false;
     if (p.adult && this.accountRole === "child") return false;
     if (p.needs === "shipments") return this.hass ? hasShipments(this.hass) : false;
+    if (p.needs === "coupons") return this.hass ? loyaltySources(this.hass, "kupony").length > 0 : false;
+    if (p.needs === "receipts") return this.hass ? loyaltySources(this.hass, "paragony").length > 0 : false;
     if (p.needs === "ebusd") return Boolean(this.options.ebusd_zone_topic);
     if (p.needs === "gas") return this.hass ? gasIds({ hass: this.hass, opts: this.options, refresh: () => this.requestUpdate() } as Ctx).length > 0 : false;
     return true;
@@ -528,6 +533,15 @@ export class HearthPanel extends LitElement {
       this.person = entity;
     },
     openCoupons: (kind: CouponKind, konto: string, view: CouponView = "kupony") => {
+      // Kupony i paragony mają strony w Zakupach — tam, z wybranym kontem; kod karty i historia punktów zostają w oknie.
+      const page = view === "kupony" || view === "paragony" ? view : null;
+      const p = page ? SECTIONS.find((s) => s.id === "zakupy")?.pages?.shopping?.find((x) => x.id === page) : undefined;
+      if (page && p && this.tabs.includes("shopping") && this.pageOk(p)) {
+        this.ui = { ...this.ui, [`zakupy.${page}`]: `${kind}:${konto}` };
+        try { localStorage.setItem(UI_KEY, JSON.stringify(this.ui)); } catch { /* bez pamięci urządzenia */ }
+        this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO.shopping[0]}/${page}`);
+        return;
+      }
       this.coupons = { kind, konto, view };
     },
     moreInfo: (entity: string) => {
@@ -724,12 +738,24 @@ export class HearthPanel extends LitElement {
         ? html`<div class="set-in">
             <div class="dhead"><h2 id="pb-tytul">${c.view === "karta" ? "Karta" : c.view === "paragony" ? "E-paragony" : c.view === "historia" ? "Historia punktów" : "Kupony"} ${{ lidl: "Lidl Plus", payback: "PAYBACK", biedronka: "Moja Biedronka" }[c.kind]}</h2>
               <button class="btn" type="button" @click=${() => this.couponsDialog?.close()}>Zamknij</button></div>
+            ${c.view === "karta" ? this.cardSwitch(ctx, c) : nothing}
             ${c.view === "karta" ? loyaltyCard(ctx, c.kind, c.konto) : c.view === "paragony" ? receiptsView(ctx, c.kind, c.konto)
               : c.view === "historia" ? paybackHistory(ctx, c.konto)
               : c.kind === "lidl" ? lidlCoupons(ctx, c.konto) : paybackCoupons(ctx, c.konto)}
           </div>`
         : nothing}
     </dialog>`;
+  }
+
+  /** Okno karty: przełącznik między kartami (gdy jest ich kilka); wybór pamiętany na urządzeniu. */
+  private cardSwitch(ctx: Ctx, c: { kind: CouponKind; konto: string; view: CouponView }) {
+    const cards = loyaltySources(ctx.hass, "karta");
+    if (cards.length < 2) return nothing;
+    return html`<div class="seg2 cardsw" role="tablist" aria-label="Karta">${cards.map((k) => {
+      const on = k.kind === c.kind && k.konto === c.konto;
+      return html`<button type="button" role="tab" aria-selected=${on ? "true" : "false"} class=${on ? "on" : ""}
+        @click=${() => { this.coupons = { ...c, kind: k.kind, konto: k.konto }; ctx.actions.setUi("zakupy.karta", `${k.kind}:${k.konto}`); }}>${k.label}</button>`;
+    })}</div>`;
   }
 
   private personDialogTpl(ctx: Ctx) {
@@ -976,7 +1002,7 @@ export class HearthPanel extends LitElement {
     const views: Record<Tab, () => unknown> = {
       climate: () => this.climate(ctx),
       home: () => html`${this.look === "neon" ? liveHouse(ctx, this.rooms(), this.narrow) : nothing}${attentionView(ctx, this.rooms())}${homeView(ctx)}`,
-      shopping: () => (page === "przesylki" ? shipmentsView(ctx) : shoppingView(ctx)),
+      shopping: () => (page === "przesylki" ? shipmentsView(ctx) : page === "kupony" || page === "paragony" ? loyaltyPage(ctx, page) : shoppingView(ctx)),
       switches: () => switchesView(ctx),
       energy: () => (page === "gaz" ? gasView(ctx) : energyView(ctx)),
       boiler: () => {
@@ -1015,6 +1041,13 @@ export class HearthPanel extends LitElement {
           </div>
           <div class="top-r">
             ${hasAgent && !this.narrow ? html`<a class="gear" href=${href("agent")} @click=${go("agent")}>${NAV_ICONS.chat}<span>Asystent</span></a>` : nothing}
+            ${(() => {
+              // Zakupy: „Pokaż kartę” zawsze pod ręką przy kasie (ostatnio wybrana karta albo pierwsza).
+              const cards = cur?.id === "zakupy" && this.accountRole !== "child" ? loyaltySources(hass, "karta") : [];
+              if (!cards.length) return nothing;
+              const pick = cards.find((k) => `${k.kind}:${k.konto}` === this.ui["zakupy.karta"]) ?? cards[0];
+              return html`<button class="gear" type="button" @click=${() => (this.coupons = { kind: pick.kind, konto: pick.konto, view: "karta" })}>${cardIcon}<span>Pokaż kartę</span></button>`;
+            })()}
             <button class="gear" type="button" @click=${() => this.dialog?.showModal()}>${gearIcon}<span>Ustawienia panelu</span></button>
           </div>
         </header>

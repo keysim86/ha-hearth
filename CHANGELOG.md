@@ -7,6 +7,15 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.23] - 2026-11-04
+
+### Zmieniono
+- **Zakupy: kupony i paragony jako strony** — *Zakupy → Kupony* (PAYBACK, Lidl Plus) i *Zakupy → Paragony* (Lidl Plus, Moja Biedronka) z przełącznikiem konta zamiast okien nad kartami; przyciski „Kupony” i „Paragony” na kartach oraz „Pokaż” w *Wymaga uwagi* prowadzą na te strony z wybranym kontem. Lista rośnie ze stroną (w oknie przewijała się w ramce).
+- **„Pokaż kartę” w nagłówku Zakupów** — kod karty jednym dotknięciem przy kasie; w oknie przełącznik między kartami (ostatni wybór pamiętany na urządzeniu). Historia punktów PAYBACK zostaje w oknie.
+
+### Naprawiono
+- Osoba konta szukana po kluczach stanów (stan bez pola `entity_id` nie wywraca panelu).
+
 ## [0.21.0-beta.22] - 2026-11-04
 
 ### Dodano
