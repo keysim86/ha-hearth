@@ -5,7 +5,7 @@ import { energyPrefs, gridSources } from "../data/energy";
 import { daysAgo, monthsAgo, startOfDay, startOfMonth, sumSince, type StatPoint } from "../data/stats";
 import { f1, num, round } from "../format";
 import { bars, boltIcon, line, type Bar } from "../svg";
-import { cleanName, deviceName, entityName, st, unitOf, type Ctx } from "./common";
+import { cleanName, deviceName, entityName, roll, st, unitOf, type Ctx } from "./common";
 import { tariffStrip, zoneColor, zoneOfName, zoneRank } from "./tariff";
 
 const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
@@ -55,7 +55,7 @@ function live(ctx: Ctx): TemplateResult | typeof nothing {
   return html`<section class="sec"><h2>Teraz</h2><div class="cards two">
     ${o.power_total
       ? html`<div class="ocell"><span class="hlabel">Moc całkowita</span>
-          <div class="orow"><span class="hval big">${fmtW(total)}</span><span class="hsub">${boltIcon}</span></div>
+          <div class="orow"><span class="hval big">${roll(fmtW(total))}</span><span class="hsub">${boltIcon}</span></div>
           <span class="hsub">ostatnie 24 h</span>${line(ctx.hist.series(ctx.hass, o.power_total), "var(--ember)", { lo: 0 })}</div>`
       : nothing}
     ${n

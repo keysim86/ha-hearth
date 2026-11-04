@@ -9,7 +9,7 @@ import { html, nothing, svg, type TemplateResult } from "lit";
 import { windowOpen, type Room } from "../model";
 import { mailIcon } from "../svg";
 import { activeAlerts } from "./alerts";
-import { entityName, isChild, lostAdvice, silentHours, since, st, valueText, type Ctx } from "./common";
+import { entityName, isChild, lostAdvice, roll, silentHours, since, st, valueText, type Ctx } from "./common";
 import { expiringCoupons, gateIds, odmiana, toggleFor, wasteRows } from "./home";
 import { cycleSources } from "./appliances";
 import { DELIVERY, courierName, shipments } from "../data/shipments";
@@ -187,12 +187,18 @@ function swipe(done: () => void, later: () => void) {
   };
 }
 
+// „Wszystko ogarnięte”: lista właśnie opustoszała (ostatnia sprawa zamknięta) — iskra przez 1,5 s, nie przy zwykłym wejściu.
+let lastCount = -1, clearedAt = 0;
+
 export function attentionView(ctx: Ctx, rooms: Room[]): TemplateResult {
   const all = attentionItems(ctx, rooms), hide_ = hidden(ctx), now = Date.now();
   const items = all.filter((i) => !(hide_[i.key] > now));
   const snoozed = all.length - items.length;
+  if (lastCount > 0 && items.length === 0) clearedAt = now;
+  lastCount = items.length;
+  const spark = now - clearedAt < 1500;
   return html`<section class="attn" aria-labelledby="attn-h">
-    <div class="attn-h"><h2 id="attn-h">Wymaga uwagi</h2>${items.length ? html`<span class="n">${items.length}</span>` : nothing}
+    <div class="attn-h"><h2 id="attn-h">Wymaga uwagi</h2>${items.length ? html`<span class="n">${roll(String(items.length))}</span>` : nothing}
       ${items.length ? html`<span class="hint">przesuń: ← jutro · zrobione →</span>` : nothing}</div>
     ${items.length
       ? items.map((i) => {
@@ -208,7 +214,7 @@ export function attentionView(ctx: Ctx, rooms: Room[]): TemplateResult {
             </div>
           </div>`;
         })
-      : html`<div class="arow ok"><span class="aico">${I.check}</span><div><b>Wszystko w porządku</b><small>nic nie czeka na reakcję</small></div></div>`}
+      : html`<div class="arow ok ${spark ? "cleared" : ""}"><span class="aico">${I.check}</span><div><b>${spark ? "Wszystko ogarnięte!" : "Wszystko w porządku"}</b><small>nic nie czeka na reakcję</small></div></div>`}
     ${snoozed
       ? html`<div class="attn-f">${snoozed === 1 ? "1 sprawa odłożona" : [2, 3, 4].includes(snoozed % 10) && ![12, 13, 14].includes(snoozed % 100) ? `${snoozed} sprawy odłożone` : `${snoozed} spraw odłożonych`}
           <button class="btn later" type="button" @click=${() => ctx.actions.setUi("attn", "{}")}>Pokaż</button></div>`

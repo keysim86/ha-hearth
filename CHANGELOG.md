@@ -7,6 +7,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.24] - 2026-11-04
+
+### Dodano
+- **Mikroanimacje (Neon z efektami)** — karty wjeżdżają sprężyście przy zmianie strony (kolejno, z małym opóźnieniem), liczby (moc całkowita, pasek domu, podsumowanie kotła, licznik spraw) przewijają się przy zmianie wartości, a po zamknięciu ostatniej sprawy w *Wymaga uwagi* pojawia się na chwilę iskra „Wszystko ogarnięte!”. Wyłącza je przełącznik efektów na urządzeniu i systemowe „ogranicz ruch”.
+
 ## [0.21.0-beta.23] - 2026-11-04
 
 ### Zmieniono

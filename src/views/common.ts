@@ -1,6 +1,7 @@
 // Wspólne kawałki widoków: kontekst, stan pokoju, urządzenia, oś dnia.
 
 import { html, nothing, type TemplateResult } from "lit";
+import { keyed } from "lit/directives/keyed.js";
 import { clock, duration, f1, num } from "../format";
 import { HistoryStore, sumPeriods } from "../history";
 import type { StatsStore } from "../data/stats";
@@ -94,6 +95,9 @@ export interface Ctx {
   /** Osoba (person.*) zalogowanego konta — np. czy jest w domu (bramy poza domem z potwierdzeniem). */
   mePerson?: string;
 }
+
+/** Liczba „przewijana” przy zmianie: nowa wartość = nowy element z animacją wejścia (tylko z efektami Neon). */
+export const roll = (v: string) => keyed(v, html`<span class="roll">${v}</span>`);
 
 /** Profil Dziecko (opcja „Dzieci” w integracji). */
 export const isChild = (ctx: Ctx) => ctx.role === "child";

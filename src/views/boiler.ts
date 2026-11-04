@@ -5,7 +5,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { f1, num, round } from "../format";
 import { multiLine } from "../svg";
-import { entityName, st, timeSel, type Ctx } from "./common";
+import { entityName, roll, st, timeSel, type Ctx } from "./common";
 import { gasToday, gasView } from "./gas";
 import { boilerState } from "./house";
 import { DAY_PL, DAY_SHORT, toMin, type Circuit, type Slot } from "../data/ebusd";
@@ -79,7 +79,7 @@ function summary(ctx: Ctx, gasLink?: PageLink): TemplateResult | typeof nothing 
   const b = boilerState(ctx);
   const cells: TemplateResult[] = [];
   const cell = (label: string, value: string, sub: string, cls = "") =>
-    html`<div class="hcell ${cls}"><span class="hlabel">${label}</span><span class="hval">${value}</span><span class="hsub">${sub}</span></div>`;
+    html`<div class="hcell ${cls}"><span class="hlabel">${label}</span><span class="hval">${roll(value)}</span><span class="hsub">${sub}</span></div>`;
   const flow = val(ctx, o.boiler_flow_temperature), mod = val(ctx, o.boiler_modulation);
   if (b)
     cells.push(cell("Kocioł", b.text, [b.burning ? `płomień${mod !== null ? ` · moc ${round(mod)}%` : ""}` : "palnik wyłączony", flow !== null ? `zasilanie ${f1(flow)}°` : ""].filter(Boolean).join(" · "), b.burning ? "burn" : ""));

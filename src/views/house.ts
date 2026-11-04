@@ -3,7 +3,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { f1, num } from "../format";
 import { hasProfiles, nightWindow, profileValue, windowOpen, type Room } from "../model";
-import { devices, nightNow, st, type Ctx } from "./common";
+import { devices, nightNow, roll, st, type Ctx } from "./common";
 
 const BOILER: Record<string, string> = {
   STANDBY: "Czuwa", HEATING: "Grzeje", DOMESTIC_HOT_WATER: "Grzeje wodę", heating: "Grzeje", idle: "Czuwa", off: "Wyłączony",
@@ -29,7 +29,7 @@ export function boilerState(ctx: Ctx): { text: string; burning: boolean; sub: st
 }
 
 const cell = (label: string, value: TemplateResult | string, sub: TemplateResult | string) =>
-  html`<div class="hcell"><span class="hlabel">${label}</span><span class="hval">${value}</span><span class="hsub">${sub}</span></div>`;
+  html`<div class="hcell"><span class="hlabel">${label}</span><span class="hval">${typeof value === "string" ? roll(value) : value}</span><span class="hsub">${sub}</span></div>`;
 
 export function house(ctx: Ctx, rooms: Room[]): TemplateResult | typeof nothing {
   const o = ctx.opts, cells: TemplateResult[] = [];
