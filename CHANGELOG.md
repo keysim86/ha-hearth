@@ -7,6 +7,10 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Klasy ryzyka akcji** — *od razu*: światła i wentylatory; *z cofnięciem*: gniazdka — po wyłączeniu komunikat z „Cofnij” przez 6 s; *z potwierdzeniem przez przytrzymanie* (0,9 s, pasek postępu, wibracja, krótkie dotknięcie podpowiada): przełączniki sprzętów AGD, auta i kotła (Home Connect, hOn, Kia, myVAILLANT, Tuya Local…), gniazdka lodówek, zamrażarek, kotła, studni i akwarium (po nazwie) oraz pralki, zmywarki i suszarki w trakcie pracy (po poborze), otwarcie zamka auta, otwarcie bramy przez dziecko i przez dorosłego poza domem; *tylko administrator*: przełączniki infrastruktury (porty routera, PoE, serwer — Omada, UniFi, Proxmox…) znikają z Przełączników innym kontom, a administrator też je przytrzymuje. Klawiatura: przytrzymanie Enter lub spacji.
+- Komunikat na dole ekranu na telefonie nad dolnym paskiem nawigacji.
+
 ## [0.21.0-beta.18] - 2026-11-04
 
 ### Dodano

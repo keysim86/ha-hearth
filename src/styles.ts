@@ -301,6 +301,19 @@ dialog.set::backdrop { background: rgba(10, 14, 18, .45); }
 .pill.air { color: var(--air); }
 .prof.airp { color: var(--air); }
 .toast[hidden] { display: none; }
+.toast { display: flex; align-items: center; gap: 12px; }
+.toast.above-bar { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+.toast .tact { font: inherit; font-weight: 800; color: inherit; background: none; border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 8px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+/* Przytrzymanie (klasa ryzyka „potwierdź”): pasek postępu pod treścią, zielony błysk po potwierdzeniu. */
+.holdable { position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.holdable > .hold-fill { position: absolute; inset: 0; pointer-events: none; background: color-mix(in srgb, var(--accent) 32%, transparent);
+  transform: scaleX(0); transform-origin: left center; }
+.holdable.holding > .hold-fill { transform: scaleX(1); transition: transform .9s linear; }
+.holdable.held { box-shadow: 0 0 0 2px var(--ok); }
+.holdable > :not(.hold-fill) { position: relative; }
+.hold-ico { width: 12px; height: 12px; margin-right: 5px; vertical-align: -1px; opacity: .8; }
+@media (prefers-reduced-motion: reduce) { .holdable.holding > .hold-fill { transition: transform .9s steps(3, end); } }
 /* zakładki */
 .tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); margin-top: -6px; }
 /* Zakładki, które się nie mieszczą: wygaszona krawędź po tej stronie, gdzie coś jest schowane (klasy z tabsEdge). */

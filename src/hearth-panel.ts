@@ -176,6 +176,7 @@ export class HearthPanel extends LitElement {
   @state() private localLook: Look | null = readChoice(LOOK_KEY, LOOKS);
   @state() private localFx: Fx | null = readChoice(FX_KEY, FXS);
   @state() private toastText = "";
+  @state() private toastAction?: { label: string; run: () => void };
   @state() private ui: Record<string, string> = readUi();
   @state() private person: string | null = null;
   /** Automat i konto, których lista kuponów albo karta jest otwarta w oknie. */
@@ -469,10 +470,12 @@ export class HearthPanel extends LitElement {
     if (n !== this.cols) this.cols = n;
   }
 
-  private toast(text: string) {
+  /** Komunikat na dole; z akcją (np. „Cofnij”) zostaje 6 s zamiast 4. */
+  private toast(text: string, action?: { label: string; run: () => void }) {
     this.toastText = text;
+    this.toastAction = action;
     window.clearTimeout(this.toastTimer);
-    this.toastTimer = window.setTimeout(() => (this.toastText = ""), 4000);
+    this.toastTimer = window.setTimeout(() => { this.toastText = ""; this.toastAction = undefined; }, action ? 6000 : 4000);
   }
 
   /** Wartość od razu na ekranie, zapis do HA po chwili (seria kliknięć = jedno wywołanie). */
@@ -665,7 +668,7 @@ export class HearthPanel extends LitElement {
       const zone = this.options.ebusd_zone_topic?.replace(/\/+$/, "");
       if (zone) this.actions.call("mqtt", "publish", { topic: `${zone}SFMode/set`, payload: "auto" });
     },
-    toast: (text: string) => this.toast(text),
+    toast: (text: string, action?: { label: string; run: () => void }) => this.toast(text, action),
     goTo: (tab: Tab, page?: string) => {
       if (this.tabs.includes(tab)) this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO[tab][0]}${page ? `/${page}` : ""}`);
       else this.toast(`Zakładka ${TAB_INFO[tab][1]} jest wyłączona w opcjach Hearth`);
@@ -897,6 +900,7 @@ export class HearthPanel extends LitElement {
       role: this.accountRole,
       myAreas: this.myAreas,
       tabs: this.tabs,
+      mePerson: this.mePerson,
     };
     const cfg = circuits(this.options.ebusd_zone_topic ?? "");
     if (cfg && this.tab === "boiler") {
@@ -1018,7 +1022,14 @@ export class HearthPanel extends LitElement {
       ${this.settings(ctx)}
       ${this.personDialogTpl(ctx)}
       ${this.couponsDialogTpl(ctx)}
-      <div class="toast" role="status" ?hidden=${!this.toastText}>${this.toastText}</div>`;
+      <div class="toast ${showNav && this.narrow ? "above-bar" : ""}" role="status" ?hidden=${!this.toastText}>${this.toastText}${this.toastAction
+        ? html`<button class="tact" type="button" @click=${() => {
+            const a = this.toastAction;
+            this.toastText = "";
+            this.toastAction = undefined;
+            a?.run();
+          }}>${this.toastAction.label}</button>`
+        : nothing}</div>`;
   }
 
   private climate(ctx: Ctx) {

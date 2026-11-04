@@ -56,8 +56,8 @@ export interface Actions {
   endOverride(room: Room, keep: boolean): void;
   stepHumidity(entity: string, delta: number): void;
   toggleEntity(entity: string): void;
-  /** Krótki komunikat na dole ekranu. */
-  toast(text: string): void;
+  /** Krótki komunikat na dole ekranu; z akcją (np. „Cofnij”) zostaje dłużej. */
+  toast(text: string, action?: { label: string; run: () => void }): void;
   /** Przejście do zakładki (i strony), np. z kafelka na Teraz do Zakupy → Przesyłki. */
   goTo(tab: import("../types").Tab, page?: string): void;
   /** Zapis kilku pomocników input_number naraz (zakładka Zdrowie → Wprowadź dane). */
@@ -91,10 +91,102 @@ export interface Ctx {
   myAreas?: string[];
   /** Zakładki dostępne dla tego konta (np. czy link do Zakupy → Przesyłki gdziekolwiek prowadzi). */
   tabs?: import("../types").Tab[];
+  /** Osoba (person.*) zalogowanego konta — np. czy jest w domu (bramy poza domem z potwierdzeniem). */
+  mePerson?: string;
 }
 
 /** Profil Dziecko (opcja „Dzieci” w integracji). */
 export const isChild = (ctx: Ctx) => ctx.role === "child";
+
+// ---- klasy ryzyka akcji ----
+// od razu (światła, wentylatory), z cofnięciem (gniazdka: „Cofnij” po wyłączeniu), z potwierdzeniem przez
+// przytrzymanie (sprzęty AGD, auto, kocioł; bramy dla dziecka i poza domem; otwarcie zamka auta),
+// tylko administrator (infrastruktura: porty routera, PoE, serwer — innym kontom się nie pokazuje).
+export type Risk = "now" | "undo" | "confirm" | "admin";
+const INFRA = new Set(["tplink_omada", "omada", "unifi", "proxmoxve", "proxmox", "mikrotik", "fritz", "synology_dsm", "truenas", "openwrt", "luci",
+  "adguard", "pi_hole", "netgear", "asuswrt", "tplink_router", "upnp"]);
+const CONFIRM = new Set(["home_connect", "hon", "haier", "kia_uvo", "hyundai_kia_connect", "mypyllant", "vaillant", "ebusd", "tuya_local",
+  "tesla_fleet", "teslemetry", "bmw_connected_drive", "renault", "volvo_on_call"]);
+
+// Gniazdka zasilające coś, czego „Cofnij” po godzinach nie naprawi (po nazwie), i sprzęty w trakcie cyklu (po poborze).
+const CRITICAL = /lod[oó]wk|zamra[zż]|fridge|freezer|vaillant|koci[oł]|boiler|studni|akwari/i;
+const CYCLE = /pralk|zmywar|suszar|washer|dishwash|dryer/i;
+
+/** Klasa ryzyka przełącznika; watts = pobór gniazdka (sprzęt w trakcie cyklu wyłączany z potwierdzeniem). */
+export function riskOf(ctx: Ctx, id: string, watts?: number | null): Risk {
+  const p = ctx.hass.entities[id]?.platform ?? "";
+  if (INFRA.has(p)) return "admin";
+  if (CONFIRM.has(p)) return "confirm";
+  if (!id.startsWith("switch.")) return "now";
+  const name = `${entityName(ctx.hass, id)} ${id}`;
+  if (CRITICAL.test(name)) return "confirm";
+  if (CYCLE.test(name) && (watts ?? 0) > 5 && ctx.hass.states[id]?.state === "on") return "confirm";
+  return "undo";
+}
+
+/** Brama z potwierdzeniem: dziecko zawsze, dorosły — gdy jego osoba jest poza domem. */
+export function gateHold(ctx: Ctx): boolean {
+  if (isChild(ctx)) return true;
+  const me = ctx.mePerson ? ctx.hass.states[ctx.mePerson] : undefined;
+  return Boolean(me && me.state !== "home");
+}
+
+export const HOLD_MS = 900;
+const held = new WeakMap<Element, { timer: number; t0: number }>();
+
+/** Przytrzymanie: akcja po HOLD_MS (pasek postępu z klasy .holding, wibracja); puszczenie wcześniej anuluje,
+ *  krótkie dotknięcie podpowiada. Stan trzymany przy elemencie — przerysowanie w trakcie nie gubi licznika. */
+export function holdHandlers(ctx: Ctx, run: () => void, hint: string) {
+  const start = (el: HTMLElement) => {
+    if (held.has(el)) return;
+    el.classList.add("holding");
+    navigator.vibrate?.(10);
+    const timer = window.setTimeout(() => {
+      held.delete(el);
+      el.classList.remove("holding");
+      el.classList.add("held");
+      window.setTimeout(() => el.classList.remove("held"), 600);
+      navigator.vibrate?.([20, 40, 20]);
+      run();
+    }, HOLD_MS);
+    held.set(el, { timer, t0: Date.now() });
+  };
+  const stop = (el: HTMLElement, tap: boolean) => {
+    const h = held.get(el);
+    if (!h) return;
+    window.clearTimeout(h.timer);
+    held.delete(el);
+    el.classList.remove("holding");
+    if (tap && Date.now() - h.t0 < 400) ctx.actions.toast(hint);
+  };
+  const el = (e: Event) => e.currentTarget as HTMLElement;
+  return {
+    down: (e: PointerEvent) => { if (e.button === 0) start(el(e)); },
+    up: (e: PointerEvent) => stop(el(e), true),
+    cancel: (e: Event) => stop(el(e), false),
+    keydown: (e: KeyboardEvent) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      if (!e.repeat) start(el(e));
+    },
+    keyup: (e: KeyboardEvent) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      stop(el(e), true);
+    },
+    menu: (e: Event) => e.preventDefault(),
+  };
+}
+
+const holdGlyph = html`<svg class="hold-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="27 11"></circle><circle cx="8" cy="8" r="1.9" fill="currentColor"></circle></svg>`;
+
+/** Przycisk z potwierdzeniem przez przytrzymanie (bramy, zamek auta). */
+export function holdButton(ctx: Ctx, label: string, aria: string, run: () => void, cls = ""): TemplateResult {
+  const h = holdHandlers(ctx, run, `Przytrzymaj „${label}”, żeby potwierdzić`);
+  return html`<button class="btn holdable ${cls}" type="button" aria-label="${aria} — przytrzymaj" title="Przytrzymaj, żeby potwierdzić"
+    @pointerdown=${h.down} @pointerup=${h.up} @pointercancel=${h.cancel} @pointerleave=${h.cancel}
+    @keydown=${h.keydown} @keyup=${h.keyup} @contextmenu=${h.menu}><i class="hold-fill" aria-hidden="true"></i><span>${holdGlyph}${label}</span></button>`;
+}
 
 export const st = (ctx: Ctx, id?: string | null) => (id ? ctx.hass.states[id]?.state : undefined);
 

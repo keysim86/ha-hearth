@@ -147,6 +147,12 @@ Konto dziecka widzi w panelu sekcje Teraz, Zakupy (sama lista), **Mój pokój**,
 to obszar HA z **etykietą o imieniu dziecka** (Ustawienia → Obszary → pokój → Etykiety, np. „Kuba”; pasuje też
 identyfikator osoby, `person.kuba` → `kuba`). Światła: lampy w całym domu i wszystko w swoim pokoju.
 
+**Klasy ryzyka akcji.** Światła i wentylatory działają od razu. Gniazdka po wyłączeniu pokazują „Cofnij” (6 s).
+Przytrzymania (0,9 s, z paskiem postępu) wymagają: przełączniki sprzętów AGD, auta i kotła, gniazdka lodówek,
+zamrażarek, kotła, studni i akwarium (po nazwie), pralka, zmywarka i suszarka w trakcie pracy, otwarcie zamka auta
+oraz otwarcie bramy przez dziecko albo dorosłego poza domem. Przełączniki infrastruktury (porty routera, PoE, serwer)
+widzi tylko administrator.
+
 Stany encji HA są dostępne dla każdego zalogowanego konta (to zasada Home Assistanta), więc ukrycie w panelu daje
 porządek i dyskrecję, a nie ochronę danych przed właścicielem konta.
 

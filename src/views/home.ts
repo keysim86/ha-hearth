@@ -7,7 +7,7 @@ import { f1, num, round, zl } from "../format";
 import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } from "../svg";
 import { areaOf } from "../model";
 import { code128, ean13, pdf417, qr } from "../barcode";
-import { entityName, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
+import { entityName, gateHold, holdButton, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
 import { shipmentsBox } from "./shipments";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
@@ -120,7 +120,10 @@ function gates(ctx: Ctx): TemplateResult | typeof nothing {
           aria-label="Światło ${entityName(h, l)}: ${st(ctx, l) === "on" ? "wyłącz" : "włącz"}" aria-pressed=${st(ctx, l) === "on" ? "true" : "false"}
           @click=${() => ctx.actions.call("light", "toggle", { entity_id: l })}>${bulbIcon}</button>`)}
         ${action
-          ? html`<button class="btn ${open ? "hot" : ""}" type="button" @click=${() => ctx.actions.call("cover", action[0], { entity_id: id })}>${action[1]}</button>`
+          ? action[0] === "open_cover" && gateHold(ctx)
+            // Otwarcie z potwierdzeniem: dziecko zawsze, dorosły poza domem (zamykanie i stop — od razu).
+            ? holdButton(ctx, action[1], `${action[1]}: ${entityName(h, id)}`, () => ctx.actions.call("cover", "open_cover", { entity_id: id }))
+            : html`<button class="btn ${open ? "hot" : ""}" type="button" @click=${() => ctx.actions.call("cover", action[0], { entity_id: id })}>${action[1]}</button>`
           : nothing}
       </span>
     </div>`;

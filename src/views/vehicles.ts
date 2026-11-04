@@ -3,7 +3,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { num, round } from "../format";
 import { camImg } from "./cameras";
-import { cleanName, deviceEntities, deviceName, entityName, since, sinceLabel, st, valueText, type Ctx } from "./common";
+import { cleanName, deviceEntities, deviceName, entityName, holdButton, since, sinceLabel, st, valueText, type Ctx } from "./common";
 
 const find = (ctx: Ctx, ids: string[], re: RegExp, cls?: string) =>
   ids.find((e) => (!cls || ctx.hass.states[e]?.attributes.device_class === cls) && re.test(`${e} ${ctx.hass.states[e]?.attributes.friendly_name ?? ""}`));
@@ -50,7 +50,10 @@ export function carsView(ctx: Ctx): TemplateResult {
       <div class="acts">
         <button class="btn" type="button" @click=${() => ctx.actions.openPerson(t)}>Mapa</button>
         ${lock && lock.startsWith("lock.") && locked !== null
-          ? html`<button class="btn ${locked ? "" : "hot"}" type="button" @click=${() => ctx.actions.call("lock", locked ? "unlock" : "lock", { entity_id: lock })}>${locked ? "Otwórz" : "Zamknij"}</button>`
+          // Otwarcie auta z potwierdzeniem (przytrzymanie); zamknięcie od razu.
+          ? locked
+            ? holdButton(ctx, "Otwórz", `Otwórz auto: ${cleanName(deviceName(h, t) ?? entityName(h, t))}`, () => ctx.actions.call("lock", "unlock", { entity_id: lock }))
+            : html`<button class="btn hot" type="button" @click=${() => ctx.actions.call("lock", "lock", { entity_id: lock })}>Zamknij</button>`
           : nothing}
       </div>
     </div>`;

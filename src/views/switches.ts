@@ -3,7 +3,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { num, round } from "../format";
 import { areaOf } from "../model";
-import { deviceEntities, entityName, isChild, sinceLabel, type Ctx } from "./common";
+import { deviceEntities, entityName, holdHandlers, isChild, riskOf, sinceLabel, type Ctx } from "./common";
 
 const DOMAINS = ["light", "switch", "fan"];
 const bulb = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
@@ -29,6 +29,8 @@ export function switchesList(ctx: Ctx): Map<string, string[]> {
     const area = areaOf(h, id);
     if (!area || !out.has(area)) continue;
     if (child && d !== "light" && !mine.has(area)) continue;
+    // Infrastruktura (porty routera, PoE, serwer) — tylko administrator.
+    if (riskOf(ctx, id) === "admin" && ctx.role !== "admin") continue;
     out.get(area)!.push(id);
   }
   for (const [k, v] of out) if (!v.length) out.delete(k);
@@ -53,12 +55,27 @@ export function switchesView(ctx: Ctx): TemplateResult {
         const isOn = s.state === "on";
         const power = deviceEntities(h, h.entities[id]?.device_id, ["sensor"]).find((x) => h.states[x].attributes.device_class === "power");
         const w = power ? num(h.states[power].state) : null;
+        const name = entityName(h, id);
+        const risk = riskOf(ctx, id, w);
+        const toggle = () => ctx.actions.call(d, "toggle", { entity_id: id });
+        const inner = html`<span class="swico">${d === "light" ? bulb : d === "fan" ? fanI : plug}</span>
+          <span class="swtxt"><b>${name}</b>
+            <small>${s.state === "unavailable" ? "niedostępne" : isOn ? sinceLabel(ctx, s.last_changed) : "wył."}${w !== null && w > 0.5 ? ` · ${round(w)} W` : ""}${
+              risk === "confirm" || risk === "admin" ? " · przytrzymaj" : ""}</small></span>`;
+        // Sprzęty, auto, kocioł i infrastruktura: przytrzymanie; gniazdka: „Cofnij” po wyłączeniu; światła od razu.
+        if (risk === "confirm" || risk === "admin") {
+          const hh = holdHandlers(ctx, toggle, `Przytrzymaj „${name}”, żeby ${isOn ? "wyłączyć" : "włączyć"}`);
+          return html`<button type="button" class="sw holdable ${isOn ? "on" : ""} d-${d}" ?disabled=${s.state === "unavailable"}
+              aria-pressed=${isOn ? "true" : "false"} aria-label="${name}: ${isOn ? "wyłącz" : "włącz"} — przytrzymaj"
+              @pointerdown=${hh.down} @pointerup=${hh.up} @pointercancel=${hh.cancel} @pointerleave=${hh.cancel}
+              @keydown=${hh.keydown} @keyup=${hh.keyup} @contextmenu=${hh.menu}><i class="hold-fill" aria-hidden="true"></i>${inner}</button>`;
+        }
+        const click = () => {
+          toggle();
+          if (risk === "undo" && isOn) ctx.actions.toast(`Wyłączono: ${name}`, { label: "Cofnij", run: () => ctx.actions.call(d, "turn_on", { entity_id: id }) });
+        };
         return html`<button type="button" class="sw ${isOn ? "on" : ""} d-${d}" ?disabled=${s.state === "unavailable"}
-            aria-pressed=${isOn ? "true" : "false"} @click=${() => ctx.actions.call(d, "toggle", { entity_id: id })}>
-          <span class="swico">${d === "light" ? bulb : d === "fan" ? fanI : plug}</span>
-          <span class="swtxt"><b>${entityName(h, id)}</b>
-            <small>${s.state === "unavailable" ? "niedostępne" : isOn ? sinceLabel(ctx, s.last_changed) : "wył."}${w !== null && w > 0.5 ? ` · ${round(w)} W` : ""}</small></span>
-        </button>`;
+            aria-pressed=${isOn ? "true" : "false"} @click=${click}>${inner}</button>`;
       })}</div></div>`;
   });
   return html`<section class="sec">
