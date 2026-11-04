@@ -6,6 +6,25 @@ import type { Ctx } from "./common";
 
 type Z = "n" | "p" | "s";
 const ZONE: Record<Z, [string, string]> = { n: ["noc", "var(--bath)"], p: ["poza szczytem", "var(--air)"], s: ["szczyt", "var(--ember)"] };
+const ORDER: Z[] = ["n", "p", "s"];
+
+/** Strefa z nazwy źródła energii („… nocna”, „… pozaszczytowa”, „… szczytowa”, G12 „dzienna”) albo null. */
+export function zoneOfName(name: string): Z | null {
+  const n = name.toLowerCase();
+  if (/noc|night/.test(n)) return "n";
+  if (/poza|off.?peak/.test(n)) return "p";
+  if (/szczyt|dzien|peak/.test(n)) return "s";
+  return null;
+}
+
+/** Kolor strefy — ten sam na pasku stref i na wykresach zużycia. */
+export const zoneColor = (z: Z): string => ZONE[z][1];
+
+/** Kolejność stref na wykresach: noc, poza szczytem, szczyt (jak legenda paska), nieznane na końcu. */
+export const zoneRank = (name: string): number => {
+  const z = zoneOfName(name);
+  return z ? ORDER.indexOf(z) : ORDER.length;
+};
 
 export interface TariffPlan { today: Z[]; tomorrow: Z[] | null; prices: Record<Z, number>; pricesTomorrow: Record<Z, number> | null; hour: number; minute: number }
 

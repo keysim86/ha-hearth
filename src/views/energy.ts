@@ -6,7 +6,7 @@ import { daysAgo, monthsAgo, startOfDay, startOfMonth, sumSince, type StatPoint 
 import { f1, num, round } from "../format";
 import { bars, boltIcon, line, type Bar } from "../svg";
 import { cleanName, deviceName, entityName, st, unitOf, type Ctx } from "./common";
-import { tariffStrip } from "./tariff";
+import { tariffStrip, zoneColor, zoneOfName, zoneRank } from "./tariff";
 
 const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 export const MONTH_NAMES = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"];
@@ -40,8 +40,8 @@ function byDay(points: Record<string, StatPoint[]>, ids: string[]): Map<number, 
   return out;
 }
 
-const legend = (names: string[]) =>
-  names.length > 1 ? html`<div class="mlegend">${names.map((n, i) => html`<span><i style="background:${ZONE_COLORS[i % ZONE_COLORS.length]}"></i>${n}</span>`)}</div>` : nothing;
+const legend = (names: string[], colors: string[]) =>
+  names.length > 1 ? html`<div class="mlegend">${names.map((n, i) => html`<span><i style="background:${colors[i]}"></i>${n}</span>`)}</div>` : nothing;
 
 function live(ctx: Ctx): TemplateResult | typeof nothing {
   const o = ctx.opts;
@@ -92,8 +92,13 @@ function usage(ctx: Ctx): TemplateResult | typeof nothing {
     parts.filter((p) => p[key] > 0.005).sort((a, b) => b[key] - a[key]).map((p) => html`<span class="zchip">${p.name} <b>${f1(p[key])}</b></span>`);
   // Słupki w podziale na strefy (ostatnie słowo nazwy źródła: „… szczytowa”, „… nocna”); sezony i typy dni się sumują.
   const zoneOf = parts.map((p) => p.name.trim().split(/\s+/).pop() ?? p.name);
-  let zones = [...new Set(zoneOf)];
+  // Kolejność i kolory stref jak na pasku stref (noc, poza szczytem, szczyt); nieznane nazwy — kolejne kolory palety.
+  let zones = [...new Set(zoneOf)].sort((a, b) => zoneRank(a) - zoneRank(b));
   if (zones.length > 5) zones = ["zużycie"];
+  const fixed = zones.map((z) => zoneOfName(z));
+  const spare = ZONE_COLORS.filter((c) => !fixed.some((k) => k && zoneColor(k) === c));
+  let next = 0;
+  const colors = fixed.map((k) => (k ? zoneColor(k) : spare[next++ % spare.length]));
   const zoneIdx = (i: number) => (zones.length === 1 ? 0 : zones.indexOf(zoneOf[i]));
   const stack = (rows: Map<number, number[]>, start: number) => {
     const v = zones.map(() => 0);
@@ -127,8 +132,8 @@ function usage(ctx: Ctx): TemplateResult | typeof nothing {
     </div>
     ${tariffStrip(ctx)}
     <div class="cards two">
-      <div class="ocell"><span class="hlabel">Ostatnie 30 dni</span>${bars(dayBars, ZONE_COLORS, { unit: "kWh", every: 3, names: zoneNames, valueLabels: "dense" })}${legend(zoneNames)}</div>
-      <div class="ocell"><span class="hlabel">Ostatnie 12 miesięcy</span>${bars(monthBars, ZONE_COLORS, { unit: "kWh", every: 1, digits: 0, names: zoneNames, valueLabels: true })}${legend(zoneNames)}</div>
+      <div class="ocell"><span class="hlabel">Ostatnie 30 dni</span>${bars(dayBars, colors, { unit: "kWh", every: 3, names: zoneNames, valueLabels: "dense" })}${legend(zoneNames, colors)}</div>
+      <div class="ocell"><span class="hlabel">Ostatnie 12 miesięcy</span>${bars(monthBars, colors, { unit: "kWh", every: 1, digits: 0, names: zoneNames, valueLabels: true })}${legend(zoneNames, colors)}</div>
     </div>
   </section>`;
 }
