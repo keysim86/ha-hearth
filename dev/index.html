@@ -27,6 +27,16 @@
   const moved = (iso) => new Date(Date.parse(iso) + shift).toISOString();
   const states = {};
   for (const [id, s] of Object.entries(snap.states)) states[id] = { ...s, last_changed: moved(s.last_changed), last_updated: moved(s.last_updated) };
+  // ?damp=demo — znaczniki wilgotności w Żywym domu: wilgotne (≥ 65%) i suche (≤ 35%) czujniki trzymają wartość całą dobę,
+  // a suszarnia jest sucha (33%).
+  if (q.get("damp") === "demo") {
+    for (const [id, s] of Object.entries(states)) {
+      if (!id.startsWith("sensor.") || s.attributes?.device_class !== "humidity") continue;
+      if (/suszarni/.test(id)) states[id] = { ...s, state: "33" };
+      const v = parseFloat(states[id].state);
+      if (snap.history?.[id] && (v >= 65 || v <= 35)) snap.history[id] = snap.history[id].map(([t]) => [t, states[id].state]);
+    }
+  }
   const hShift = health.now ? Math.round((Date.now() - Date.parse(health.now)) / 864e5) * 864e5 : 0;
   for (const [id, s] of Object.entries(health.states ?? {})) states[id] = { ...s, last_changed: new Date(Date.parse(s.last_changed) + hShift).toISOString() };
   // Profil Dziecko w podglądzie: ?role=child&me=<imię osoby>&room=<area_id> — osoba przypisana do konta, etykieta jej pokoju.

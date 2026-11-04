@@ -28,7 +28,7 @@ import { shipmentsView } from "./views/shipments";
 import { loyaltyPage } from "./views/loyalty";
 import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, loyaltySources, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
-import { liveHouse } from "./views/livehouse";
+import { houseHumidityIds, liveHouse } from "./views/livehouse";
 import { attentionView, visibleAttention } from "./views/attention";
 import { ADMIN_TABS, CHILD_TABS, NAV_ICONS, PHONE_BAR, SECTIONS, sectionsFor, subLinks, type Page, type Section } from "./nav";
 import { neonRoom } from "./views/neonroom";
@@ -412,8 +412,9 @@ export class HearthPanel extends LitElement {
         ...this.rooms().flatMap((r) => [r.temp, ...r.fans, ...r.dehumidifiers.flatMap((d) => [d.entity, d.power, d.energy])]),
         o.outdoor_temperature, o.outdoor_pressure, o.outdoor_illuminance, o.outdoor_pm25,
       ],
-      // Teraz: historia sprzętów z cyklem (koniec prania / zmywania w „Wymaga uwagi”).
-      home: cycleSources(this.hass, o).map((c) => c.id), shopping: [],
+      // Teraz: historia sprzętów z cyklem (koniec prania / zmywania w „Wymaga uwagi”) i — w Neon — czujników wilgotności
+      // Żywego domu (kropla „za wilgotno / za sucho od ponad 2 h”).
+      home: [...cycleSources(this.hass, o).map((c) => c.id), ...(this.look === "neon" ? houseHumidityIds(this.hass, this.rooms(), [o.outdoor_humidity]) : [])], shopping: [],
       energy: [o.power_total, ...(o.phase_power ?? [])],
       boiler: [o.boiler_flow_temperature, o.boiler_flow_target, o.boiler_return_temperature, o.boiler_outdoor, o.dhw_temperature],
       network: [...(this.hass ? speedIds({ hass: this.hass, opts: o } as Ctx) : []), ...(o.net_status ?? [])],

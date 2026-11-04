@@ -1143,6 +1143,12 @@ dialog.more::backdrop { background: rgba(10, 14, 18, .45); }
 .lh .room[role="button"] { cursor: pointer; outline: none; }
 .lh .room[role="button"]:hover .frame, .lh .room:focus-visible .frame { stroke: var(--accent); stroke-width: 2.5; }
 .lh-hint { margin: 4px 4px 0; font-size: 12.5px; color: var(--muted); }
+/* przełącznik warstwy nad domem (zostaje na miejscu, gdy rysunek przewija się w bok) */
+.lh-bar { position: sticky; left: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 4px 0; }
+.lh-leg { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+.lh-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 4px; margin-right: 6px; vertical-align: -1px; }
+.lh-dleg { display: inline-flex; align-items: center; gap: 2px; }
+.lh-dleg svg { width: 14px; height: 14px; overflow: visible; }
 :host([fx]) .lh .flow { animation: lh-flow 1.4s linear infinite; }
 :host([fx]) .lh .pipe { animation: lh-pipe 1.6s linear infinite; }
 :host([fx]) .lh .smoke circle { animation: lh-smoke 7s ease-out infinite; transform-box: fill-box; transform-origin: center; }
