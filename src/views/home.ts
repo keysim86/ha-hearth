@@ -8,6 +8,7 @@ import { doorIcon, gateIcon, icon, mailIcon, steps as stepsIcon, weatherIcon } f
 import { areaOf } from "../model";
 import { code128, ean13, pdf417, qr } from "../barcode";
 import { entityName, since, sinceLabel, st, type CouponKind, type Ctx } from "./common";
+import { shipmentsBox } from "./shipments";
 const bulbIcon = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
 
 
@@ -773,8 +774,10 @@ function weather(ctx: Ctx): TemplateResult | typeof nothing {
 }
 
 export function homeView(ctx: Ctx): TemplateResult {
-  const mail = mailbox(ctx), bins = waste(ctx);
-  const top = mail !== nothing || bins !== nothing ? html`<div class="cards two top">${mail}${bins}</div>` : nothing;
+  const mail = mailbox(ctx), ship = shipmentsBox(ctx), bins = waste(ctx);
+  // Skrzynka i przesyłki jedna pod drugą, obok odpady.
+  const left = mail !== nothing && ship !== nothing ? html`<div class="boxcol">${mail}${ship}</div>` : html`${mail}${ship}`;
+  const top = mail !== nothing || ship !== nothing || bins !== nothing ? html`<div class="cards two top">${left}${bins}</div>` : nothing;
   return html`${persons(ctx)} ${gates(ctx)}
     ${top !== nothing ? html`<section class="sec">${top}</section>` : nothing}
     ${weather(ctx)}`;

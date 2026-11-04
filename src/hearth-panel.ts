@@ -23,6 +23,8 @@ import { outdoor } from "./views/outdoor";
 import { tile } from "./views/tiles";
 import { boilerView } from "./views/boiler";
 import { gasIds, gasView } from "./views/gas";
+import { hasShipments } from "./data/shipments";
+import { shipmentsView } from "./views/shipments";
 import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { liveHouse } from "./views/livehouse";
@@ -253,7 +255,9 @@ export class HearthPanel extends LitElement {
     const allowed = (t: Tab) => (isAdmin || !ADMIN_TABS.includes(t)) && (t !== "agent" || Boolean(this.agentUrl))
       && (t !== "health" || this.healthList.length > 0 || (isAdmin && this.me !== undefined));
     const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
-    const list = (chosen.length ? chosen : TABS.filter((t) => t !== "shopping" || (this.hass ? hasShopping(this.hass) : false))).filter(allowed);
+    // Zakupy bez wyboru zakładek: lista Bring!, karty lojalnościowe albo (dla dorosłych) przesyłki kurierów.
+    const shop = (h: Hass) => hasShopping(h) || (this.accountRole !== "child" && hasShipments(h));
+    const list = (chosen.length ? chosen : TABS.filter((t) => t !== "shopping" || (this.hass ? shop(this.hass) : false))).filter(allowed);
     // Profil Dziecko: Teraz, Zakupy, Mój pokój, Światła, Moje zdrowie.
     if (this.accountRole !== "child") return list;
     // Dziecko: Zakupy tylko z listą Bring! (karty lojalnościowe ma dorosły — sama karta to pusta zakładka).
@@ -277,6 +281,8 @@ export class HearthPanel extends LitElement {
 
   private pageOk(p: Page): boolean {
     if (p.admin && !this.hass?.user?.is_admin) return false;
+    if (p.adult && this.accountRole === "child") return false;
+    if (p.needs === "shipments") return this.hass ? hasShipments(this.hass) : false;
     if (p.needs === "ebusd") return Boolean(this.options.ebusd_zone_topic);
     if (p.needs === "gas") return this.hass ? gasIds({ hass: this.hass, opts: this.options, refresh: () => this.requestUpdate() } as Ctx).length > 0 : false;
     return true;
@@ -660,6 +666,10 @@ export class HearthPanel extends LitElement {
       if (zone) this.actions.call("mqtt", "publish", { topic: `${zone}SFMode/set`, payload: "auto" });
     },
     toast: (text: string) => this.toast(text),
+    goTo: (tab: Tab, page?: string) => {
+      if (this.tabs.includes(tab)) this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO[tab][0]}${page ? `/${page}` : ""}`);
+      else this.toast(`Zakładka ${TAB_INFO[tab][1]} jest wyłączona w opcjach Hearth`);
+    },
     saveNumbers: (values: Array<[string, number]>, done: string) => {
       Promise.all(values.map(([entity_id, value]) => this.hass!.callService(entity_id.split(".")[0], "set_value", { entity_id, value })))
         .then(() => this.toast(done))
@@ -886,6 +896,7 @@ export class HearthPanel extends LitElement {
       health: this.healthList,
       role: this.accountRole,
       myAreas: this.myAreas,
+      tabs: this.tabs,
     };
     const cfg = circuits(this.options.ebusd_zone_topic ?? "");
     if (cfg && this.tab === "boiler") {
@@ -957,7 +968,7 @@ export class HearthPanel extends LitElement {
     const views: Record<Tab, () => unknown> = {
       climate: () => this.climate(ctx),
       home: () => html`${this.look === "neon" ? liveHouse(ctx, this.rooms(), this.narrow) : nothing}${attentionView(ctx, this.rooms())}${homeView(ctx)}`,
-      shopping: () => shoppingView(ctx),
+      shopping: () => (page === "przesylki" ? shipmentsView(ctx) : shoppingView(ctx)),
       switches: () => switchesView(ctx),
       energy: () => (page === "gaz" ? gasView(ctx) : energyView(ctx)),
       boiler: () => {

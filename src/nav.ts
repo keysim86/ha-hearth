@@ -5,12 +5,14 @@
 import { html, svg, type TemplateResult } from "lit";
 import type { Tab } from "./types";
 
-/** Strona wewnątrz zakładki: admin = tylko administrator HA, needs = pokazywana, gdy są dane (sprawdza panel). */
+/** Strona wewnątrz zakładki: admin = tylko administrator HA, adult = bez profilu Dziecko,
+ *  needs = pokazywana, gdy są dane (sprawdza panel). */
 export interface Page {
   id: string;
   label: string;
   admin?: boolean;
-  needs?: "ebusd" | "gas";
+  adult?: boolean;
+  needs?: "ebusd" | "gas" | "shipments";
 }
 
 export interface Section {
@@ -44,7 +46,8 @@ export const NAV_ICONS = {
 
 export const SECTIONS: Section[] = [
   { id: "teraz", label: "Teraz", icon: NAV_ICONS.home, tabs: ["home", "alerts"], sub: { home: "Teraz", alerts: "Alerty" } },
-  { id: "zakupy", label: "Zakupy", icon: NAV_ICONS.cart, tabs: ["shopping"], sub: {} },
+  { id: "zakupy", label: "Zakupy", icon: NAV_ICONS.cart, tabs: ["shopping"], sub: { shopping: "Lista i karty" },
+    pages: { shopping: [{ id: "przesylki", label: "Przesyłki", adult: true, needs: "shipments" }] } },
   { id: "cieplo", label: "Ciepło", icon: NAV_ICONS.flame, tabs: ["climate", "boiler"], sub: { climate: "Pokoje", boiler: "Kocioł i ciepła woda" },
     pages: { boiler: [{ id: "program", label: "Program tygodnia", admin: true, needs: "ebusd" }, { id: "serwis", label: "Serwis", admin: true }] } },
   { id: "urzadzenia", label: "Urządzenia", icon: NAV_ICONS.plug, tabs: ["appliances", "switches", "cars", "robots"],

@@ -383,6 +383,42 @@ dialog.pdlg { width: min(720px, calc(100% - 24px)); }
 .box2.mail.full { border-color: var(--air); }
 .box2.mail.full .gico { background: var(--air-soft); color: var(--air); }
 .box2.waste { grid-template-columns: 1fr; gap: 4px; }
+/* Przesyłki: kafelek na Teraz (pod skrzynką) i strona Zakupy → Przesyłki. */
+.boxcol { display: grid; gap: 12px; align-content: start; }
+.box2.shipbox { font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%; }
+.box2.shipbox.ro { cursor: default; }
+.box2.shipbox.full { border-color: var(--ok); }
+.box2.shipbox.full .gico { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+.box2.shipbox.bad { border-color: var(--crit); }
+.box2.shipbox:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ship-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ship-top h2 { margin: 0; }
+.ships { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.ship { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.ship.ready { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); }
+.ship.out { border-color: color-mix(in srgb, var(--frost) 55%, var(--line)); }
+.ship.bad { border-color: color-mix(in srgb, var(--crit) 55%, var(--line)); }
+.ship-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ship-c { font-weight: 800; font-size: 12px; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); }
+.ship-st { font-weight: 700; font-size: 13px; }
+.ship.ready .ship-st { color: var(--ok); }
+.ship.out .ship-st { color: var(--frost); }
+.ship.bad .ship-st { color: var(--crit); }
+.ship-h small { margin-left: auto; color: var(--muted); font-size: 12px; }
+.ship-from { font-size: 15px; overflow-wrap: anywhere; }
+.ship-loc { font-size: 13px; color: var(--muted); }
+.ship-code { display: flex; align-items: baseline; gap: 10px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--ok) 12%, var(--surface-2)); }
+.ship-code span { font-size: 12px; color: var(--muted); }
+.ship-code b { font-family: var(--f-mono); font-size: 22px; letter-spacing: .12em; }
+.ship-no { font-family: var(--f-mono); font-size: 12px; color: var(--faint); overflow-wrap: anywhere; }
+.ship .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.ship-track { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-top: 18px; }
+.ship-track label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); flex: 1 1 260px; }
+.ship-track label small { color: var(--faint); }
+.ship-track input { font: inherit; color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; }
+.ship-ign { margin-top: 14px; }
+.ship-ign summary { cursor: pointer; color: var(--muted); }
+.ship-ign .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; }
 /* PAYBACK: karta jak karta lojalnościowa (granatowo-niebieska, biały napis) + okno kuponów */
 .pbcard { position: relative; overflow: hidden; isolation: isolate; border-radius: 16px; padding: 14px 16px; color: #fff; cursor: pointer;
   background: radial-gradient(120% 140% at 100% 0%, #2a7bea 0%, transparent 55%), linear-gradient(135deg, #00318f 0%, #0049c6 55%, #0b62e6 100%);

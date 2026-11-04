@@ -58,6 +58,8 @@ export interface Actions {
   toggleEntity(entity: string): void;
   /** Krótki komunikat na dole ekranu. */
   toast(text: string): void;
+  /** Przejście do zakładki (i strony), np. z kafelka na Teraz do Zakupy → Przesyłki. */
+  goTo(tab: import("../types").Tab, page?: string): void;
   /** Zapis kilku pomocników input_number naraz (zakładka Zdrowie → Wprowadź dane). */
   saveNumbers(values: Array<[string, number]>, done: string): void;
 }
@@ -87,6 +89,8 @@ export interface Ctx {
   role?: import("../types").Role;
   /** Obszary „mojego pokoju” (etykieta obszaru = imię osoby przypisanej do konta) — profil Dziecko. */
   myAreas?: string[];
+  /** Zakładki dostępne dla tego konta (np. czy link do Zakupy → Przesyłki gdziekolwiek prowadzi). */
+  tabs?: import("../types").Tab[];
 }
 
 /** Profil Dziecko (opcja „Dzieci” w integracji). */

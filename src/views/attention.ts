@@ -1,6 +1,7 @@
 // „Wymaga uwagi” (zakładka Dom, oba wyglądy): jedno miejsce na sprawy do załatwienia, od najpilniejszych.
 // Źródła: reguły z zakładki Alerty, bramy/garaże/drzwi otwarte za długo, otwarte okno przy grzaniu, głowica bez kontaktu,
-// jutrzejszy wywóz odpadów, poczta w skrzynce. Każda sprawa ma akcję w jednym dotknięciu; „Jutro” odkłada ją do 6:00,
+// jutrzejszy wywóz odpadów, poczta w skrzynce, przesyłki (do odbioru, u kuriera, problem — Polish Shipment Tracking).
+// Każda sprawa ma akcję w jednym dotknięciu; „Jutro” odkłada ją do 6:00,
 // „Zrobione” (przesunięcie w prawo) chowa ją do następnego razu — wybór pamięta to urządzenie (ctx.ui.attn).
 
 import { html, nothing, svg, type TemplateResult } from "lit";
@@ -9,6 +10,8 @@ import { mailIcon } from "../svg";
 import { activeAlerts } from "./alerts";
 import { entityName, isChild, silentHours, since, st, valueText, type Ctx } from "./common";
 import { gateIds, toggleFor, wasteRows } from "./home";
+import { DELIVERY, courierName, shipments } from "../data/shipments";
+import { parcelIcon } from "./shipments";
 
 type Kind = "crit" | "warn" | "cold" | "info";
 /** action.dismiss = przycisk tylko potwierdza (np. „Wystawione”) i chowa sprawę do następnego razu. */
@@ -81,6 +84,22 @@ export function attentionItems(ctx: Ctx, rooms: Room[]): Item[] {
   if (mail?.state === "on")
     items.push({ key: `mail:${mail.last_changed}`, kind: "info", icon: mailIcon, title: "Poczta w skrzynce", sub: `od ${ago(mail.last_changed)}`, at: ms(mail.last_changed),
       action: { label: "Odebrane", dismiss: true } });
+  // przesyłki (dorośli — kody odbioru): czeka w punkcie, kurier wiezie dziś, problem z doręczeniem
+  for (const s of child ? [] : shipments(h)) {
+    const who = courierName(s.courier);
+    const when = Date.now() - s.since < 60_000 ? "chwili" : since(s.since);
+    // „Szczegóły” tylko gdy zakładka Zakupy jest dostępna (strona Przesyłki).
+    const go = !ctx.tabs || ctx.tabs.includes("shopping") ? { label: "Szczegóły", run: () => ctx.actions.goTo("shopping", "przesylki") } : undefined;
+    if (s.status === "waiting_for_pickup")
+      items.push({ key: `ship:${s.number}:ready`, kind: "info", icon: parcelIcon, title: `Paczka do odbioru — ${who}`,
+        sub: [s.location || DELIVERY[s.delivery] || "", s.code ? `kod ${s.code}` : "", `od ${when}`].filter(Boolean).join(" · "), at: s.since, action: go });
+    else if (s.status === "handed_out_for_delivery")
+      items.push({ key: `ship:${s.number}:out`, kind: "info", icon: parcelIcon, title: `Kurier w drodze — ${who}`,
+        sub: [s.sender, s.code ? `PIN ${s.code}` : "", `wydana ${when === "chwili" ? "przed chwilą" : `${when} temu`}`].filter(Boolean).join(" · "), at: s.since, action: go });
+    else if (s.status === "exception")
+      items.push({ key: `ship:${s.number}:bad`, kind: "warn", icon: parcelIcon, title: `Problem z przesyłką — ${who}`,
+        sub: [s.sender, `od ${when}`].filter(Boolean).join(" · "), at: s.since, action: go });
+  }
   return items.sort((a, b) => RANK[a.kind] - RANK[b.kind] || (a.at || 0) - (b.at || 0));
 }
 
