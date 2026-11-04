@@ -8,7 +8,7 @@ import {
   type Catalog, type ShopItem,
 } from "../data/shopping";
 import type { Hass } from "../types";
-import { since, st, type Ctx } from "./common";
+import { isChild, since, st, type Ctx } from "./common";
 import { loyaltyCards } from "./home";
 
 const OWN = "Własne produkty";
@@ -109,8 +109,8 @@ function catalogBrowser(ctx: Ctx, list: string, cat: Catalog, items: ShopItem[])
 }
 
 export function shoppingView(ctx: Ctx): TemplateResult {
-  // Najpierw lista (po to się tu wchodzi), karty przy kasie pod nią.
-  const cards = loyaltyCards(ctx);
+  // Najpierw lista (po to się tu wchodzi), karty przy kasie pod nią. Dziecko — sama lista (kupony i paragony mają dorośli).
+  const cards = isChild(ctx) ? [] : loyaltyCards(ctx);
   const loyal = cards.length ? html`<section class="sec"><h2>Karty przy kasie</h2><div class="cards loyal">${cards}</div></section>` : nothing;
   return html`${shoppingList(ctx, cards.length > 0)}${loyal}`;
 }

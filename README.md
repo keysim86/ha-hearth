@@ -142,6 +142,10 @@ stronie:
 | dziecko (osoba z opcji **Dzieci**) | nie | tylko swoja osoba |
 | użytkownik bez dostępu | nie | nic — panel pokazuje „brak dostępu” |
 
+Konto dziecka widzi w panelu sekcje Teraz, Zakupy (sama lista), **Mój pokój**, **Światła** i Moje zdrowie. Pokój dziecka
+to obszar HA z **etykietą o imieniu dziecka** (Ustawienia → Obszary → pokój → Etykiety, np. „Kuba”; pasuje też
+identyfikator osoby, `person.kuba` → `kuba`). Światła: lampy w całym domu i wszystko w swoim pokoju.
+
 Stany encji HA są dostępne dla każdego zalogowanego konta (to zasada Home Assistanta), więc ukrycie w panelu daje
 porządek i dyskrecję, a nie ochronę danych przed właścicielem konta.
 

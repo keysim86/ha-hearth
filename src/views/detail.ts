@@ -4,7 +4,7 @@ import { html, nothing, type TemplateResult } from "lit";
 import { f1, hhmm, num, round } from "../format";
 import { areaOf, entityList, hasProfiles, OPENINGS, presenceUsed, profileValue, PROFILE_HELPER, type Profile, type Room } from "../model";
 import { activity, fanIcon } from "../svg";
-import { dayline, devices, nightNow, roomTemp, st, targetNow, timeSel, workTime, type Ctx } from "./common";
+import { dayline, devices, isChild, nightNow, roomTemp, st, targetNow, timeSel, workTime, type Ctx } from "./common";
 
 /** Pomocnik input_text mieści 255 znaków — dłuższej listy nie zapisujemy (HA by ją odrzucił). */
 const MAX_TEXT = 255;
@@ -235,12 +235,16 @@ function head(ctx: Ctx, r: Room) {
     if (lock.startsWith("lock.")) ctx.actions.call("lock", locked ? "unlock" : "lock", { entity_id: lock });
     else ctx.actions.toggleEntity(lock);
   };
+  // Dziecko widzi stan blokady, ale jej nie zdejmie.
+  const lockRow = isChild(ctx)
+    ? html`<div class="row"><span>Blokada rodzicielska<small>przyciski i pokrętło na głowicy</small></span><b>${locked ? "włączona" : "wyłączona"}</b></div>`
+    : html`<div class="row"><span>Blokada rodzicielska<small>przyciski i pokrętło na głowicy</small></span>${toggle("Blokada rodzicielska", locked, flipLock)}</div>`;
   return html`<div class="box"><h3>Głowica</h3>
     <div class="row"><span>Pomiar głowicy</span><b>${f1(num(c?.attributes.current_temperature))} °C</b></div>
     <div class="row"><span>Pomiar w pokoju</span><b>${f1(roomTemp(ctx.hass, r))} °C</b></div>
     ${r.valve ? html`<div class="row"><span>Zawór w ostatniej godzinie</span><b>${round(num(st(ctx, r.valve)) ?? 0)}%</b></div>` : nothing}
     ${r.battery ? html`<div class="row"><span>Bateria</span><b>${num(st(ctx, r.battery)) === null ? "brak odczytu" : `${round(num(st(ctx, r.battery)))}%`}</b></div>` : nothing}
-    ${lock ? html`<div class="row"><span>Blokada rodzicielska<small>przyciski i pokrętło na głowicy</small></span>${toggle("Blokada rodzicielska", locked, flipLock)}</div>` : nothing}
+    ${lock ? lockRow : nothing}
   </div>`;
 }
 
@@ -308,7 +312,11 @@ export function detail(ctx: Ctx, r: Room) {
     </div>
     <div class="why">${why(ctx, r, z, p)}</div>
     <div class="dcols">
-      ${hasProfiles(r)
+      ${isChild(ctx)
+        ? html`${head(ctx, r)}${air(ctx, r)}
+            <div class="box"><h3>Temperatura</h3><p class="rule">− / + na karcie pokoju zmienia temperaturę na 2 godziny, potem wraca program.
+              Program, czujniki i automatykę ustawia dorosły.</p></div>`
+        : html`${hasProfiles(r)
         ? profiles(ctx, r, p)
         : html`<div class="box"><h3>Temperatura zadana</h3>
             <div class="prof k on"><span class="pl">Nastawa głowicy<small>bez profili — zmienia termostat</small></span>
@@ -319,7 +327,7 @@ export function detail(ctx: Ctx, r: Room) {
       ${presence(ctx, r)}
       ${head(ctx, r)}
       ${air(ctx, r)}
-      ${automation(ctx, r)}
+      ${automation(ctx, r)}`}
     </div>
   </section>`;
 }

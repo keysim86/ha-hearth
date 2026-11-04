@@ -83,7 +83,14 @@ export interface Ctx {
   pending: Map<string, number>;
   open: string | null;
   actions: Actions;
+  /** Rola konta (/api/hearth/me); bez odpowiedzi serwera — administrator albo dorosły według konta HA. */
+  role?: import("../types").Role;
+  /** Obszary „mojego pokoju” (etykieta obszaru = imię osoby przypisanej do konta) — profil Dziecko. */
+  myAreas?: string[];
 }
+
+/** Profil Dziecko (opcja „Dzieci” w integracji). */
+export const isChild = (ctx: Ctx) => ctx.role === "child";
 
 export const st = (ctx: Ctx, id?: string | null) => (id ? ctx.hass.states[id]?.state : undefined);
 

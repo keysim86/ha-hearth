@@ -33,6 +33,8 @@ export interface AreaReg {
   name: string;
   icon?: string | null;
   floor_id?: string | null;
+  /** Identyfikatory etykiet obszaru (np. „kuba” = pokój dziecka w profilu Dziecko). */
+  labels?: string[];
 }
 
 export interface FloorReg {
@@ -49,7 +51,7 @@ export interface Hass {
   floors?: Record<string, FloorReg>;
   themes?: { darkMode?: boolean };
   config?: { time_zone?: string; latitude?: number; longitude?: number };
-  user?: { is_admin?: boolean; is_owner?: boolean; name?: string };
+  user?: { id?: string; is_admin?: boolean; is_owner?: boolean; name?: string };
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
   callService(domain: string, service: string, data?: Record<string, unknown>): Promise<unknown>;
   /** REST HA z tokenem zalogowanego konta (widoki integracji /api/hearth/…). */
@@ -68,6 +70,8 @@ export interface Options {
   accent_color?: string;
   sidebar_title?: string;
   deny_users?: string[];
+  /** Osoby (person.*) z profilem Dziecko — panel liczy z nich rolę, zanim odpowie /api/hearth/me. */
+  children?: string[];
   // Klimat
   helper_prefix?: string;
   areas?: string[];

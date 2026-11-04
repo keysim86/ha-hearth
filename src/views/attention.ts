@@ -7,7 +7,7 @@ import { html, nothing, svg, type TemplateResult } from "lit";
 import { windowOpen, type Room } from "../model";
 import { mailIcon } from "../svg";
 import { activeAlerts } from "./alerts";
-import { entityName, silentHours, since, st, valueText, type Ctx } from "./common";
+import { entityName, isChild, silentHours, since, st, valueText, type Ctx } from "./common";
 import { gateIds, toggleFor, wasteRows } from "./home";
 
 type Kind = "crit" | "warn" | "cold" | "info";
@@ -35,8 +35,10 @@ const age = (t: string | undefined) => (Date.now() - ms(t)) / 60000;
 /** Wszystkie bieżące sprawy (bez filtra odłożonych), posortowane: pilność, potem najstarsze. */
 export function attentionItems(ctx: Ctx, rooms: Room[]): Item[] {
   const h = ctx.hass, items: Item[] = [], seen = new Set<string>();
+  // Profil Dziecko: swój pokój, poczta i odpady — bez bram i alertów.
+  const child = isChild(ctx), mine = new Set(ctx.myAreas ?? []);
   // bramy, garaże, drzwi
-  for (const id of gateIds(ctx)) {
+  for (const id of child ? [] : gateIds(ctx)) {
     const c = h.states[id];
     if (!c || c.state !== "open" || age(c.last_changed) < GATE_MIN) continue;
     seen.add(id);
@@ -44,7 +46,7 @@ export function attentionItems(ctx: Ctx, rooms: Room[]): Item[] {
       at: ms(c.last_changed), action: { label: "Zamknij", run: () => ctx.actions.call("cover", "close_cover", { entity_id: id }) } });
   }
   // pokoje: otwarte okno przy grzaniu, głowica bez kontaktu
-  for (const r of rooms) {
+  for (const r of child ? rooms.filter((x) => mine.has(x.areaId)) : rooms) {
     const c = h.states[r.climate];
     if (windowOpen(h, r) && c && c.state !== "off") {
       const open = r.windows.filter((w) => st(ctx, w) === "on").map((w) => h.states[w]?.last_changed).sort()[0];
@@ -60,7 +62,7 @@ export function attentionItems(ctx: Ctx, rooms: Room[]): Item[] {
         at: Date.now() - silent * 3_600_000, action: { label: "Pokój", run: () => ctx.actions.openRoom(r.areaId) } });
   }
   // reguły z zakładki Alerty (bez encji już pokazanych wyżej)
-  for (const a of activeAlerts(ctx)) {
+  for (const a of child ? [] : activeAlerts(ctx)) {
     if (seen.has(a.entity)) continue;
     const s = h.states[a.entity];
     items.push({ key: `alert:${a.entity}:${a.message}`, kind: a.severity === "error" ? "crit" : a.severity === "warn" ? "warn" : "info", icon: I.bell,

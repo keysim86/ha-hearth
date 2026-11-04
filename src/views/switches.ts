@@ -3,7 +3,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { num, round } from "../format";
 import { areaOf } from "../model";
-import { deviceEntities, entityName, sinceLabel, type Ctx } from "./common";
+import { deviceEntities, entityName, isChild, sinceLabel, type Ctx } from "./common";
 
 const DOMAINS = ["light", "switch", "fan"];
 const bulb = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"></path></svg>`;
@@ -17,14 +17,18 @@ export function switchesList(ctx: Ctx): Map<string, string[]> {
   const wrapped = new Set(
     Object.values(h.entities).filter((e) => e.platform === "switch_as_x" && e.device_id).map((e) => e.device_id as string),
   );
+  // Profil Dziecko: światła w całym domu, a gniazdka i wentylatory tylko w swoim pokoju; swój pokój pierwszy.
+  const child = isChild(ctx), mine = new Set(ctx.myAreas ?? []);
   const out = new Map<string, string[]>();
-  for (const a of Object.values(h.areas)) out.set(a.area_id, []);
+  const areas = Object.values(h.areas);
+  for (const a of child ? [...areas.filter((x) => mine.has(x.area_id)), ...areas.filter((x) => !mine.has(x.area_id))] : areas) out.set(a.area_id, []);
   for (const e of Object.values(h.entities)) {
     const id = e.entity_id, d = id.split(".")[0];
     if (!DOMAINS.includes(d) || e.hidden || e.entity_category || skip.has(id) || !h.states[id]) continue;
     if (d === "switch" && e.device_id && wrapped.has(e.device_id) && e.platform !== "switch_as_x") continue;
     const area = areaOf(h, id);
     if (!area || !out.has(area)) continue;
+    if (child && d !== "light" && !mine.has(area)) continue;
     out.get(area)!.push(id);
   }
   for (const [k, v] of out) if (!v.length) out.delete(k);

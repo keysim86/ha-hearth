@@ -37,6 +37,8 @@ export const NAV_ICONS = {
   heart: ico(svg`<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.2C19.5 15.4 12 20 12 20Z"></path><path d="M6.5 12.5h3l1.5-2.5 2 4 1.5-1.5h3"></path>`),
   server: ico(svg`<rect x="4" y="4" width="16" height="7" rx="1.5"></rect><rect x="4" y="13" width="16" height="7" rx="1.5"></rect><path d="M7.5 7.5h.01M7.5 16.5h.01M11 7.5h5M11 16.5h5"></path>`),
   more: ico(svg`<circle cx="5.5" cy="12" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="18.5" cy="12" r="1.3"></circle>`),
+  room: ico(svg`<path d="M3 19v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"></path><path d="M3 15h18M3 19v1.5M21 19v1.5"></path><path d="M6 10V7.5A1.5 1.5 0 0 1 7.5 6h3A1.5 1.5 0 0 1 12 7.5V10"></path>`),
+  bulb: ico(svg`<path d="M9 18h6M10 21h4"></path><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2V16h5v-.2c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3Z"></path>`),
   chat: ico(svg`<path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 16h-7l-4.5 3.5V16H5a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 5 5Z"></path><path d="M8 10.5h8"></path>`),
 };
 
@@ -60,9 +62,17 @@ export const ADMIN_TABS: Tab[] = ["proxmox", "network"];
 /** Sekcje w dolnym pasku telefonu (reszta pod „Więcej”). */
 export const PHONE_BAR = ["teraz", "zakupy", "cieplo", "urzadzenia"];
 
-/** Sekcje z włączonymi zakładkami (kolejność sekcji stała, zakładki w kolejności sekcji). */
-export function sectionsFor(tabs: Tab[]): Section[] {
-  return SECTIONS.map((s) => ({ ...s, tabs: s.tabs.filter((t) => tabs.includes(t)) })).filter((s) => s.tabs.length);
+/** Profil Dziecko: Teraz, Zakupy, Mój pokój (Ciepło), Światła (z Urządzeń) i Moje zdrowie (tylko swoje — z serwera). */
+export const CHILD_TABS: Tab[] = ["home", "shopping", "climate", "switches", "health"];
+const CHILD_SECTION: Record<string, { label: string; icon: TemplateResult }> = {
+  cieplo: { label: "Mój pokój", icon: NAV_ICONS.room },
+  urzadzenia: { label: "Światła", icon: NAV_ICONS.bulb },
+};
+
+/** Sekcje z włączonymi zakładkami (kolejność sekcji stała, zakładki w kolejności sekcji); dziecko — własne nazwy. */
+export function sectionsFor(tabs: Tab[], child = false): Section[] {
+  return SECTIONS.map((s) => ({ ...s, ...(child ? CHILD_SECTION[s.id] : undefined), tabs: s.tabs.filter((t) => tabs.includes(t)) }))
+    .filter((s) => s.tabs.length);
 }
 
 /** Pozycje paska podzakładek: zakładka, po niej jej strony (page = undefined to strona główna zakładki). */

@@ -7,6 +7,15 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Profil Dziecko w panelu** — konto dziecka (opcja „Dzieci”) widzi sekcje *Teraz*, *Zakupy*, *Mój pokój*, *Światła* i *Moje zdrowie*. *Mój pokój* to obszary HA z etykietą o imieniu dziecka (identyfikator osoby albo imię, np. etykieta „Kuba” na pokoju Kuby) — bez paska domu i kotła. *Światła*: lampy w całym domu i wszystkie przełączniki w swoim pokoju (swój pokój pierwszy). *Wymaga uwagi*: tylko swój pokój, poczta i odpady. *Zakupy*: sama lista, bez kart, kuponów i paragonów. Bez etykiety *Mój pokój* podpowiada, co zrobić.
+- **Dziecko zmienia temperaturę tylko chwilowo** — w szczegółach swojego pokoju widzi głowicę (blokada rodzicielska tylko do odczytu) i nawiew; program, czujniki, obecność i automatykę ustawia dorosły. Bez przycisku „na stałe” przy temperaturze chwilowej; w Żywym domu otwiera tylko swój pokój; w Ustawieniach panelu bez przełączników frakcji odpadów (wspólnych dla domu).
+
+### Zmieniono
+- Na telefonie przy co najwyżej 5 sekcjach (np. profil Dziecko) wszystkie są w dolnym pasku, bez „Więcej”.
+- Rola konta liczona w przeglądarce z konfiguracji panelu (opcje „Dzieci” i „Użytkownicy bez dostępu”), zanim odpowie `/api/hearth/me`, i gdy zapytanie zawiedzie (ponowienie po 30 s) — dziecko nie widzi przez chwilę panelu dorosłego.
+- Etykieta pokoju dziecka pasuje też nazwą (etykieta przemianowana na imię ma stary identyfikator).
+
 ## [0.21.0-beta.16] - 2026-11-04
 
 ### Naprawiono
@@ -187,7 +196,7 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 - **Lidl Plus: kupony wykluczające się** — kupon, którego Lidl nie aktywuje, bo aktywny jest inny z tej samej grupy
   (np. dwa różne „na zakupy za min. 100 zł”), ma na liście status „wyklucza się” zamiast ostrzegawczego „nieaktywny”
 - **Moja Biedronka: jedna karta dla kilku kont** — przy więcej niż jednym koncie (`sensor.biedronka_<konto>_stan`)
-  zamiast osobnych kart jest jedna z przełącznikiem w prawym górnym rogu (np. „Grzegorz | Klaudia”); domyślnie
+  zamiast osobnych kart jest jedna z przełącznikiem w prawym górnym rogu (np. „Piotr | Ewa”); domyślnie
   pierwsze konto alfabetycznie, wybór zapamiętywany na urządzeniu. Wydatki, ostatni paragon, stan automatu i okna
   „Karta” / „Paragony” dotyczą wybranego konta; kliknięcie przełącznika nie otwiera okna
 

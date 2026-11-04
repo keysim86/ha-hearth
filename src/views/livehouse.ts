@@ -7,7 +7,7 @@ import { html, nothing, svg, type SVGTemplateResult, type TemplateResult } from 
 import { f1, num } from "../format";
 import { windowOpen, type Room } from "../model";
 import type { Hass } from "../types";
-import { entityName, silentHours, since, st, type Ctx } from "./common";
+import { entityName, isChild, silentHours, since, st, type Ctx } from "./common";
 import { gateIds, gateLights, personIds } from "./home";
 import { skyPhase, skyWeather } from "../sky";
 import { boilerState } from "./house";
@@ -139,8 +139,10 @@ function roomSvg(ctx: Ctx, s: Spot, x: number, y: number, w: number, hgt: number
     ${s.kind === "heat"
       ? [0, 1, 2].map((k) => svg`<path class="shimmer" d="M${wx + (ww * (k + 0.5)) / 3},${y + hgt - 14}q2.5,-3 0,-6t0,-6" fill="none" stroke="rgba(255,140,80,.6)" stroke-width="1.2"></path>`)
       : nothing}`;
-  const open = () => s.room && ctx.actions.openRoom(s.id);
-  return svg`<g class="room" role=${s.room ? "button" : "img"} tabindex=${s.room ? "0" : "-1"} aria-label=${label} @click=${open}
+  // Dziecko otwiera tylko swój pokój (cudzy i tak nie ma szczegółów w „Mój pokój”).
+  const can = Boolean(s.room) && (!isChild(ctx) || (ctx.myAreas ?? []).includes(s.id));
+  const open = () => can && ctx.actions.openRoom(s.id);
+  return svg`<g class="room" role=${can ? "button" : "img"} tabindex=${can ? "0" : "-1"} aria-label=${label} @click=${open}
       @keydown=${(e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), open())}>
     <title>${label}</title>
     <rect x=${x} y=${y} width=${w} height=${hgt} fill="#0a1030" opacity=".94"></rect>

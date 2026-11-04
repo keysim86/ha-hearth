@@ -5,7 +5,7 @@ import { html, nothing, svg } from "lit";
 import { f1, num, round } from "../format";
 import type { Room } from "../model";
 import { icon } from "../svg";
-import { chip, deviceIcon, devices, profileLabel, roomTemp, st, targetNow, type Ctx } from "./common";
+import { chip, deviceIcon, devices, isChild, profileLabel, roomTemp, st, targetNow, type Ctx } from "./common";
 import { tcol } from "./livehouse";
 
 const LO = 14, HI = 28, R = 40, C = 2 * Math.PI * R, L = C * 0.75;
@@ -45,7 +45,7 @@ export function neonRoom(ctx: Ctx, r: Room) {
       <button type="button" aria-label="${r.name}: cel wyżej" ?disabled=${p === "okno"} @click=${() => step(0.5)}>+</button>
     </div>
     ${until
-      ? html`<div class="nr-tmp"><button type="button" @click=${() => ctx.actions.endOverride(r, true)}>na stałe</button>
+      ? html`<div class="nr-tmp">${isChild(ctx) ? nothing : html`<button type="button" @click=${() => ctx.actions.endOverride(r, true)}>na stałe</button>`}
           <button type="button" @click=${() => ctx.actions.endOverride(r, false)}>wróć do programu</button></div>`
       : nothing}
     <div class="nr-pills">

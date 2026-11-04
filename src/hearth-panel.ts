@@ -12,7 +12,7 @@ import { climateTarget, discoverRooms, hasProfiles, overrideUntil, profileNow, p
 import { skyPhase, skyWeather } from "./sky";
 import { styles } from "./styles";
 import { gearIcon, menuIcon } from "./svg";
-import type { Hass, HealthProfile, Look, Me, Options, PanelInfo, Route, Style, Tab } from "./types";
+import type { Hass, HealthProfile, Look, Me, Options, PanelInfo, Role, Route, Style, Tab } from "./types";
 import type { Actions, CouponKind, CouponView, Ctx } from "./views/common";
 import { devices } from "./views/common";
 import { detail } from "./views/detail";
@@ -27,11 +27,11 @@ import { energyView } from "./views/energy";
 import { homeView, lidlCoupons, loyaltyCard, paybackCoupons, paybackHistory, personInfo, receiptsView, tileMap, toggleFor, wasteToggles } from "./views/home";
 import { liveHouse } from "./views/livehouse";
 import { attentionView, visibleAttention } from "./views/attention";
-import { ADMIN_TABS, NAV_ICONS, PHONE_BAR, SECTIONS, sectionsFor, subLinks, type Page, type Section } from "./nav";
+import { ADMIN_TABS, CHILD_TABS, NAV_ICONS, PHONE_BAR, SECTIONS, sectionsFor, subLinks, type Page, type Section } from "./nav";
 import { neonRoom } from "./views/neonroom";
 import { metersView } from "./views/meters";
 import { activeAlerts, alertsView } from "./views/alerts";
-import { hasShopping, shoppingView, toBuy } from "./views/shopping";
+import { bringLists, hasShopping, shoppingView, toBuy } from "./views/shopping";
 import { camerasView } from "./views/cameras";
 import { networkView, speedIds } from "./views/network";
 import { proxmoxView } from "./views/proxmox";
@@ -122,6 +122,9 @@ function readAccent(): string | null {
   }
 }
 const UI_KEY = "hearth.ui";
+/** Identyfikator etykiety HA z nazwy (jak w HA: małe litery, bez polskich znaków, „_” zamiast reszty). */
+const labelSlug = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/Ł/g, "L").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 const FONTS_ID = "hearth-fonts";
 /** Czcionki z integracji (www/fonts obok panelu, ten sam parametr wersji) — bez zapytań do Google Fonts. */
 const FONTS_URL = (() => {
@@ -164,6 +167,7 @@ export class HearthPanel extends LitElement {
   /** Kim jest to konto (/api/hearth/me): undefined = jeszcze nie wiadomo, null = brak odpowiedzi (starsza integracja). */
   @state() private me?: Me | null;
   private meFor?: PanelInfo;
+  @state() private labelNames = new Map<string, string>();
   @state() private cols = 1;
   @state() private localStyle: Style | null = readStyle();
   @state() private localAccent: string | null = readAccent();
@@ -212,6 +216,35 @@ export class HearthPanel extends LitElement {
     return this.me?.health ?? (this.me === null ? (this.panel?.config?.health ?? []) : []);
   }
 
+  /** Osoba (person.*) przypisana do zalogowanego konta. */
+  private get mePerson(): string | undefined {
+    const uid = this.hass?.user?.id;
+    if (!this.hass || !uid) return undefined;
+    return Object.values(this.hass.states).find((s) => s.entity_id.startsWith("person.") && s.attributes.user_id === uid)?.entity_id;
+  }
+
+  /** Rola konta: z /api/hearth/me; zanim przyjdzie albo gdy zawiedzie — ta sama reguła z konfiguracji panelu
+   *  (bez dostępu > administrator > dziecko z opcji „Dzieci” > dorosły), żeby dziecko nie widziało przez chwilę panelu dorosłego. */
+  private get accountRole(): Role {
+    if (this.me) return this.me.role;
+    const u = this.hass?.user;
+    const deny = (this.options.deny_users ?? []).map((x) => String(x).trim().toLowerCase());
+    if (u?.name && deny.includes(u.name.trim().toLowerCase())) return "denied";
+    if (u?.is_admin) return "admin";
+    const p = this.mePerson;
+    return p && (this.options.children ?? []).includes(p) ? "child" : "adult";
+  }
+
+  /** Obszary „mojego pokoju”: etykieta obszaru = osoba przypisana do konta (identyfikator encji, imię albo nazwa etykiety). */
+  private get myAreas(): string[] {
+    const h = this.hass, p = this.mePerson;
+    if (!h || !p) return [];
+    const name = String(h.states[p]?.attributes.friendly_name ?? "");
+    const keys = new Set([p.slice(7), labelSlug(name), labelSlug(name.split(/\s+/)[0] ?? "")].filter(Boolean));
+    const match = (l: string) => keys.has(l) || keys.has(labelSlug(this.labelNames.get(l) ?? ""));
+    return Object.values(h.areas).filter((a) => (a.labels ?? []).some(match)).map((a) => a.area_id);
+  }
+
   private get tabs(): Tab[] {
     // Kolejność z opcji (kolejność wyboru); nieznane pomijamy. Bez wyboru: wszystkie, poza Zakupami bez list.
     // Zawsze bez Asystenta, gdy konto go nie dostało, i bez Zdrowia, gdy nie widzi żadnej osoby (administrator widzi
@@ -220,7 +253,11 @@ export class HearthPanel extends LitElement {
     const allowed = (t: Tab) => (isAdmin || !ADMIN_TABS.includes(t)) && (t !== "agent" || Boolean(this.agentUrl))
       && (t !== "health" || this.healthList.length > 0 || (isAdmin && this.me !== undefined));
     const chosen = (this.options.tabs ?? []).filter((t, i, a) => TABS.includes(t) && a.indexOf(t) === i);
-    return (chosen.length ? chosen : TABS.filter((t) => t !== "shopping" || (this.hass ? hasShopping(this.hass) : false))).filter(allowed);
+    const list = (chosen.length ? chosen : TABS.filter((t) => t !== "shopping" || (this.hass ? hasShopping(this.hass) : false))).filter(allowed);
+    // Profil Dziecko: Teraz, Zakupy, Mój pokój, Światła, Moje zdrowie.
+    if (this.accountRole !== "child") return list;
+    // Dziecko: Zakupy tylko z listą Bring! (karty lojalnościowe ma dorosły — sama karta to pusta zakładka).
+    return list.filter((t) => CHILD_TABS.includes(t) && (t !== "shopping" || (this.hass ? bringLists(this.hass).length > 0 : false)));
   }
 
   private get tab(): Tab {
@@ -328,8 +365,17 @@ export class HearthPanel extends LitElement {
     if (this.hass && this.panel && this.meFor !== this.panel) {
       this.meFor = this.panel;
       const ask = this.hass.callApi?.<Me>("GET", "hearth/me");
-      if (ask) ask.then((m) => (this.me = m)).catch(() => (this.me = null));
+      if (ask)
+        ask.then((m) => (this.me = m)).catch(() => {
+          // Bez odpowiedzi: rola z konfiguracji panelu (accountRole), ponowienie za 30 s.
+          this.me = null;
+          window.setTimeout(() => { this.meFor = undefined; this.requestUpdate(); }, 30_000);
+        });
       else this.me = null;
+      // Nazwy etykiet (etykieta przemianowana na imię dziecka ma stary identyfikator) — raz na konfigurację.
+      this.hass.callWS<Array<{ label_id: string; name: string }>>({ type: "config/label_registry/list" })
+        .then((list) => { this.labelNames = new Map(list.map((l) => [l.label_id, l.name])); })
+        .catch(() => undefined);
     }
     if ((changed as Map<string, unknown>).has("person") && this.person && !this.personDialog?.open) this.personDialog?.showModal();
     if ((changed as Map<string, unknown>).has("coupons") && this.coupons && !this.couponsDialog?.open) this.couponsDialog?.showModal();
@@ -452,6 +498,8 @@ export class HearthPanel extends LitElement {
       this.open = this.open === areaId ? null : areaId;
     },
     openRoom: (areaId) => {
+      // Dziecko: tylko swój pokój („Mój pokój” i tak pokazuje wyłącznie jego obszary).
+      if (this.accountRole === "child" && !this.myAreas.includes(areaId)) return;
       this.open = areaId;
       if (this.tabs.includes("climate")) this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO.climate[0]}`);
     },
@@ -731,7 +779,7 @@ export class HearthPanel extends LitElement {
         </div>
         <div class="rule">Wybór zapamiętuje tylko to urządzenie (przeglądarka albo aplikacja). Styl domyślny dla wszystkich, czujniki na zewnątrz, kocioł i pomocniki ogrzewania ustawisz w ustawieniach integracji.</div>
         ${this.accentChooser()}
-        ${this.wasteSwitches(ctx)}
+        ${ctx.role === "child" ? nothing : this.wasteSwitches(ctx)}
         <div class="set-foot">
           ${this.hass?.user?.is_admin
             ? html`<button class="btn" type="button" @click=${() => { this.dialog?.close(); this.navigate("/config/integrations/integration/hearth"); }}>Ustawienia integracji</button>`
@@ -816,6 +864,10 @@ export class HearthPanel extends LitElement {
       return html`<div class="noaccess" style="max-width:40rem;margin:0 auto;padding:6rem 2rem 2rem;text-align:center;line-height:1.6">
         <h2>Brak dostępu</h2><p>Panel Hearth jest niedostępny dla Twojego konta.</p></div>`;
     }
+    // Np. profil Dziecko przy zakładkach z opcji bez żadnej z jego sekcji — zamiast pustego panelu z błędem.
+    if (!this.tabs.length)
+      return html`<div class="noaccess" style="max-width:40rem;margin:0 auto;padding:6rem 2rem 2rem;text-align:center;line-height:1.6">
+        <h2>Nic tu dla Ciebie</h2><p>Żadna sekcja Hearth nie jest włączona dla Twojego konta. Poproś administratora o zmianę zakładek w opcjach Hearth.</p></div>`;
     const c = clock(hass.config?.time_zone);
     const ctx: Ctx = {
       hass,
@@ -832,6 +884,8 @@ export class HearthPanel extends LitElement {
       sched: this.sched,
       rows: this.rows,
       health: this.healthList,
+      role: this.accountRole,
+      myAreas: this.myAreas,
     };
     const cfg = circuits(this.options.ebusd_zone_topic ?? "");
     if (cfg && this.tab === "boiler") {
@@ -856,7 +910,7 @@ export class HearthPanel extends LitElement {
       this.navigate(href(t, page));
     };
     const page = this.page;
-    const secs = sectionsFor(this.tabs);
+    const secs = sectionsFor(this.tabs, this.accountRole === "child");
     const cur = secs.find((s) => s.tabs.includes(tab));
     const showNav = secs.length > 1;
     const hasAgent = this.tabs.includes("agent");
@@ -866,7 +920,8 @@ export class HearthPanel extends LitElement {
     const secLink = (s: Section, cls = "") => html`<a href=${href(s.tabs[0])} class="${cls} ${s === cur ? "on" : ""}" aria-current=${s === cur ? "page" : "false"}
       @click=${go(s.tabs[0])}><span class="si">${s.icon}${secBadge(s)}</span><span class="sl">${s.label}</span></a>`;
     const side = showNav && !this.narrow ? html`<nav class="secs" aria-label="Sekcje">${secs.map((s) => secLink(s))}</nav>` : nothing;
-    const barSecs = secs.filter((s) => PHONE_BAR.includes(s.id)).slice(0, 4);
+    // Do 5 sekcji (np. profil Dziecko) wszystkie w pasku — „Więcej” z jedną pozycją tylko by przeszkadzało.
+    const barSecs = secs.length <= 5 && !hasAgent ? secs : secs.filter((s) => PHONE_BAR.includes(s.id)).slice(0, 4);
     const moreSecs = secs.filter((s) => !barSecs.includes(s));
     const moreOn = Boolean(cur && moreSecs.includes(cur)) || tab === "agent";
     const bar = showNav && this.narrow
@@ -956,7 +1011,15 @@ export class HearthPanel extends LitElement {
   }
 
   private climate(ctx: Ctx) {
-    const rooms = this.rooms();
+    // Dziecko: tylko swój pokój (obszary z etykietą jego imienia), bez paska domu i kotła.
+    const child = this.accountRole === "child";
+    const rooms = child ? this.rooms().filter((r) => ctx.myAreas?.includes(r.areaId)) : this.rooms();
+    if (child && !rooms.length)
+      return ctx.myAreas?.length
+        ? html`<div class="empty">W Twoim pokoju (${ctx.myAreas.map((a) => this.hass!.areas[a]?.name ?? a).join(", ")}) Hearth nie widzi termostatu —
+            poproś administratora, żeby przypisał do pokoju głowicę albo dodał pokój w opcjach Hearth (Pokoje → obszary).</div>`
+        : html`<div class="empty">Twój pokój nie jest jeszcze oznaczony. Poproś administratora, żeby w Home Assistant (Ustawienia → Obszary)
+            dodał pokojowi etykietę z Twoim imieniem — wtedy zobaczysz tu jego temperaturę i ustawienia.</div>`;
     // Neon: jedna karta pokoju (pierścień); klasyczny: kafelki, lista albo pokrętła.
     const neon = this.look === "neon";
     const style = this.cardStyle;
@@ -971,7 +1034,7 @@ export class HearthPanel extends LitElement {
     });
     const profiles = rooms.some(hasProfiles);
     const anyDevices = rooms.some((r) => devices(ctx, r).length);
-    return html`${outdoor(ctx)} ${house(ctx, rooms)}
+    return html`${child ? nothing : html`${outdoor(ctx)} ${house(ctx, rooms)}`}
         ${profiles || anyDevices
           ? html`<div class="legend" aria-label="Legenda">
               ${profiles
