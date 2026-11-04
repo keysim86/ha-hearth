@@ -7,6 +7,12 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.25] - 2026-11-04
+
+### Zmieniono
+- **Jedna skala typografii i zaokrągleń** — 8 rozmiarów tekstu (10–28 px) i 3 rozmiary dużych cyfr zamiast 27 różnych; 4 promienie (4, 8, 12, 16 px) i pigułka zamiast 18.
+- **Kontrast WCAG AA w wyglądzie klasycznym** — najsłabszy tekst (osie, podpisy) liczony z koloru tekstu i karty (≥ 4,5:1 w każdym motywie HA; dotąd `--disabled-text-color`, ok. 2:1); temperatury w jasnym motywie ciemniejsze (każdy odcień ≥ 3,6:1, dotąd żółtozielony 2,4:1).
+
 ## [0.21.0-beta.24] - 2026-11-04
 
 ### Dodano
