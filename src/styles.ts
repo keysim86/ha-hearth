@@ -303,6 +303,13 @@ dialog.set::backdrop { background: rgba(10, 14, 18, .45); }
 .toast[hidden] { display: none; }
 .toast { display: flex; align-items: center; gap: 12px; }
 /* Ciepło: pokoje w grupach według pięter HA; telefon — szczegóły pokoju w arkuszu od dołu. */
+/* Zużycie: fazy zwinięte do podsumowania (rozwinięte przy złym napięciu). */
+details.phases { align-self: start; }
+details.phases > summary { list-style: none; cursor: pointer; display: grid; gap: 2px; }
+details.phases > summary::-webkit-details-marker { display: none; }
+details.phases > summary .hlabel::after { content: " ▸"; }
+details.phases[open] > summary .hlabel::after { content: " ▾"; }
+details.phases[open] > summary { margin-bottom: 8px; }
 .rgrp { margin: 20px 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .rgrp small { text-transform: none; letter-spacing: 0; color: var(--faint); font-weight: 400; margin-left: 4px; }
 .sheet-bg { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .5); }

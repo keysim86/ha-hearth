@@ -7,6 +7,14 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.21.0-beta.22] - 2026-11-04
+
+### Dodano
+- **Zużycie → Prąd: dziś godzina po godzinie** — słupki zużycia z każdej godziny dnia w kolorach stref taryfy (jak pasek stref nad nimi), z legendą; bieżąca godzina wyróżniona.
+
+### Zmieniono
+- **Fazy zwinięte do jednego zdania** („najwięcej L2: 520 W · napięcie w normie”); rozwijają się kliknięciem, a same — gdy napięcie którejś fazy wychodzi poza normę.
+
 ## [0.21.0-beta.21] - 2026-11-04
 
 ### Dodano

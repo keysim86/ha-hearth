@@ -59,14 +59,21 @@ function live(ctx: Ctx): TemplateResult | typeof nothing {
           <span class="hsub">ostatnie 24 h</span>${line(ctx.hist.series(ctx.hass, o.power_total), "var(--ember)", { lo: 0 })}</div>`
       : nothing}
     ${n
-      ? html`<div class="ocell"><span class="hlabel">Fazy</span>
-          ${phase.map((x, i) => html`<div class="phase">
-            <b>L${i + 1}</b>
-            <div class="pmbar"><i style="width:${Math.min(100, ((x.p ?? 0) / maxP) * 100).toFixed(0)}%;background:var(--ember)"></i></div>
-            <span>${fmtW(x.p)}</span>
-            <span class="volt ${uCls(x.u)}">${x.u === null ? "—" : `${round(x.u)} V`}</span>
-          </div>`)}
-          <span class="hsub">Napięcie: norma 230 V ±10% (207–253 V).</span></div>`
+      ? (() => {
+          // Fazy zwinięte do jednego zdania; rozwinięte same, gdy napięcie wychodzi poza normę.
+          const bad = phase.map((x, i) => [i, uCls(x.u)] as const).filter(([, c]) => c === "warn" || c === "crit");
+          const top = phase.map((x, i) => [i, x.p ?? -1] as const).sort((a, b) => b[1] - a[1])[0];
+          const sum = [top && top[1] >= 0 ? `najwięcej L${top[0] + 1}: ${fmtW(phase[top[0]].p)}` : "",
+            phasesU.length ? (bad.length ? `napięcie: ${bad.map(([i]) => `L${i + 1} ${round(phase[i].u)} V`).join(", ")}` : "napięcie w normie") : ""].filter(Boolean).join(" · ");
+          return html`<details class="ocell phases" ?open=${bad.length > 0}><summary><span class="hlabel">Fazy</span><span class="hsub">${sum}</span></summary>
+            ${phase.map((x, i) => html`<div class="phase">
+              <b>L${i + 1}</b>
+              <div class="pmbar"><i style="width:${Math.min(100, ((x.p ?? 0) / maxP) * 100).toFixed(0)}%;background:var(--ember)"></i></div>
+              <span>${fmtW(x.p)}</span>
+              <span class="volt ${uCls(x.u)}">${x.u === null ? "—" : `${round(x.u)} V`}</span>
+            </div>`)}
+            <span class="hsub">Napięcie: norma 230 V ±10% (207–253 V).</span></details>`;
+        })()
       : nothing}
   </div></section>`;
 }
@@ -117,6 +124,15 @@ function usage(ctx: Ctx): TemplateResult | typeof nothing {
     return { label: MONTHS[d.getMonth()], title: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}${k === 0 ? " (do dziś)" : ""}`, values: stack(months, d.getTime()), now: k === 0 };
   });
   const zoneNames = zones.map((z) => z.charAt(0).toUpperCase() + z.slice(1));
+  // Dziś godzina po godzinie (statystyki godzinowe źródeł sieci, w podziale na strefy jak wyżej).
+  const hours = byDay(ctx.stats.get(ctx.hass, ids, "hour", startOfDay(), ctx.refresh), ids);
+  const nowH = new Date().getHours();
+  const hourBars: Bar[] = [...Array(24).keys()].map((hr) => {
+    const d = startOfDay();
+    d.setHours(hr);
+    return { label: String(hr), title: `${hr}:00–${hr + 1}:00${hr === nowH ? " (teraz)" : ""}`, values: stack(hours, d.getTime()), now: hr === nowH };
+  });
+  const anyHour = hourBars.some((b) => b.values.some((v) => v > 0));
   const tariff = ctx.opts.tariff ? st(ctx, ctx.opts.tariff) : undefined;
   return html`<section class="sec"><h2>Zużycie prądu <small>z panelu Energia</small></h2>
     <div class="cards two">
@@ -131,6 +147,9 @@ function usage(ctx: Ctx): TemplateResult | typeof nothing {
       </div>
     </div>
     ${tariffStrip(ctx)}
+    ${anyHour
+      ? html`<div class="ocell"><span class="hlabel">Dziś godzina po godzinie</span>${bars(hourBars, colors, { unit: "kWh", every: 3, digits: 2, names: zoneNames, height: 120 })}${legend(zoneNames, colors)}</div>`
+      : nothing}
     <div class="cards two">
       <div class="ocell"><span class="hlabel">Ostatnie 30 dni</span>${bars(dayBars, colors, { unit: "kWh", every: 3, names: zoneNames, valueLabels: "dense" })}${legend(zoneNames, colors)}</div>
       <div class="ocell"><span class="hlabel">Ostatnie 12 miesięcy</span>${bars(monthBars, colors, { unit: "kWh", every: 1, digits: 0, names: zoneNames, valueLabels: true })}${legend(zoneNames, colors)}</div>
