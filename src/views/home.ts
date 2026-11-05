@@ -499,20 +499,6 @@ export function loyaltySources(h: Hass, what: "kupony" | "paragony" | "karta"): 
   return found.map((x) => ({ ...x, label: `${BRAND[x.kind]}${many(x.kind) ? ` · ${x.konto.charAt(0).toUpperCase()}${x.konto.slice(1)}` : ""}` }));
 }
 
-/** Kupony kończące się dziś (PAYBACK, Lidl Plus — atrybut `kupony` z datą `do`) — dla „Wymaga uwagi”. */
-export function expiringCoupons(ctx: Ctx): Array<{ kind: CouponKind; konto: string; n: number; names: string[] }> {
-  const h = ctx.hass, out: Array<{ kind: CouponKind; konto: string; n: number; names: string[] }> = [];
-  const zrodla: Array<[CouponKind, RegExp, string]> = [["payback", /^sensor\.payback_([a-z0-9_]+)_kupony$/, "partner"], ["lidl", /^sensor\.lidl_([a-z0-9_]+)_kupony$/, "tytul"]];
-  for (const [kind, re, pole] of zrodla)
-    for (const id of Object.keys(h.states).sort()) {
-      const m = re.exec(id);
-      if (!m || h.entities[id]?.hidden) continue;
-      const lista = (h.states[id].attributes.kupony ?? []) as Array<Record<string, unknown>>;
-      const dzis = lista.filter((k) => k && k.id && !k.wykluczony && typeof k.do === "string" && Number.isFinite(Date.parse(k.do)) && dniOdDzis(Date.parse(k.do)) === 0);
-      if (dzis.length) out.push({ kind, konto: m[1], n: dzis.length, names: [...new Set(dzis.map((k) => String(k[pole] ?? "").trim()).filter(Boolean))].slice(0, 3) });
-    }
-  return out;
-}
 
 interface Kupon { id: string; partner: string; korzysc: string; warunek: string; opis: string; do: string; online: boolean; link: string | null; logo: string }
 

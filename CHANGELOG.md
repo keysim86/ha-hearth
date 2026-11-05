@@ -7,6 +7,9 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Usunięto
+- **„Wymaga uwagi” bez kuponów kończących się dziś** (PAYBACK, Lidl Plus) — na prośbę użytkownika; kupony z datą ważności zostają na stronie *Zakupy → Kupony*.
+
 ## [0.22.0] - 2026-11-04
 
 Wilgotność w Żywym domu — zbiorczo z 0.22.0-beta.1 (szczegóły niżej). Zmienił się tylko panel: wystarczy odświeżyć go w przeglądarce.
