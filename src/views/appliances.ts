@@ -63,14 +63,16 @@ function head(ctx: Ctx, a: Appliance, chip: string, color: string): TemplateResu
     <span class="lvl" style="background:color-mix(in srgb, ${color} 16%, transparent);color:${color}">${chip}</span></div>`;
 }
 
-function stepper(ctx: Ctx, id: string, label: string, unit = "°"): TemplateResult {
+/** − / + liczby. `press` zastępuje zwykłą zmianę o krok (np. frytkownica: najpierw program), `off` wyłącza przyciski. */
+function stepper(ctx: Ctx, id: string, label: string, unit = "°", opts: { off?: boolean; press?: (delta: number) => void } = {}): TemplateResult {
   const a = ctx.hass.states[id]?.attributes ?? {};
   const v = ctx.pending.get(id) ?? num(st(ctx, id));
   const step = num(a.step) ?? 1;
+  const go = (d: number) => (opts.press ? opts.press(d) : ctx.actions.stepNumber(id, d));
   return html`<span class="step">
-    <button type="button" aria-label="${label}: mniej" @click=${() => ctx.actions.stepNumber(id, -step)}>−</button>
+    <button type="button" aria-label="${label}: mniej" ?disabled=${opts.off} @click=${() => go(-step)}>−</button>
     <output>${v === null ? "—" : `${round(v)}${unit}`}</output>
-    <button type="button" aria-label="${label}: więcej" @click=${() => ctx.actions.stepNumber(id, step)}>+</button>
+    <button type="button" aria-label="${label}: więcej" ?disabled=${opts.off} @click=${() => go(step)}>+</button>
   </span>`;
 }
 
@@ -277,13 +279,34 @@ function softener(ctx: Ctx, a: Appliance): TemplateResult {
 
 // ---- frytkownica (Tuya Local; profil gotzejensen_af850t_airfryer z ha-package) ----
 
-const FRYER_STATE: Record<string, string> = { sleep: "czuwanie", standby: "czuwanie", cooking: "gotuje", working: "gotuje", pause: "pauza", done: "gotowe", finish: "gotowe", keep_warm: "podtrzymanie", preheat: "nagrzewanie" };
+const FRYER_STATE: Record<string, string> = {
+  sleep: "uśpiona", standby: "czuwanie", wait_mode: "czuwanie", set_mode: "ustawianie", cooking: "gotuje", working: "gotuje", run_mode: "gotuje",
+  pause: "pauza", pause_mode: "pauza", door_mode: "otwarta szuflada", run_shake: "potrząśnij koszem", recognising: "rozpoznawanie",
+  done: "gotowe", finish: "gotowe", heat_finish: "gotowe", warm: "podtrzymanie ciepła", keep_warm: "podtrzymanie ciepła", preheat: "nagrzewanie",
+};
+const NO_PROGRAM = /^(brak|empty|none)$/i;
 
 function airfryer(ctx: Ctx, a: Appliance): TemplateResult {
   const h = ctx.hass;
   const end = (re: RegExp) => a.ents.find((e) => re.test(e));
   const power = end(/^switch\..*_power$/), cooking = end(/^switch\..*_cooking$/);
   const temp = end(/^number\..*_temperature$/), time = end(/^number\..*_cooking_time$/);
+  // Program (profil gotzejensen_af850t_airfryer, DP 3): przy „Brak” frytkownica ignoruje temperaturę, czas i start —
+  // jej przyciski same wybierają „Własne ustawienia”, więc karta robi to samo przed nastawami i startem.
+  const program = end(/^select\..*_program$/);
+  const progNow = st(ctx, program) ?? "";
+  const manual = ((h.states[program ?? ""]?.attributes.options ?? []) as string[]).find((o) => !NO_PROGRAM.test(o));
+  const needsProgram = Boolean(program && manual && NO_PROGRAM.test(progNow));
+  const pickProgram = () => {
+    ctx.actions.call("select", "select_option", { entity_id: program, option: manual });
+    ctx.actions.toast(`Program „${manual}” — frytkownica podstawia swoją temperaturę i czas, potem możesz je zmienić`);
+  };
+  const press = (id: string) => (d: number) => (needsProgram ? pickProgram() : ctx.actions.stepNumber(id, d));
+  const start = () => {
+    if (!needsProgram || !cooking) return cooking && ctx.actions.toggleEntity(cooking);
+    pickProgram();
+    window.setTimeout(() => ctx.actions.toggleEntity(cooking), 2500);
+  };
   const remain = num(st(ctx, end(/^sensor\..*_time_remaining$/)));
   const status = st(ctx, end(/^sensor\..*_status$/));
   const problem = st(ctx, a.ents.find((e) => e.startsWith("binary_sensor.") && h.states[e].attributes.device_class === "problem")) === "on";
@@ -295,13 +318,13 @@ function airfryer(ctx: Ctx, a: Appliance): TemplateResult {
     ${head(ctx, a, chip, color)}
     ${cooks && remain !== null
       ? html`<div class="orow"><span class="hval big">${round(remain)} min</span><span class="hsub">do końca · koniec ok. ${ctx.clock.hm(Date.now() + remain * 60e3)}</span></div>`
-      : html`<span class="hsub">${status ? `Stan: ${FRYER_STATE[status] ?? status}` : ""}</span>`}
+      : html`<span class="hsub">${[status ? `Stan: ${FRYER_STATE[status] ?? status}` : "", on && program && progNow ? `program: ${progNow.toLowerCase()}` : ""].filter(Boolean).join(" · ")}</span>`}
     <div class="agdtemps">
-      ${temp ? html`<div class="agdtemp"><span class="hsub">Temperatura</span>${stepper(ctx, temp, "Temperatura")}</div>` : nothing}
-      ${time ? html`<div class="agdtemp"><span class="hsub">Czas</span>${stepper(ctx, time, "Czas", " min")}</div>` : nothing}
+      ${temp ? html`<div class="agdtemp"><span class="hsub">Temperatura</span>${stepper(ctx, temp, "Temperatura", "°", { off: offline || !on, press: press(temp) })}</div>` : nothing}
+      ${time ? html`<div class="agdtemp"><span class="hsub">Czas</span>${stepper(ctx, time, "Czas", " min", { off: offline || !on, press: press(time) })}</div>` : nothing}
     </div>
     <div class="acts">
-      ${cooking ? html`<button class="btn ${cooks ? "" : "hot"}" type="button" ?disabled=${offline || (!on && !cooks)} @click=${() => ctx.actions.toggleEntity(cooking)}>${cooks ? "Zatrzymaj" : "Start"}</button>` : nothing}
+      ${cooking ? html`<button class="btn ${cooks ? "" : "hot"}" type="button" ?disabled=${offline || (!on && !cooks)} @click=${start}>${cooks ? "Zatrzymaj" : "Start"}</button>` : nothing}
       ${power ? html`<button class="btn" type="button" ?disabled=${offline} @click=${() => (!cooks || window.confirm("Wyłączyć frytkownicę w trakcie pracy?")) && ctx.actions.toggleEntity(power)}>${on ? "Wyłącz" : "Włącz"}</button>` : nothing}
     </div>
     ${problem ? html`<div class="row"><span>Usterka urządzenia</span><b class="alarm">tak</b></div>` : nothing}

@@ -7,6 +7,14 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.22.2] - 2026-11-05
+
+### Naprawiono
+- **Frytkownica (Tuya Local): temperatura, czas i start z karty AGD** — przy programie „Brak” frytkownica ignoruje nastawy i start; jej przyciski same wybierają „Własne ustawienia”. Karta robi teraz to samo: pierwsze − / + albo „Start” ustawia program (frytkownica podstawia swoją temperaturę i czas), kolejne zmieniają nastawy, a „Start” rusza po chwili. Wymaga encji `select.*_program` z profilu Tuya Local (ha-package).
+
+### Zmieniono
+- Frytkownica: stany po polsku (ustawianie, gotuje, pauza, otwarta szuflada, potrząśnij koszem, gotowe, podtrzymanie ciepła…) i bieżący program obok stanu; − / + nieaktywne, gdy frytkownica jest wyłączona (zapis by ją wybudził).
+
 ## [0.22.1] - 2026-11-05
 
 ### Usunięto
