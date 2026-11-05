@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-11-05
+
 ### Usunięto
 - **„Wymaga uwagi” bez kuponów kończących się dziś** (PAYBACK, Lidl Plus) — na prośbę użytkownika; kupony z datą ważności zostają na stronie *Zakupy → Kupony*.
 
