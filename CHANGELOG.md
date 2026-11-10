@@ -7,6 +7,12 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Auta: paliwo w procentach dla aut podających litry** (np. Renault) — nowa opcja *Pojemność baku* w sekcji Auta i Roboty (lista: lokalizator auta + pojemność w litrach). Karta pokazuje wtedy procent baku z paskiem, a litry zostają dopiskiem obok zasięgu. Bez wpisu — jak dotąd, litry. Nowa opcja = restart HA po aktualizacji.
+
+### Naprawiono
+- **Auta: brak zasięgu w Kia** — karta brała pierwszy czujnik zasięgu, a w spalinowej Kia „Zasięg na paliwie” jest stale niedostępny (wartość ma „Całkowity zasięg jazdy”). Teraz kolejność: łączny, na paliwie, na prądzie, reszta po nazwie — i pierwszy z wartością.
+
 ## [0.22.2] - 2026-11-05
 
 ### Naprawiono

@@ -72,7 +72,7 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
             "energy": {},
             "switches": {},
             "cameras": {},
-            "vehicles": {},
+            "vehicles": {"fuel_tanks": [{"vehicle": "device_tracker.captur", "liters": 48}]},
             "appliances": {"appliance_plugs": [{"name": "Pralka", "kind": "washer", "power": "sensor.pralka_power"}]},
             "proxmox": {},
             "network": {},
@@ -103,6 +103,8 @@ async def test_options_flow_flattens_sections_and_clears_fields(hass: HomeAssist
     assert o["cameras"] == []
     assert o["appliances_exclude"] == []
     assert o["appliance_plugs"][0]["kind"] == "washer"
+    assert o["fuel_tanks"] == [{"vehicle": "device_tracker.captur", "liters": 48}]
+    assert o["vehicles"] == []
     assert o["areas"] == ["salon", "lazienka"]
     assert o["helper_prefix"] == "ogrzewanie"
     assert o["fans"] == ["switch.wentylator"]

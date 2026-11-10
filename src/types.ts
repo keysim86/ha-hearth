@@ -139,6 +139,7 @@ export interface Options {
   nvr_storage_used?: string | null;
   nvr_storage_total?: string | null;
   vehicles?: string[];
+  fuel_tanks?: Array<{ vehicle: string; liters: number }>;
   robots_exclude?: string[];
   appliances_exclude?: string[];
   appliance_plugs?: Array<{ name: string; kind?: "washer" | "dryer" | "dishwasher" | "other"; power: string; energy?: string; running?: string; energy_start?: string }>;

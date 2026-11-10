@@ -211,10 +211,12 @@
             "description": "Auta z lokalizatorów (dane z urządzenia: paliwo, zasięg, przebieg, akumulator, zamek); kosiarki i odkurzacze wykrywane same.",
             "data": {
               "vehicles": "Auta (lokalizatory)",
+              "fuel_tanks": "Pojemność baku",
               "robots_exclude": "Pomiń roboty"
             },
             "data_description": {
-              "vehicles": "Puste = lokalizatory, których urządzenie ma przebieg albo zasięg."
+              "vehicles": "Puste = lokalizatory, których urządzenie ma przebieg albo zasięg.",
+              "fuel_tanks": "Dla aut, które podają paliwo w litrach (np. Renault): lokalizator auta i pojemność baku — panel pokaże paliwo w procentach."
             }
           },
           "appliances": {
@@ -614,6 +616,17 @@
         "dryer": "Suszarka",
         "dishwasher": "Zmywarka",
         "other": "Inne"
+      }
+    },
+    "fuel_tank": {
+      "fields": {
+        "vehicle": {
+          "name": "Auto (lokalizator)"
+        },
+        "liters": {
+          "name": "Pojemność baku",
+          "description": "W litrach, z danych technicznych auta."
+        }
       }
     }
   }

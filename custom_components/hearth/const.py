@@ -96,6 +96,7 @@ CONF_NVR_USED = "nvr_storage_used"
 CONF_NVR_TOTAL = "nvr_storage_total"
 CONF_VEHICLES = "vehicles"
 CONF_ROBOTS_EXCLUDE = "robots_exclude"
+CONF_FUEL_TANKS = "fuel_tanks"
 CONF_APPLIANCES_EXCLUDE = "appliances_exclude"
 CONF_APPLIANCE_PLUGS = "appliance_plugs"
 CONF_PROXMOX_EXCLUDE = "proxmox_exclude"
@@ -128,7 +129,7 @@ SECTIONS: dict[str, list[str]] = {
     "meters": [CONF_METERS],
     "switches": [CONF_SWITCH_EXCLUDE],
     "cameras": [CONF_CAMERAS, CONF_NVR_STATUS, CONF_NVR_VERSION, CONF_NVR_CHANNELS, CONF_NVR_USED, CONF_NVR_TOTAL],
-    "vehicles": [CONF_VEHICLES, CONF_ROBOTS_EXCLUDE],
+    "vehicles": [CONF_VEHICLES, CONF_FUEL_TANKS, CONF_ROBOTS_EXCLUDE],
     "appliances": [CONF_APPLIANCES_EXCLUDE, CONF_APPLIANCE_PLUGS],
     "proxmox": [CONF_PROXMOX_EXCLUDE, CONF_PROXMOX_DISKS],
     "network": [CONF_NET_SPEED, CONF_NET_STATUS, CONF_NET_UPDATES, CONF_NET_PORTS],
@@ -162,6 +163,7 @@ DEFAULTS: dict[str, object] = {
     CONF_SWITCH_EXCLUDE: [],
     CONF_CAMERAS: [],
     CONF_VEHICLES: [],
+    CONF_FUEL_TANKS: [],
     CONF_ROBOTS_EXCLUDE: [],
     CONF_APPLIANCES_EXCLUDE: [],
     CONF_APPLIANCE_PLUGS: [],

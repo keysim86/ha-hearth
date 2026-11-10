@@ -211,10 +211,12 @@
             "description": "Cars from trackers (data from the device: fuel, range, odometer, battery, lock); mowers and vacuums are found automatically.",
             "data": {
               "vehicles": "Cars (trackers)",
+              "fuel_tanks": "Fuel tank capacity",
               "robots_exclude": "Exclude robots"
             },
             "data_description": {
-              "vehicles": "Empty = trackers whose device has an odometer or range."
+              "vehicles": "Empty = trackers whose device has an odometer or range.",
+              "fuel_tanks": "For cars that report fuel in litres (e.g. Renault): the car's tracker and its tank capacity — the panel shows fuel as a percentage."
             }
           },
           "appliances": {
@@ -614,6 +616,17 @@
         "dryer": "Dryer",
         "dishwasher": "Dishwasher",
         "other": "Other"
+      }
+    },
+    "fuel_tank": {
+      "fields": {
+        "vehicle": {
+          "name": "Car (tracker)"
+        },
+        "liters": {
+          "name": "Tank capacity",
+          "description": "In litres, from the car's specification."
+        }
       }
     }
   }

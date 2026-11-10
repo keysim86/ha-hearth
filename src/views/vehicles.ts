@@ -8,6 +8,29 @@ import { cleanName, deviceEntities, deviceName, entityName, holdButton, since, s
 const find = (ctx: Ctx, ids: string[], re: RegExp, cls?: string) =>
   ids.find((e) => (!cls || ctx.hass.states[e]?.attributes.device_class === cls) && re.test(`${e} ${ctx.hass.states[e]?.attributes.friendly_name ?? ""}`));
 
+// Zasięg: najpierw łączny (hybrydy; w spalinowej Kia „na paliwie” bywa stale niedostępny, a łączny ma wartość), potem
+// na paliwie i na prądzie, na końcu reszta po nazwie — pierwszy, który ma wartość.
+const RANGE_RE = /zasieg|zasięg|range|autonomia/i;
+const RANGE_KEYS = ["total_driving_range", "fuel_driving_range", "fuel_autonomy", "ev_driving_range", "battery_autonomy"];
+function rangeOf(ctx: Ctx, sensors: string[]): string | undefined {
+  const h = ctx.hass;
+  const tk = (e: string) => h.entities[e]?.translation_key ?? "";
+  const rank = (e: string) => { const i = RANGE_KEYS.indexOf(tk(e)); return i < 0 ? RANGE_KEYS.length : i; };
+  const all = sensors.filter((e) => RANGE_KEYS.includes(tk(e)) || RANGE_RE.test(`${e} ${h.states[e]?.attributes.friendly_name ?? ""}`)).sort((a, b) => rank(a) - rank(b));
+  return all.find((e) => valueText(h, e) !== "—") ?? all[0];
+}
+
+// Paliwo w procentach: wprost z czujnika w %, a gdy auto podaje litry (Renault) — z pojemności baku z opcji.
+function fuelPctOf(ctx: Ctx, tracker: string, fuel: string | undefined): number | null {
+  if (!fuel) return null;
+  const u = ctx.hass.states[fuel]?.attributes.unit_of_measurement;
+  const v = num(st(ctx, fuel));
+  if (v === null) return null;
+  if (u === "%") return v;
+  const tank = ctx.opts.fuel_tanks?.find((t) => t.vehicle === tracker)?.liters;
+  return (u === "L" || u === "l") && tank && tank > 0 ? Math.min(100, (v / tank) * 100) : null;
+}
+
 export function vehicleList(ctx: Ctx): string[] {
   const h = ctx.hass;
   if (ctx.opts.vehicles?.length) return ctx.opts.vehicles.filter((v) => h.states[v]);
@@ -26,7 +49,7 @@ export function carsView(ctx: Ctx): TemplateResult {
     const ents = deviceEntities(h, h.entities[t]?.device_id);
     const sensors = ents.filter((e) => e.startsWith("sensor."));
     const fuel = sensors.find((e) => /paliw|fuel/i.test(e) && !/zasieg|zasięg|range|autonomia|cena|price/i.test(e));
-    const range = find(ctx, sensors, /zasieg|zasięg|range|autonomia/i);
+    const range = rangeOf(ctx, sensors);
     const odo = find(ctx, sensors, /przebieg|odometer|mileage|licznik_kilometr/i);
     const batt = sensors.find((e) => h.states[e].attributes.device_class === "battery");
     const updated = sensors.find((e) => h.states[e].attributes.device_class === "timestamp" && /ostatni|last|aktywno/i.test(e));
@@ -34,14 +57,17 @@ export function carsView(ctx: Ctx): TemplateResult {
     const lockState = lock ? st(ctx, lock) : undefined;
     const locked = !lock || lockState === "unavailable" || lockState === "unknown" ? null : lock.startsWith("lock.") ? lockState === "locked" : lockState === "off";
     const doors = ents.filter((e) => e.startsWith("binary_sensor.") && ["door", "opening", "window"].includes(h.states[e].attributes.device_class) && st(ctx, e) === "on");
-    const fuelPct = fuel && h.states[fuel].attributes.unit_of_measurement === "%" ? num(st(ctx, fuel)) : null;
+    const fuelPct = fuelPctOf(ctx, t, fuel);
+    // Litry przeliczone na procent — litry zostają drobnym dopiskiem obok zasięgu.
+    const liters = fuelPct !== null && h.states[fuel!]?.attributes.unit_of_measurement !== "%" ? valueText(h, fuel, 0) : null;
     const s = h.states[t];
     const where = s.state === "home" ? "w domu" : s.state === "not_home" ? "poza domem" : s.state === "unavailable" || s.state === "unknown" ? "brak danych" : s.state;
     return html`<div class="ocell car">
       <div class="orow"><span class="hlabel">${cleanName(deviceName(h, t) ?? entityName(h, t))}</span>
         ${locked !== null ? html`<span class="lvl" style="background:color-mix(in srgb, ${locked ? "var(--ok)" : "var(--warn)"} 18%, transparent);color:${locked ? "var(--ok)" : "var(--warn)"}">${locked ? "zamknięte" : "otwarte"}</span>` : nothing}</div>
-      <div class="orow"><span class="hval big">${valueText(h, fuel, 0)}</span><span class="hsub">${range ? `zasięg ${valueText(h, range, 0)}` : ""}</span></div>
-      ${fuelPct !== null ? html`<div class="pmbar"><i style="width:${fuelPct}%;background:${fuelPct < 15 ? "var(--crit)" : fuelPct < 30 ? "var(--warn)" : "var(--ok)"}"></i></div>` : nothing}
+      <div class="orow"><span class="hval big">${fuelPct !== null ? `${round(fuelPct)}%` : valueText(h, fuel, 0)}</span>
+        <span class="hsub">${[liters, range ? `zasięg ${valueText(h, range, 0)}` : ""].filter(Boolean).join(" · ")}</span></div>
+      ${fuelPct !== null ? html`<div class="pmbar"><i style="width:${fuelPct.toFixed(0)}%;background:${fuelPct < 15 ? "var(--crit)" : fuelPct < 30 ? "var(--warn)" : "var(--ok)"}"></i></div>` : nothing}
       <div class="row"><span>Przebieg</span><b>${valueText(h, odo, 0)}</b></div>
       ${batt ? html`<div class="row"><span>Akumulator</span><b>${valueText(h, batt, 0)}</b></div>` : nothing}
       ${doors.length ? html`<div class="row"><span>Otwarte</span><b style="color:var(--warn)">${doors.map((d) => entityName(h, d)).join(", ")}</b></div>` : nothing}

@@ -97,6 +97,18 @@ _FIELDS: dict[str, Any] = {
     c.CONF_NVR_USED: _SENSOR,
     c.CONF_NVR_TOTAL: _SENSOR,
     c.CONF_VEHICLES: _entity("device_tracker", many=True),
+    # Auta, które podają paliwo w litrach (np. Renault): {vehicle, liters} — panel liczy z tego procent baku.
+    c.CONF_FUEL_TANKS: selector.ObjectSelector(
+        selector.ObjectSelectorConfig(
+            multiple=True,
+            label_field="vehicle",
+            translation_key="fuel_tank",
+            fields={
+                "vehicle": {"selector": {"entity": {"domain": "device_tracker"}}, "required": True},
+                "liters": {"selector": {"number": {"min": 1, "max": 200, "step": 1, "mode": "box", "unit_of_measurement": "L"}}, "required": True},
+            },
+        )
+    ),
     c.CONF_ROBOTS_EXCLUDE: _entity(["lawn_mower", "vacuum"], many=True),
     # Całe urządzenia (nie pojedyncze encje) z integracji, które zakładka AGD rozpoznaje.
     c.CONF_APPLIANCES_EXCLUDE: selector.DeviceSelector(
