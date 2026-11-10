@@ -1,6 +1,6 @@
 {
   "name": "ha-hearth",
-  "version": "0.22.2",
+  "version": "0.23.0",
   "private": true,
   "type": "module",
   "description": "Panel Hearth dla Home Assistant — pokoje z obszarów",

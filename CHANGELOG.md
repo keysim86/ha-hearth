@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-10
+
 ### Dodano
 - **Auta: paliwo w procentach dla aut podających litry** (np. Renault) — nowa opcja *Pojemność baku* w sekcji Auta i Roboty (lista: lokalizator auta + pojemność w litrach). Karta pokazuje wtedy procent baku z paskiem, a litry zostają dopiskiem obok zasięgu. Bez wpisu — jak dotąd, litry. Nowa opcja = restart HA po aktualizacji.
 
