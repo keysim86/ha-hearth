@@ -4,7 +4,11 @@
 // przesyłki (do odbioru, u kuriera, problem — Polish Shipment Tracking). Kupony tu nie trafiają (decyzja użytkownika
 // 2026-11-05 — są na stronach Zakupy → Kupony).
 // Każda sprawa ma akcję w jednym dotknięciu; „Jutro” odkłada ją do 6:00,
-// „Zrobione” (przesunięcie w prawo) chowa ją do następnego razu — wybór pamięta to urządzenie (ctx.ui.attn).
+// „Zrobione” (przesunięcie w prawo, „Wyjęte”, „Odebrane”…) chowa ją do następnego razu.
+// Wybór jest wspólny dla domu (ctx.attn — stan w HA): kliknięcie w dowolnej przeglądarce, przez dowolne konto, chowa
+// sprawę wszędzie. Sprawy z czasem w kluczu (koniec cyklu, otwarcie bramy, poczta) przy następnym razie mają nowy klucz;
+// alerty i głowice bez kontaktu są zapominane, gdy przez 5 min ich nie ma (sweep). Bez wspólnego stanu (integracja
+// sprzed tej wersji) — jak dawniej pamięć urządzenia (ctx.ui.attn).
 
 import { html, nothing, svg, type TemplateResult } from "lit";
 import { windowOpen, type Room } from "../model";
@@ -23,6 +27,9 @@ interface Item { key: string; kind: Kind; icon: TemplateResult; title: string; s
 const RANK: Record<Kind, number> = { crit: 0, warn: 1, cold: 2, info: 3 };
 const GATE_MIN = 10, WINDOW_MIN = 3;
 const NEVER = 9e15;
+/** Klucze bez czasu wystąpienia — znikają ze wspólnego stanu, gdy sprawy nie ma przez FORGET_MS. */
+const FORGET_PREFIXES = ["alert:", "lost:"];
+const FORGET_MS = 5 * 60_000;
 
 const ico = (d: TemplateResult) => html`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const I = {
@@ -119,6 +126,7 @@ export function attentionItems(ctx: Ctx, rooms: Room[]): Item[] {
 }
 
 function hidden(ctx: Ctx): Record<string, number> {
+  if (ctx.attn) return ctx.attn;
   try {
     return JSON.parse(ctx.ui.attn ?? "{}") ?? {};
   } catch {
@@ -126,14 +134,36 @@ function hidden(ctx: Ctx): Record<string, number> {
   }
 }
 
-/** Sprawy widoczne teraz (bez odłożonych i zrobionych) — też licznik na zakładce. */
-export function visibleAttention(ctx: Ctx, rooms: Room[]): Item[] {
-  const hide = hidden(ctx), now = Date.now();
-  return attentionItems(ctx, rooms).filter((i) => !(hide[i.key] > now));
+// Od kiedy ten panel nie widzi schowanej sprawy bez czasu w kluczu (alert, głowica).
+const missing = new Map<string, number>();
+
+/** Zapomina schowane alerty / głowice, których nie ma od FORGET_MS — przy następnym razie znów będą widoczne.
+ *  Tylko panel dorosłego (dziecko nie widzi alertów, więc „brak” u niego nic nie znaczy). */
+function sweep(ctx: Ctx, all: Item[]) {
+  if (!ctx.attn || isChild(ctx)) return missing.clear();
+  const live = new Set(all.map((i) => i.key)), now = Date.now(), gone: string[] = [];
+  for (const k of missing.keys()) if (!(k in ctx.attn) || live.has(k)) missing.delete(k);
+  for (const k of Object.keys(ctx.attn)) {
+    if (live.has(k) || !FORGET_PREFIXES.some((p) => k.startsWith(p))) continue;
+    const t = missing.get(k);
+    if (t === undefined) missing.set(k, now);
+    else if (now - t >= FORGET_MS) gone.push(k);
+  }
+  if (!gone.length) return;
+  gone.forEach((k) => missing.delete(k));
+  ctx.actions.attnForget(gone);
 }
 
-/** Odłóż albo schowaj sprawę; przy okazji czyści wpisy spraw, których już nie ma. */
+/** Sprawy widoczne teraz (bez odłożonych i zrobionych) — też licznik na zakładce. */
+export function visibleAttention(ctx: Ctx, rooms: Room[]): Item[] {
+  const all = attentionItems(ctx, rooms), hide = hidden(ctx), now = Date.now();
+  sweep(ctx, all);
+  return all.filter((i) => !(hide[i.key] > now));
+}
+
+/** Odłóż albo schowaj sprawę — dla całego domu; bez wspólnego stanu na tym urządzeniu (czyści wpisy spraw, których już nie ma). */
 function hide(ctx: Ctx, items: Item[], key: string, until: number) {
+  if (ctx.attn) return ctx.actions.attnHide(key, until);
   const live = new Set(items.map((i) => i.key)), cur = hidden(ctx), next: Record<string, number> = {};
   for (const [k, v] of Object.entries(cur)) if (live.has(k) && v > Date.now()) next[k] = v;
   next[key] = until;
@@ -207,7 +237,8 @@ export function attentionView(ctx: Ctx, rooms: Room[]): TemplateResult {
       : html`<div class="arow ok ${spark ? "cleared" : ""}"><span class="aico">${I.check}</span><div><b>${spark ? "Wszystko ogarnięte!" : "Wszystko w porządku"}</b><small>nic nie czeka na reakcję</small></div></div>`}
     ${snoozed
       ? html`<div class="attn-f">${snoozed === 1 ? "1 sprawa odłożona" : [2, 3, 4].includes(snoozed % 10) && ![12, 13, 14].includes(snoozed % 100) ? `${snoozed} sprawy odłożone` : `${snoozed} spraw odłożonych`}
-          <button class="btn later" type="button" @click=${() => ctx.actions.setUi("attn", "{}")}>Pokaż</button></div>`
+          <button class="btn later" type="button" title=${ctx.attn ? "Pokaż odłożone i zrobione sprawy na wszystkich urządzeniach" : "Pokaż odłożone i zrobione sprawy"}
+            @click=${() => (ctx.attn ? ctx.actions.attnReset() : ctx.actions.setUi("attn", "{}"))}>Pokaż</button></div>`
       : nothing}
   </section>`;
 }

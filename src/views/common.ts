@@ -29,6 +29,10 @@ export interface Actions {
   /** Pokój otwarty w zakładce Klimat (z Żywego domu). */
   openRoom(areaId: string): void;
   setUi(key: string, value: string): void;
+  /** „Wymaga uwagi” wspólne dla domu (gdy ctx.attn): schowaj do `until` (ms), zapomnij zniknięte, pokaż wszystkie. */
+  attnHide(key: string, until: number): void;
+  attnForget(keys: string[]): void;
+  attnReset(): void;
   /** Okno z mapą lokalizacji osoby (albo innego lokalizatora, np. auta). */
   openPerson(entity: string): void;
   /** Okno konta automatu: lista kuponów (sensor.<automat>_<konto>_kupony), kod karty (…_karta) albo e-paragony (…_paragony). */
@@ -74,6 +78,8 @@ export interface Ctx {
   refresh: () => void;
   /** Drobny stan widoku (np. wybrany widok pogody), pamiętany na urządzeniu. */
   ui: Record<string, string>;
+  /** Odłożone / zrobione sprawy „Wymaga uwagi” wspólne dla wszystkich przeglądarek i kont; brak = pamięć urządzenia (ui.attn). */
+  attn?: Record<string, number>;
   /** Programy czasowe sterownika (ebusd) — gdy skonfigurowany temat strefy. */
   timers?: { week(c: import("../data/ebusd").Circuit): import("../data/ebusd").Slot[][] | null; value(name: string): string | undefined; connected: boolean };
   sched?: import("./boiler").SchedEdit | null;

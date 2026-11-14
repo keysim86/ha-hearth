@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 
 from .access import HearthMeView, health_profiles, panel_options, public_options
+from .attention import async_setup_attention
 from .bring import BringCatalogView
 from .const import (
     CONF_ADMIN_ONLY,
@@ -67,6 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(BringCatalogView())
         hass.http.register_view(HearthMeView())
         hass.data[DATA_STATIC_REGISTERED] = True
+    # „Wymaga uwagi”: odłożone i zrobione sprawy wspólne dla wszystkich przeglądarek i kont (raz na życie HA).
+    await async_setup_attention(hass)
 
     options = panel_options(entry)
     digest = await hass.async_add_executor_job(_file_digest, FRONTEND_DIR / "hearth-panel.js")

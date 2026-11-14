@@ -28,6 +28,9 @@ async def test_setup_registers_panel_and_unload_removes_it(hass: HomeAssistant, 
     assert kwargs["module_url"].startswith("/hearth_files/hearth-panel.js?v=")
     assert kwargs["config"]["options"]["style"] == "list"
     assert kwargs["require_admin"] is False
+    # Wspólne „Wymaga uwagi”: komendy WebSocket zarejestrowane raz na życie HA.
+    assert "hearth/attention/subscribe" in hass.data["websocket_api"]
+    assert "hearth_attention" in hass.data
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     remove.assert_called_once_with(hass, "hearth")

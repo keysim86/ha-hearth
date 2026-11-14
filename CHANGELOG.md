@@ -7,6 +7,9 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Zmieniono
+- **„Wymaga uwagi”: odłożone i zrobione sprawy wspólne dla całego domu** — „Wyjęte”, „Odebrane”, „Wystawione”, przesunięcie w prawo i „Jutro” w dowolnej przeglądarce, przez dowolne konto, chowają sprawę we wszystkich otwartych panelach od razu (dotąd tylko na urządzeniu, na którym kliknięto). Sprawa wraca przy następnym wystąpieniu: nowy cykl zmywarki czy pralki, kolejne otwarcie bramy, nowa poczta; alert albo głowica bez kontaktu — gdy zniknie na co najmniej 5 min i pojawi się znowu. „Pokaż” przywraca odłożone sprawy na wszystkich urządzeniach. Stan trzyma Home Assistant (`.storage/hearth.attention`, wpisy starsze niż 14 dni wypadają same); wcześniejsze wybory z pamięci przeglądarki przenoszą się przy pierwszym otwarciu panelu. Konto z „Bez dostępu” nie czyta ani nie zmienia tego stanu. Nowy kod integracji = restart HA po aktualizacji; do restartu panel działa jak dotąd.
+
 ## [0.23.0] - 2026-11-10
 
 ### Dodano

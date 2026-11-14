@@ -5,6 +5,7 @@ import { property, query, state } from "lit/decorators.js";
 import { clock, num } from "./format";
 import { StatsStore } from "./data/stats";
 import { RowsStore } from "./data/health";
+import { AttentionSync } from "./data/attention";
 import { DAYS, EbusdTimers, circuits, validate, writes, type Circuit, type Slot } from "./data/ebusd";
 import type { SchedEdit } from "./views/boiler";
 import { HistoryStore } from "./history";
@@ -185,6 +186,7 @@ export class HearthPanel extends LitElement {
   @state() private coupons: { kind: CouponKind; konto: string; view: CouponView } | null = null;
   @state() private sched: SchedEdit | null = null;
   private ebusd = new EbusdTimers();
+  private attn = new AttentionSync();
 
   @query("dialog.set:not(.more)") private dialog?: HTMLDialogElement;
   @query("dialog.more") private moreDialog?: HTMLDialogElement;
@@ -344,6 +346,7 @@ export class HearthPanel extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this.ebusd.disconnect();
+    this.attn.disconnect();
     window.clearInterval(this.tick);
     this.resize?.disconnect();
   }
@@ -521,6 +524,18 @@ export class HearthPanel extends LitElement {
       if (this.accountRole === "child" && !this.myAreas.includes(areaId)) return;
       this.open = areaId;
       if (this.tabs.includes("climate")) this.navigate(`${this.route?.prefix ?? "/hearth"}/${TAB_INFO.climate[0]}`);
+    },
+    attnHide: (key, until) => {
+      this.attn.hide(key, until);
+      this.requestUpdate();
+    },
+    attnForget: (keys) => {
+      this.attn.forget(keys);
+      this.requestUpdate();
+    },
+    attnReset: () => {
+      this.attn.reset();
+      this.requestUpdate();
     },
     setUi: (key: string, value: string) => {
       this.ui = { ...this.ui, [key]: value };
@@ -912,6 +927,17 @@ export class HearthPanel extends LitElement {
     if (!this.tabs.length)
       return html`<div class="noaccess" style="max-width:40rem;margin:0 auto;padding:6rem 2rem 2rem;text-align:center;line-height:1.6">
         <h2>Nic tu dla Ciebie</h2><p>Żadna sekcja Hearth nie jest włączona dla Twojego konta. Poproś administratora o zmianę zakładek w opcjach Hearth.</p></div>`;
+    // „Wymaga uwagi” wspólne dla domu; wpisy z pamięci urządzenia (sprzed wersji ze wspólnym stanem) przenosi raz do HA.
+    this.attn.connect(hass as never, () => this.requestUpdate(), () => {
+      let local: Record<string, number> = {};
+      try {
+        local = JSON.parse(this.ui.attn ?? "{}") ?? {};
+      } catch {
+        /* uszkodzony wpis */
+      }
+      if (this.ui.attn) this.actions.setUi("attn", "{}");
+      return local;
+    });
     const c = clock(hass.config?.time_zone);
     const ctx: Ctx = {
       hass,
@@ -925,6 +951,7 @@ export class HearthPanel extends LitElement {
       stats: this.stats,
       refresh: () => this.requestUpdate(),
       ui: { ...this.ui, dark: this.dark ? "1" : "0" },
+      attn: this.attn.hidden ?? undefined,
       sched: this.sched,
       rows: this.rows,
       health: this.healthList,
