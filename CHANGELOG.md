@@ -7,6 +7,11 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Naprawiono
+- **Żywy dom: przerywana linia ciepła także w suterenie.** Animowana woda grzewcza (gdy pali się w kotle) biegła
+  tylko pod kondygnacjami nad ziemią, a w suterenie jej nie było. Rury biegną teraz też pod pokojami suterenu,
+  a pion przedłuża się w dół.
+
 ## [0.24.0] - 2026-11-14
 
 ### Zmieniono

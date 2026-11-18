@@ -378,6 +378,11 @@ export function liveHouse(ctx: Ctx, rooms: Room[], compact = false): TemplateRes
     });
     parts.push(svg`<rect x=${x0} y=${y} width=${w} height=${BH} fill="none" stroke="rgba(150,180,255,.45)" stroke-width="2" stroke-dasharray="6 4"></rect>`);
   });
+  // woda grzewcza także w suterenie: rury pod pokojami i pion w dół (po pokojach, żeby ich tło nie zasłaniało)
+  if (burning && down.length)
+    parts.push(svg`<g class="pipes" fill="none" stroke="#ff6d2e" stroke-width="1.8" stroke-dasharray="5 6" opacity=".9" filter="url(#lh-gl)">
+      ${down.map((b, k) => svg`<path class="pipe" d="M${x0 + 6},${GY + k * BH + BH - 4}H${x0 + bw(b) - 6}"></path>`)}
+      <path class="pipe" d="M${x0 + 10},${GY}V${GY + (down.length - 1) * BH + BH - 4}"></path></g>`);
   // domownicy: w domu przy domu, poza domem na drodze (przerywane)
   const px0 = x0 + bw(up[up.length - 1]) + 30;
   home.forEach((p, i) => parts.push(person(p.name, p.color, px0 + i * 26, GY - 14, false)));
