@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release-forgejo:
     if: ${{ !contains(github.server_url, 'github.com') }}
@@ -38,4 +42,8 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"; VERSION_NO="${TAG#v}"
           awk "/^## \[$VERSION_NO\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md > notes.md
           if echo "$VERSION_NO" | grep -q '-'; then PRE="--prerelease"; else PRE=""; fi
-          gh release create "$TAG" --title "Hearth $TAG" --notes-file notes.md $PRE
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "Hearth $TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" --title "Hearth $TAG" --notes-file notes.md $PRE
+          fi
