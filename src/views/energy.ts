@@ -6,7 +6,7 @@ import { daysAgo, monthsAgo, startOfDay, startOfMonth, sumSince, type StatPoint 
 import { f1, num, round } from "../format";
 import { bars, boltIcon, line, type Bar } from "../svg";
 import { cleanName, deviceName, entityName, roll, st, unitOf, type Ctx } from "./common";
-import { tariffStrip, zoneColor, zoneOfName, zoneRank } from "./tariff";
+import { sibling, tariffCompare, tariffStrip, zoneColor, zoneOfName, zoneRank } from "./tariff";
 
 const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 export const MONTH_NAMES = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"];
@@ -94,7 +94,8 @@ function usage(ctx: Ctx): TemplateResult | typeof nothing {
   const today = parts.reduce((s, p) => s + p.today, 0), monthSum = parts.reduce((s, p) => s + p.month, 0);
   const cost = (since: number) => costIds.reduce((s, id) => s + sumSince(day[id], since), 0);
   const currency = costIds.length ? unitOf(ctx.hass, costIds[0]) || "zł" : "";
-  const price = grid.find((g) => g.price)?.price;
+  // cena teraz: z integracji Taryfy prądu (encja „cena” punktu poboru), inaczej ze źródła sieci w panelu Energia
+  const price = sibling(ctx, ctx.opts.tariff, "cena") ?? grid.find((g) => g.price)?.price;
   const chips = (key: "today" | "month") =>
     parts.filter((p) => p[key] > 0.005).sort((a, b) => b[key] - a[key]).map((p) => html`<span class="zchip">${p.name} <b>${f1(p[key])}</b></span>`);
   // Słupki w podziale na strefy (ostatnie słowo nazwy źródła: „… szczytowa”, „… nocna”); sezony i typy dni się sumują.
@@ -147,6 +148,7 @@ function usage(ctx: Ctx): TemplateResult | typeof nothing {
       </div>
     </div>
     ${tariffStrip(ctx)}
+    ${tariffCompare(ctx)}
     ${anyHour
       ? html`<div class="ocell"><span class="hlabel">Dziś godzina po godzinie</span>${bars(hourBars, colors, { unit: "kWh", every: 3, digits: 2, names: zoneNames, height: 120 })}${legend(zoneNames, colors)}</div>`
       : nothing}

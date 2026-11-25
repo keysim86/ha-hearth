@@ -7,6 +7,18 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Zużycie → Prąd: strefy z integracji Taryfy prądu.** Opcja „taryfa” może wskazywać encję strefy punktu poboru
+  integracji `taryfy_pradu` — pasek stref, „taniej od” i ceny biorą się z jej planu godzinowego, dla dowolnej taryfy
+  (G11, G12, G12w, G12as, G13, G13s, G14dynamic). Kolory stref według ceny, od najtańszej; nazwy stref z integracji.
+  Dotychczasowy format pakietu YAML (24 znaki n/p/s) nadal działa.
+- **Zużycie → Prąd: karta „Porównanie taryf”.** Ranking kosztów za ostatnie 30 dni i 12 miesięcy na rzeczywistym
+  zużyciu (z integracji, bez opłaty handlowej), różnica do obecnej oferty i rekomendacja zmiany.
+
+### Zmieniono
+- Cena „teraz” w Zużyciu pochodzi z encji ceny punktu poboru integracji, gdy strefa jest z integracji
+  (wcześniej zawsze ze źródła sieci w panelu Energia).
+
 ## [0.24.1] - 2026-11-18
 
 ### Naprawiono

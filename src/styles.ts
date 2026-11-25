@@ -1072,6 +1072,16 @@ form.ocell .orow { margin-top: 6px; }
 .tplan .tleg i { display: inline-block; width: 10px; height: 10px; border-radius: 4px; margin-right: 6px; background: var(--c); vertical-align: -1px; }
 :host([neon]) .tplan .tbar i:not(.past) { box-shadow: 0 0 8px color-mix(in srgb, var(--c) 55%, transparent); }
 :host([neon]) .tplan .tnow { box-shadow: 0 0 10px var(--fg); }
+/* ——— Porównanie taryf (integracja Taryfy prądu) ——— */
+.tcomp { display: grid; gap: 8px; margin-top: 12px; }
+.tcomp .hlabel small { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.tcomp .tnext { font-size: 14px; } .tcomp .tnext .cheaper { color: var(--ok); }
+.tcomp .ttab { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 13px; }
+.tcomp .ttab td { padding: 5px 4px; border-top: 1px solid var(--line, color-mix(in srgb, var(--fg) 10%, transparent)); }
+.tcomp .ttab td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tcomp .ttab tr.best td { color: var(--ok); font-weight: 600; }
+.tcomp .ttab tr.cur td { font-weight: 600; }
+.tcomp .ttab td.minus { color: var(--ok); } .tcomp .ttab td.plus { color: var(--muted); }
 
 /* ——— Nawigacja w sekcjach ——— */
 .wrap.with-side { max-width: 1540px; grid-template-columns: 196px minmax(0, 1fr); align-items: start; column-gap: 26px; }
