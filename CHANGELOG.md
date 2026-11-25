@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-25
+
 ### Dodano
 - **Zużycie → Prąd: strefy z integracji Taryfy prądu.** Opcja „taryfa” może wskazywać encję strefy punktu poboru
   integracji `taryfy_pradu` — pasek stref, „taniej od” i ceny biorą się z jej planu godzinowego, dla dowolnej taryfy
