@@ -7,6 +7,8 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-11-25
+
 ### Dodano
 - **Styl kart pokoi „Pierścienie”** — dotychczasowa karta wyglądu neon jako zwykły styl do wyboru (w ustawieniach
   panelu i integracji). W wyglądzie klasycznym rysowana jak pokrętła.
