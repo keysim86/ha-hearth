@@ -7,6 +7,14 @@ projekt stosuje [wersjonowanie semantyczne](https://semver.org/lang/pl/).
 
 ## [Unreleased]
 
+### Dodano
+- **Styl kart pokoi „Pierścienie”** — dotychczasowa karta wyglądu neon jako zwykły styl do wyboru (w ustawieniach
+  panelu i integracji). W wyglądzie klasycznym rysowana jak pokrętła.
+
+### Naprawiono
+- **Wybór stylu kart (kafelki / lista / pokrętła) nie działał w wyglądzie neon** — neon zawsze pokazywał pierścienie.
+  Styl działa teraz w obu wyglądach; w neonie kafelki, lista i pokrętła mają szkło i poświatę.
+
 ## [0.25.0] - 2026-11-25
 
 ### Dodano

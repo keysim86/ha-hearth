@@ -44,7 +44,7 @@ import { carsView, robotsView } from "./views/vehicles";
 import { healthView } from "./views/health";
 import { appliancesView, cycleSources } from "./views/appliances";
 
-const STYLES: Style[] = ["tiles", "list", "dials"];
+const STYLES: Style[] = ["tiles", "list", "dials", "rings"];
 const TABS: Tab[] = ["home", "shopping", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"];
 const TAB_INFO: Record<Tab, [slug: string, label: string]> = {
   home: ["dom", "Dom"],
@@ -68,11 +68,13 @@ const STYLE_INFO: Record<Style, [string, string]> = {
   tiles: ["Kafelki", "Łuk, wykres 24 h, oś dnia i urządzenia; ustawienia po kliknięciu."],
   list: ["Lista", "Wiersz na pokój, skala 16–28 °C. Najgęstszy, dobry na komputer."],
   dials: ["Pokrętła", "Kolorowe karty jak termostat, − / + na karcie. Dobry na telefon i tablet."],
+  rings: ["Pierścienie", "Pierścień temperatury na pokój, szklana karta. W wyglądzie klasycznym — jak pokrętła."],
 };
 const FOOT: Record<Style, string> = {
   tiles: "Kolor liczby to temperatura: im cieplej, tym bardziej pomarańczowo. Łuk pokazuje 16–28 °C, kreska na łuku to cel. Wykres to ostatnie 24 godziny. Turkusowe urządzenie właśnie pracuje.",
   list: "Na skali kreska to cel, kropka to pomiar; pomarańczowy odcinek to brakujące stopnie. Wykres to ostatnie 24 godziny, pod nim plan dnia z kreską „teraz”.",
   dials: "Pierścień pokazuje 14–30 °C, białe kółko to cel. Tło karty ma kolor temperatury w pokoju. − / + zmienia cel profilu, który teraz działa.",
+  rings: "Pierścień pokazuje temperaturę w skali 14–28 °C, kropka to cel, kolor zmienia się od chłodnego cyjanu do ciepłego żaru. Kliknij pokój, żeby zobaczyć ustawienia.",
 };
 const STYLE_KEY = "hearth.style";
 const ACCENT_KEY = "hearth.accent";
@@ -299,6 +301,12 @@ export class HearthPanel extends LitElement {
   private get cardStyle(): Style {
     const s = this.localStyle ?? this.options.style;
     return STYLES.includes(s) ? s : "tiles";
+  }
+
+  /** Styl kart pokoi faktycznie rysowany: pierścienie są kartą neonu — w wyglądzie klasycznym zastępują je pokrętła. */
+  private get roomStyle(): Style {
+    const s = this.cardStyle;
+    return s === "rings" && this.look !== "neon" ? "dials" : s;
   }
 
   /** Wygląd: urządzenie > opcje integracji > klasyczny. */
@@ -1057,7 +1065,7 @@ export class HearthPanel extends LitElement {
     const sky = this.look === "neon"
       ? html`<div class="sky" data-phase=${skyPhase(hass)} data-wx=${skyWeather(hass, this.options, () => this.requestUpdate())} aria-hidden="true"><i></i><span class="wx"></span></div>`
       : nothing;
-    return html`${sky}<div class="wrap s-${this.cardStyle} ${showNav && !this.narrow ? "with-side" : ""} ${showNav && this.narrow ? "with-bar" : ""}">
+    return html`${sky}<div class="wrap s-${this.roomStyle} ${showNav && !this.narrow ? "with-side" : ""} ${showNav && this.narrow ? "with-bar" : ""}">
         ${side}
         <div class="col">
         <header class="top">
@@ -1107,22 +1115,22 @@ export class HearthPanel extends LitElement {
             poproś administratora, żeby przypisał do pokoju głowicę albo dodał pokój w opcjach Hearth (Pokoje → obszary).</div>`
         : html`<div class="empty">Twój pokój nie jest jeszcze oznaczony. Poproś administratora, żeby w Home Assistant (Ustawienia → Obszary)
             dodał pokojowi etykietę z Twoim imieniem — wtedy zobaczysz tu jego temperaturę i ustawienia.</div>`;
-    // Neon: jedna karta pokoju (pierścień); klasyczny: kafelki, lista albo pokrętła.
-    const neon = this.look === "neon";
-    const style = this.cardStyle;
-    const card = neon ? neonRoom : style === "list" ? row : style === "dials" ? dial : tile;
-    const cols = !neon && style === "list" ? 1 : Math.max(1, this.cols);
+    // Styl kart pokoi (ustawienie urządzenia albo integracji) działa w obu wyglądach: kafelki, lista, pokrętła
+    // albo pierścienie (karta neonu; w wyglądzie klasycznym rysowana jak pokrętła).
+    const style = this.roomStyle;
+    const card = style === "rings" ? neonRoom : style === "list" ? row : style === "dials" ? dial : tile;
+    const cols = style === "list" ? 1 : Math.max(1, this.cols);
     // Telefon: szczegóły pokoju w arkuszu od dołu (nie w siatce, gdzie odsuwały resztę pokoi poza ekran).
     const sheet = this.narrow;
     const grid = (list: Room[]) => {
       const openIdx = sheet ? -1 : list.findIndex((r) => r.areaId === this.open);
-      const items: unknown[] = !neon && style === "list" ? [listHeader] : [];
+      const items: unknown[] = style === "list" ? [listHeader] : [];
       list.forEach((r, i) => {
         items.push(card(ctx, r));
         const endOfRow = (i + 1) % cols === 0 || i === list.length - 1;
         if (openIdx >= 0 && endOfRow && Math.floor(openIdx / cols) === Math.floor(i / cols)) items.push(detail(ctx, list[openIdx]));
       });
-      return html`<main class="grid ${neon ? "nring" : ""}">${items}</main>`;
+      return html`<main class="grid ${style === "rings" ? "nring" : ""}">${items}</main>`;
     };
     // Grupy według pięter HA (od najwyższego), gdy pokoje są na co najmniej dwóch; bez piętra — „Pozostałe” na końcu.
     const floors = this.hass!.floors ?? {};
@@ -1150,7 +1158,7 @@ export class HearthPanel extends LitElement {
         ${rooms.length
           ? groups.map(([name, list]) => html`${name ? html`<h3 class="rgrp">${name} <small>${list.length} ${many(list.length)}</small></h3>` : nothing}${grid(list)}`)
           : html`<div class="empty">Nie znalazłem pokoi. Pokój to obszar Home Assistant z termostatem (encja climate.*) — przypisz głowice do obszarów w ustawieniach urządzeń.</div>`}
-        <p class="foot">${neon ? "Pierścień pokazuje temperaturę w skali 14–28 °C, kropka to cel, kolor zmienia się od chłodnego cyjanu do ciepłego żaru. Kliknij pokój, żeby zobaczyć ustawienia." : FOOT[style]}</p>
+        <p class="foot">${FOOT[style]}</p>
         ${openRoom
           ? html`<div class="sheet-bg" @click=${() => ctx.actions.toggleRoom(openRoom.areaId)}></div>
               <div class="sheet" role="dialog" aria-modal="true" aria-label="Ustawienia: ${openRoom.name}" tabindex="-1"

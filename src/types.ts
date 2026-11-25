@@ -58,7 +58,7 @@ export interface Hass {
   callApi?<T>(method: "GET" | "POST", path: string): Promise<T>;
 }
 
-export type Style = "tiles" | "list" | "dials";
+export type Style = "tiles" | "list" | "dials" | "rings";
 export type Look = "classic" | "neon";
 export type Tab = "home" | "shopping" | "climate" | "switches" | "energy" | "boiler" | "meters" | "network" | "cameras" | "cars" | "robots" | "proxmox" | "health" | "appliances" | "agent" | "alerts";
 

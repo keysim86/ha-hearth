@@ -524,7 +524,8 @@
       "options": {
         "tiles": "Kafelki — łuk, wykres 24 h, oś dnia (domyślny)",
         "list": "Lista — wiersz na pokój, najgęstszy",
-        "dials": "Pokrętła — kolorowe karty jak termostat"
+        "dials": "Pokrętła — kolorowe karty jak termostat",
+        "rings": "Pierścienie — szklana karta z pierścieniem temperatury (w wyglądzie klasycznym jak pokrętła)"
       }
     },
     "tabs": {

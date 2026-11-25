@@ -21,7 +21,7 @@ CONF_CHILDREN = "children"
 CONF_ACCENT = "accent_color"
 # Kolory wiodące (klucze jak w panelu); w opcjach można też wpisać własny „#rrggbb”.
 ACCENTS = ["ember", "frost", "air", "ok", "bath", "rose", "slate", "theme"]
-STYLES = ["tiles", "list", "dials"]
+STYLES = ["tiles", "list", "dials", "rings"]
 LOOKS = ["classic", "neon"]
 TABS = ["home", "shopping", "climate", "switches", "energy", "boiler", "meters", "network", "cameras", "cars", "robots", "proxmox", "health", "appliances", "agent", "alerts"]
 

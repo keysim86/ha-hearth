@@ -1054,6 +1054,13 @@ form.ocell .orow { margin-top: 6px; }
 .nr-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 :host([neon]) .nr-ring .tv { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--tc) 55%, transparent)); }
 :host([neon]) .nroom.sel { box-shadow: var(--shadow), 0 0 0 1px var(--accent), 0 0 24px -8px var(--accent); }
+/* Kafelki, lista i pokrętła w wyglądzie neon: szkło i poświata (kolory z ciemnego motywu). */
+:host([neon]) .room { background: color-mix(in srgb, var(--surface) 78%, transparent); backdrop-filter: blur(10px); }
+:host([neon]) .room[aria-expanded="true"] { box-shadow: var(--shadow), 0 0 0 1px var(--accent), 0 0 24px -8px var(--accent); }
+:host([neon]) .lrow { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+:host([neon]) .lrow[aria-expanded="true"] { box-shadow: inset 4px 0 0 var(--accent), 0 0 18px -10px var(--accent); }
+:host([neon]) .dial { box-shadow: var(--shadow), 0 0 26px -12px hsl(var(--h) 85% 60%); }
+:host([neon]) .dial.sel { outline-color: hsl(var(--h) 85% 62%); box-shadow: var(--shadow), 0 0 30px -8px hsl(var(--h) 85% 60%); }
 :host([narrow]) .grid.nring { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 :host([narrow]) .nr-ctl { grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 4px; }
 :host([narrow]) .nr-top { flex-direction: column; align-items: center; gap: 4px; }

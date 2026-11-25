@@ -524,7 +524,8 @@
       "options": {
         "tiles": "Tiles — arc, 24 h chart, day timeline (default)",
         "list": "List — one row per room, densest",
-        "dials": "Dials — colourful thermostat-like cards"
+        "dials": "Dials — colourful thermostat-like cards",
+        "rings": "Rings — glass card with a temperature ring (shown as dials in the classic look)"
       }
     },
     "tabs": {
